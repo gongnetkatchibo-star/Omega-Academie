@@ -351,3 +351,43 @@ def reinitialiser(token):
         return redirect(url_for("auth.connexion"))
 
     return render_template("auth/reinitialiser.html", token=token)
+
+
+@auth_bp.route("/premiere-configuration", methods=["GET", "POST"])
+def premiere_configuration():
+    """Créer le tout premier compte (développeur) directement depuis le
+    web — sans terminal ni Shell, indisponible sur le plan gratuit Render
+    (sept. 2026). Se désactive automatiquement dès qu'un compte existe
+    déjà dans la base, pour ne jamais pouvoir être réutilisée après coup."""
+    if User.query.count() > 0:
+        flash("La configuration initiale a déjà été faite — connecte-toi normalement.", "error")
+        return redirect(url_for("auth.connexion"))
+
+    if request.method == "POST":
+        nom_complet = request.form.get("nom_complet", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        mot_de_passe = request.form.get("mot_de_passe", "")
+        confirmation = request.form.get("confirmation", "")
+
+        if not all([nom_complet, email, mot_de_passe]):
+            flash("Merci de remplir tous les champs.", "error")
+            return render_template("auth/premiere_configuration.html")
+        if mot_de_passe != confirmation:
+            flash("Les mots de passe ne correspondent pas.", "error")
+            return render_template("auth/premiere_configuration.html")
+
+        # Re-vérifié juste avant l'écriture, au cas où deux personnes
+        # tenteraient la configuration en même temps.
+        if User.query.count() > 0:
+            flash("La configuration initiale a déjà été faite — connecte-toi normalement.", "error")
+            return redirect(url_for("auth.connexion"))
+
+        user = User(nom_complet=nom_complet, email=email, role="developpeur", statut="actif", email_verifie=True)
+        user.set_mot_de_passe(mot_de_passe)
+        db.session.add(user)
+        db.session.commit()
+
+        flash("Compte développeur créé. Tu peux te connecter.", "info")
+        return redirect(url_for("auth.connexion"))
+
+    return render_template("auth/premiere_configuration.html")

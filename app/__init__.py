@@ -117,4 +117,11 @@ def create_app(config_name=None):
         db.session.commit()
         click.echo(f"Compte {role} créé et actif : {email}")
 
+    # Création automatique des tables manquantes à chaque démarrage —
+    # ne touche jamais aux tables/données déjà existantes. Nécessaire sur
+    # le plan gratuit Render, qui n'a pas de Shell pour lancer la
+    # commande manuellement (sept. 2026).
+    with app.app_context():
+        db.create_all()
+
     return app
