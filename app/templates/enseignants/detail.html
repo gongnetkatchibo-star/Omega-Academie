@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ enseignant.nom_complet }}{% endblock %}
+{% block content %}
+  <h1>{{ enseignant.nom_complet }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <p><strong>Spécialité :</strong> {{ enseignant.specialite or "—" }}</p>
+  <p><strong>Email :</strong> {{ enseignant.user.email }}</p>
+
+  <h2>Classes affectées</h2>
+  {% if enseignant.affectations %}
+    <ul class="liste-demandes">
+      {% for a in enseignant.affectations %}
+        <li class="carte-demande">
+          <div class="infos"><strong>{{ a.classe.nom }}</strong><span>{{ a.matiere }}</span></div>
+          <div class="actions">
+            <a href="{{ url_for('emploi_du_temps.classe', classe_id=a.classe_id) }}">Emploi du temps</a>
+            <a href="{{ url_for('suivi_cours.classe', classe_id=a.classe_id) }}">Suivi</a>
+            <a href="{{ url_for('notes.saisie', classe_id=a.classe_id) }}">Notes</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune classe affectée pour l'instant.</p>
+  {% endif %}
+
+  {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
+    <h2>Affecter une classe</h2>
+    <form method="post" action="{{ url_for('enseignants.affecter', enseignant_id=enseignant.id) }}">
+      <label>Classe
+        <select name="classe_id" required>
+          <option value="">Choisir une classe</option>
+          {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Matière
+        <input type="text" name="matiere" placeholder="ex : Mathématiques" required>
+      </label>
+      <button type="submit">Affecter</button>
+    </form>
+  {% endif %}
+{% endblock %}

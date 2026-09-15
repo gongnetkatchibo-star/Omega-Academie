@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block content %}
+  <div class="accueil-entete">
+    <img src="{{ url_for('static', filename='images/logo-omega-icone.png') }}" alt="Omega Académie" class="accueil-logo">
+    <div>
+      <h1>Omega Académie vous souhaite la bienvenue</h1>
+      <p class="role-badge">Bonjour, {{ user.nom_complet }} · Rôle : {{ user.role }}</p>
+    </div>
+  </div>
+
+  {% if user.role == "developpeur" %}
+    <div class="carte-attente">
+      <p><strong>Espace développeur actif.</strong> Tu es le seul rôle qui peut attribuer ou changer un rôle utilisateur — via la carte « Espace développeur » ci-dessous.</p>
+    </div>
+  {% endif %}
+
+  {% if enfants %}
+    <h2>Mes enfants</h2>
+    <div class="grille-cartes">
+      {% for e in enfants %}
+        <a class="carte-module" href="{{ url_for('eleves.detail', eleve_id=e.id) }}">
+          <h3>{{ e.nom_complet }}</h3>
+          <p>{{ e.classe.nom if e.classe else "" }} · Matricule {{ e.matricule }}</p>
+        </a>
+        <a class="carte-module" href="{{ url_for('finances.detail', eleve_id=e.id) }}">
+          <h3>Finances</h3>
+          <p>Voir le solde et l'historique des paiements.</p>
+        </a>
+        <a class="carte-module" href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">
+          <h3>Bulletin</h3>
+          <p>Notes et moyennes du trimestre.</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% elif user.role == "parent" %}
+    <h2>Mes enfants</h2>
+    <p>Aucun enfant n'est encore rattaché à ton compte. Contacte le secrétariat pour le lier à ton dossier.</p>
+  {% endif %}
+
+  {% if est_personnel or est_direction or user.role in ["enseignant", "developpeur"] %}
+    <h2>Espace {{ "direction" if est_direction else ("personnel" if est_personnel else "") }}</h2>
+    <div class="grille-cartes">
+      {% for m in modules %}
+        <a class="carte-module" href="{{ url_for(m.endpoint) }}">
+          <h3>{{ m.label }}</h3>
+          <p>{{ m.description }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if user.role == "eleve" %}
+    <h2>Mon espace</h2>
+    {% if mon_dossier_eleve %}
+      <div class="grille-cartes">
+        <a class="carte-module" href="{{ url_for('eleves.detail', eleve_id=mon_dossier_eleve.id) }}">
+          <h3>Ma fiche</h3>
+          <p>{{ mon_dossier_eleve.classe.nom if mon_dossier_eleve.classe else "" }} · Matricule {{ mon_dossier_eleve.matricule }}</p>
+        </a>
+        <a class="carte-module" href="{{ url_for('notes.bulletin', eleve_id=mon_dossier_eleve.id) }}">
+          <h3>Mon bulletin</h3>
+          <p>Notes et moyennes du trimestre.</p>
+        </a>
+        {% if mon_dossier_eleve.classe %}
+          <a class="carte-module" href="{{ url_for('emploi_du_temps.classe', classe_id=mon_dossier_eleve.classe.id) }}">
+            <h3>Mon emploi du temps</h3>
+            <p>Le planning de ma classe, téléchargeable en PDF.</p>
+          </a>
+        {% endif %}
+        <a class="carte-module" href="{{ url_for('communication.liste') }}">
+          <h3>Annonces</h3>
+          <p>Communications de l'école.</p>
+        </a>
+        <a class="carte-module" href="{{ url_for('bibliotheque.liste') }}">
+          <h3>Bibliothèque</h3>
+          <p>Livres, cours et exercices numériques.</p>
+        </a>
+      </div>
+    {% else %}
+      <p>Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

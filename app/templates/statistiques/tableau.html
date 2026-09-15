@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Statistiques{% endblock %}
+{% block content %}
+  <h1>Statistiques — {{ annee }}</h1>
+
+  {% if annees_disponibles %}
+    <form method="get" style="margin-bottom:12px;">
+      <input type="hidden" name="vue" value="{{ vue }}">
+      <label>Année scolaire
+        <select name="annee" onchange="this.form.submit()">
+          {% for a in annees_disponibles %}<option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>{% endfor %}
+        </select>
+      </label>
+    </form>
+  {% endif %}
+
+  <div class="stats-layout">
+    <nav class="stats-sidebar">
+      <a class="stats-lien {% if vue == 'global' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='global', annee=annee) }}">Statistique globale</a>
+      {% for c in classes %}
+        <a class="stats-lien {% if vue == 'classe_' ~ c.id %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='classe_' ~ c.id, annee=annee) }}">{{ c.nom }}</a>
+      {% endfor %}
+      <a class="stats-lien {% if vue == 'finances' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='finances', annee=annee) }}">Finances</a>
+    </nav>
+
+    <div class="stats-contenu">
+      <h2>{{ titre_vue }}</h2>
+
+      {% if vue != 'finances' %}
+        <div class="grille-cartes">
+          <div class="carte-module"><h3>Effectif</h3><p>{{ effectif_total }}</p></div>
+          <div class="carte-module"><h3>Garçons</h3><p>{{ garcons }}</p></div>
+          <div class="carte-module"><h3>Filles</h3><p>{{ filles }}</p></div>
+        </div>
+
+        <h3>Réussite par sexe</h3>
+        <table class="table">
+          <thead><tr><th>Indicateur</th><th>Garçons</th><th>Filles</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Effectif</td>
+              <td>{{ tableau_sexe['Garçons'].effectif }}</td>
+              <td>{{ tableau_sexe['Filles'].effectif }}</td>
+              <td>{{ tableau_sexe['Total'].effectif }}</td>
+            </tr>
+            <tr>
+              <td>Taux de réussite</td>
+              <td class="solde-ok">{{ tableau_sexe['Garçons'].taux_reussite ~ ' %' if tableau_sexe['Garçons'].taux_reussite is not none else '—' }}</td>
+              <td class="solde-ok">{{ tableau_sexe['Filles'].taux_reussite ~ ' %' if tableau_sexe['Filles'].taux_reussite is not none else '—' }}</td>
+              <td class="solde-ok">{{ tableau_sexe['Total'].taux_reussite ~ ' %' if tableau_sexe['Total'].taux_reussite is not none else '—' }}</td>
+            </tr>
+            <tr>
+              <td>Taux d'échec</td>
+              <td class="solde-du">{{ tableau_sexe['Garçons'].taux_echec ~ ' %' if tableau_sexe['Garçons'].taux_echec is not none else '—' }}</td>
+              <td class="solde-du">{{ tableau_sexe['Filles'].taux_echec ~ ' %' if tableau_sexe['Filles'].taux_echec is not none else '—' }}</td>
+              <td class="solde-du">{{ tableau_sexe['Total'].taux_echec ~ ' %' if tableau_sexe['Total'].taux_echec is not none else '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        {% if stats_globales.nb_avec_notes == 0 %}
+          <p class="lien-secondaire">Aucun élève n'a encore de notes saisies pour cette sélection.</p>
+        {% endif %}
+
+      {% else %}
+        <div class="grille-cartes">
+          <div class="carte-module"><h3>Total à recouvrer</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
+          <div class="carte-module"><h3>Total encaissé</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
+          <div class="carte-module">
+            <h3>Solde à recouvrer</h3>
+            <p class="{% if solde_a_recouvrer > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(solde_a_recouvrer) }}</p>
+          </div>
+          <div class="carte-module"><h3>Taux de recouvrement</h3><p>{{ "%.1f"|format(taux_recouvrement) }} %</p></div>
+        </div>
+
+        <h3>Par échéance</h3>
+        <table class="table">
+          <thead><tr><th>Échéance</th><th>Attendu</th><th>Payé</th><th>Solde</th><th>Taux</th></tr></thead>
+          <tbody>
+            {% for cle, t in par_tranche.items() %}
+              <tr>
+                <td>{{ t.libelle }}</td>
+                <td>{{ "%.0f"|format(t.attendu) }}</td>
+                <td>{{ "%.0f"|format(t.paye) }}</td>
+                <td class="{% if t.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(t.solde) }}</td>
+                <td>{{ t.taux }} %</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h3>Listes par situation de paiement</h3>
+        <table class="table">
+          <thead><tr><th>Situation</th><th>Nb élèves</th><th>Télécharger</th></tr></thead>
+          <tbody>
+            {% for cle, libelle in libelles_filtre.items() %}
+              <tr>
+                <td>{{ libelle }}</td>
+                <td>{{ nb_par_filtre[cle] }}</td>
+                <td>
+                  <a href="{{ url_for('statistiques.export_finance', filtre=cle, fmt='csv', annee=annee) }}">CSV</a> ·
+                  <a href="{{ url_for('statistiques.export_finance', filtre=cle, fmt='xlsx', annee=annee) }}">Excel</a> ·
+                  <a href="{{ url_for('statistiques.export_finance', filtre=cle, fmt='pdf', annee=annee) }}">PDF</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

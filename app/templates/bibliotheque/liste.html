@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Bibliothèque numérique{% endblock %}
+{% block content %}
+  <h1>Bibliothèque numérique</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
+    <p class="lien-secondaire">
+      <a href="{{ url_for('bibliotheque.nouvelle') }}">+ Ajouter une ressource</a>
+      · <a href="{{ url_for('bibliotheque.importer') }}">Importer plusieurs fichiers</a>
+      · <a href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">Exporter {{ "cette sélection" if type_filtre else "tout" }} (.zip)</a>
+    </p>
+  {% endif %}
+
+  <form method="get">
+    <label>Filtrer par type
+      <select name="type" onchange="this.form.submit()">
+        <option value="">Tous les types</option>
+        {% for t in types %}<option value="{{ t }}" {% if t == type_filtre %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+
+  {% if ressources %}
+    <ul class="liste-demandes">
+      {% for r in ressources %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ r.titre }}</strong>
+            <span>{{ r.type }}{% if r.matiere %} · {{ r.matiere }}{% endif %}</span>
+          </div>
+          <div class="actions"><a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}">Télécharger</a></div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune ressource pour l'instant.</p>
+  {% endif %}
+{% endblock %}

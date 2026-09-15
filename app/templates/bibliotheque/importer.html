@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Importer des ressources{% endblock %}
+{% block content %}
+  <h1>Importer plusieurs fichiers</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" enctype="multipart/form-data">
+    <label>Type (appliqué à tous les fichiers)
+      <select name="type" required>
+        {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Matière (optionnel, appliquée à tous les fichiers)
+      <input type="text" name="matiere">
+    </label>
+    <label>Fichiers (plusieurs à la fois)
+      <input type="file" name="fichiers" multiple required>
+    </label>
+    <button type="submit">Importer</button>
+  </form>
+  <p class="lien-secondaire">Chaque fichier devient une ressource distincte — le titre reprend automatiquement le nom du fichier.</p>
+{% endblock %}

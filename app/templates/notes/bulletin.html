@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Bulletin — {{ eleve.nom_complet }}{% endblock %}
+{% block content %}
+  <h1>Bulletin — {{ eleve.nom_complet }}</h1>
+  <p><strong>Classe :</strong> {{ eleve.classe.nom }} · <strong>Matricule :</strong> {{ eleve.matricule }}</p>
+
+  <form method="get">
+    <label>Trimestre
+      <select name="trimestre" onchange="this.form.submit()">
+        {% for t in trimestres %}<option value="{{ t }}" {% if t == trimestre %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+
+  {% if lignes %}
+    <table class="table">
+      <thead><tr><th>Matière</th><th>Moyenne /20</th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+          <tr><td>{{ l.matiere }}</td><td>{{ l.moyenne }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><strong>Moyenne générale :</strong> {{ moyenne_generale }}/20</p>
+    {% if classement %}<p><strong>Rang dans la classe :</strong> {{ classement }}</p>{% endif %}
+  {% else %}
+    <p>Aucune note enregistrée pour ce trimestre.</p>
+  {% endif %}
+
+  <p class="lien-secondaire">Note : export PDF du bulletin non encore implémenté — impression navigateur possible en attendant.</p>
+{% endblock %}

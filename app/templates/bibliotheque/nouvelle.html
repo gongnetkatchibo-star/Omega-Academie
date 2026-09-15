@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Ajouter une ressource{% endblock %}
+{% block content %}
+  <h1>Ajouter une ressource</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" enctype="multipart/form-data">
+    <label>Titre
+      <input type="text" name="titre" required>
+    </label>
+    <label>Type
+      <select name="type" required>
+        {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Matière (optionnel)
+      <input type="text" name="matiere">
+    </label>
+    <label>Description (optionnel)
+      <input type="text" name="description">
+    </label>
+    <label>Fichier
+      <input type="file" name="fichier" required>
+    </label>
+    <button type="submit">Ajouter</button>
+  </form>
+{% endblock %}

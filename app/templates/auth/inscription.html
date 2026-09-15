@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Créer un compte{% endblock %}
+{% block content %}
+  <div class="logo-page">
+    <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie">
+  </div>
+  <h1>Créer un compte</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if envoye %}
+    <div class="carte-attente">
+      <p><strong>Demande envoyée.</strong></p>
+      <p>Votre compte sera activé dès validation par le secrétariat.</p>
+    </div>
+  {% else %}
+    <form method="post" id="form-inscription">
+      <label>Je suis…
+        <select name="role" id="champ-role" required>
+          <option value="">Choisir un profil</option>
+          <option value="parent">Parent</option>
+          <option value="enseignant">Enseignant</option>
+          <option value="personnel">Personnel de l'école (précisé après validation)</option>
+        </select>
+      </label>
+
+      <div id="champs-standard">
+        <label>Nom complet
+          <input type="text" name="nom_complet" id="champ-nom-complet">
+        </label>
+      </div>
+
+      <div id="champs-parent" style="display:none;">
+        <label>Prénom
+          <input type="text" name="prenom" id="champ-prenom">
+        </label>
+        <label>Nom
+          <input type="text" name="nom" id="champ-nom">
+        </label>
+        <label>Profession
+          <input type="text" name="profession" id="champ-profession">
+        </label>
+      </div>
+
+      <label>Email
+        <input type="email" name="email" required>
+      </label>
+      <label>Téléphone{% if True %} <span id="tel-obligatoire" style="display:none;">(obligatoire, unique)</span>{% endif %}
+        <input type="tel" name="telephone" id="champ-telephone">
+      </label>
+      <label>Mot de passe
+        <input type="password" name="mot_de_passe" required>
+      </label>
+      <label>Confirmer le mot de passe
+        <input type="password" name="confirmation" required>
+      </label>
+      <button type="submit">Envoyer ma demande</button>
+    </form>
+    <script>
+      // Bascule les champs affichés selon le profil choisi. La validation
+      // réelle reste côté serveur (voir app/auth/routes.py) — ceci est
+      // seulement un confort d'affichage.
+      const roleSelect = document.getElementById('champ-role');
+      const champsStandard = document.getElementById('champs-standard');
+      const champsParent = document.getElementById('champs-parent');
+      const nomComplet = document.getElementById('champ-nom-complet');
+      const prenom = document.getElementById('champ-prenom');
+      const nom = document.getElementById('champ-nom');
+      const profession = document.getElementById('champ-profession');
+      const telephone = document.getElementById('champ-telephone');
+      const telObligatoire = document.getElementById('tel-obligatoire');
+
+      function majAffichage() {
+        const estParent = roleSelect.value === 'parent';
+        champsStandard.style.display = estParent ? 'none' : '';
+        champsParent.style.display = estParent ? '' : 'none';
+        nomComplet.required = !estParent;
+        prenom.required = estParent;
+        nom.required = estParent;
+        profession.required = estParent;
+        telephone.required = estParent;
+        telObligatoire.style.display = estParent ? '' : 'none';
+      }
+      roleSelect.addEventListener('change', majAffichage);
+      majAffichage();
+    </script>
+  {% endif %}
+
+  <p class="lien-secondaire"><a href="{{ url_for('auth.connexion') }}">Déjà un compte ? Se connecter</a></p>
+{% endblock %}

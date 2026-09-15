@@ -1,0 +1,28 @@
+databases:
+  - name: omega-academie-db
+    plan: free
+    databaseName: omega_academie
+    user: omega_academie
+
+services:
+  - type: web
+    name: omega-academie
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: omega-academie-db
+          property: connectionString
+      - key: MATRICULE_PREFIXE
+        value: OA26
+      # À renseigner manuellement dans le tableau de bord Render
+      # (jamais dans ce fichier, qui est versionné dans Git) :
+      # MAIL_SERVER, MAIL_PORT, MAIL_USE_TLS, MAIL_USERNAME, MAIL_PASSWORD,
+      # MAIL_DEFAULT_SENDER, ANTHROPIC_API_KEY

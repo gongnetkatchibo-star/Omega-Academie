@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Tests de niveau{% endblock %}
+{% block content %}
+  <h1>Tests de niveau</h1>
+  <p class="lien-secondaire"><a href="{{ url_for('tests_niveau.nouveau') }}">+ Nouveau test</a></p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if tests %}
+    <table class="table">
+      <thead><tr><th>Candidat</th><th>Classe demandée</th><th>Date du test</th><th>Note</th><th>Décision</th><th></th></tr></thead>
+      <tbody>
+        {% for t in tests %}
+          <tr>
+            <td>{{ t.nom_candidat }}</td>
+            <td>{{ t.classe_demandee.nom }}</td>
+            <td>{{ t.date_test.strftime("%d/%m/%Y") }}</td>
+            <td>{{ t.note_obtenue if t.note_obtenue is not none else "—" }}</td>
+            <td class="{% if t.decision == 'admis' %}solde-ok{% elif t.decision == 'refuse' %}solde-du{% endif %}">{{ t.decision }}</td>
+            <td>
+              <form method="post" action="{{ url_for('tests_niveau.decision', test_id=t.id) }}" style="display:flex; gap:6px; align-items:center;">
+                <input type="number" step="0.5" name="note_obtenue" value="{{ t.note_obtenue or '' }}" placeholder="Note" style="width:70px;">
+                <select name="decision">
+                  <option value="en_attente" {% if t.decision == "en_attente" %}selected{% endif %}>En attente</option>
+                  <option value="admis" {% if t.decision == "admis" %}selected{% endif %}>Admis</option>
+                  <option value="refuse" {% if t.decision == "refuse" %}selected{% endif %}>Refusé</option>
+                </select>
+                <button type="submit">Enregistrer</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun test de niveau enregistré.</p>
+  {% endif %}
+{% endblock %}

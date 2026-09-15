@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Saisie des notes — {{ classe.nom }}{% endblock %}
+{% block content %}
+  <h1>Saisie des notes — {{ classe.nom }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if matieres %}
+    <form method="get">
+      <label>Matière
+        <select name="matiere" required>
+          <option value="">— Choisir —</option>
+          {% for m in matieres %}<option value="{{ m }}" {% if m == matiere_choisie %}selected{% endif %}>{{ m }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Trimestre
+        <select name="trimestre" required>
+          <option value="">— Choisir —</option>
+          {% for t in trimestres %}<option value="{{ t }}" {% if t == trimestre_choisi %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit">Afficher / corriger</button>
+    </form>
+
+    {% if matiere_choisie and trimestre_choisi %}
+      <p class="lien-secondaire">Les notes déjà saisies sont pré-remplies ci-dessous — modifie une valeur pour la corriger, laisse un champ vide pour ne pas y toucher.</p>
+      <form method="post">
+        <input type="hidden" name="matiere" value="{{ matiere_choisie }}">
+        <input type="hidden" name="trimestre" value="{{ trimestre_choisi }}">
+
+        <table class="table">
+          <thead><tr><th>Élève</th><th>Note (/{{ bareme|int }})</th></tr></thead>
+          <tbody>
+            {% for e in eleves %}
+              <tr>
+                <td>{{ e.nom_complet }}</td>
+                <td><input type="number" step="0.5" min="0" max="{{ bareme }}" name="note_{{ e.id }}" value="{{ notes_existantes.get(e.id, '') }}"></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <button type="submit">Enregistrer les notes</button>
+      </form>
+    {% endif %}
+  {% else %}
+    <p>Vous n'enseignez pas dans cette classe.</p>
+  {% endif %}
+{% endblock %}

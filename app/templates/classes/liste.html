@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_macros.html" import champ_montant %}
+{% block title %}Classes{% endblock %}
+{% block content %}
+  <h1>Classes {% if annee_selectionnee != annee_courante %}<span class="badge-retard">année {{ annee_selectionnee }} — archive</span>{% endif %}</h1>
+
+  {% if annees_disponibles %}
+    <form method="get" style="margin-bottom:12px;">
+      <label>Année scolaire
+        <select name="annee" onchange="this.form.submit()">
+          {% for a in annees_disponibles %}
+            <option value="{{ a }}" {% if a == annee_selectionnee %}selected{% endif %}>{{ a }}{% if a == annee_courante %} (en cours){% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p class="lien-secondaire">
+      <a href="{{ url_for('classes.nouvelle') }}">+ Nouvelle classe</a>
+      · <a href="{{ url_for('classes.demarrer_annee') }}">Démarrer une nouvelle année scolaire</a>
+    </p>
+  {% endif %}
+
+  {% if classes %}
+    <ul class="liste-demandes">
+      {% for c in classes %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ c.nom }}</strong>
+            <span>{{ c.annee_scolaire }} — {{ c.eleves.count() }} élève(s) — total annuel : {{ c.frais_annuel|int }} (inscription {{ c.frais_inscription|int }} + T1 {{ c.frais_tranche1|int }} + T2 {{ c.frais_tranche2|int }})</span>
+            {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "comptable") %}
+              <form method="post" action="{{ url_for('classes.modifier_frais', classe_id=c.id) }}">
+                {{ champ_montant("frais_inscription", c.frais_inscription|int, 30000) }}
+                {{ champ_montant("frais_tranche1", c.frais_tranche1|int) }}
+                {{ champ_montant("frais_tranche2", c.frais_tranche2|int) }}
+                <button type="submit">Mettre à jour (tout le groupe)</button>
+              </form>
+            {% endif %}
+          </div>
+          <div class="actions">
+            <a href="{{ url_for('eleves.liste', classe_id=c.id) }}">Élèves</a>
+            <a href="{{ url_for('emploi_du_temps.classe', classe_id=c.id) }}">Emploi du temps</a>
+            {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "enseignant") %}
+              <a href="{{ url_for('suivi_cours.classe', classe_id=c.id) }}">Suivi</a>
+            {% endif %}
+            {% if current_user.role == "enseignant" %}
+              <a href="{{ url_for('notes.saisie', classe_id=c.id) }}">Notes</a>
+              <a href="{{ url_for('absences.saisie', classe_id=c.id) }}">Absences</a>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune classe pour l'instant.</p>
+  {% endif %}
+{% endblock %}

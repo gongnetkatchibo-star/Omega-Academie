@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Vérification de l'email{% endblock %}
+{% block content %}
+  <h1>Vérifie ton email</h1>
+  <p>Un code à 6 chiffres a été envoyé à <strong>{{ email }}</strong> pour confirmer ton adresse.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <label>Code de vérification
+      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required autofocus>
+    </label>
+    <button type="submit">Valider</button>
+  </form>
+
+  <form method="post" action="{{ url_for('auth.renvoyer_code_verification') }}">
+    <button type="submit">Renvoyer le code</button>
+  </form>
+
+  <p class="lien-secondaire">Le code expire au bout de 10 minutes. Une fois vérifié, ta demande de compte sera transmise au secrétariat pour validation — la double vérification ne sera plus redemandée à tes prochaines connexions.</p>
+{% endblock %}

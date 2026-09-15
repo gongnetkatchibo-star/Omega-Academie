@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Absences — {{ classe.nom }}{% endblock %}
+{% block content %}
+  <h1>Absences — {{ classe.nom }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <form method="get">
+    <label>Date
+      <input type="date" name="date" value="{{ date_selectionnee.isoformat() }}" onchange="this.form.submit()">
+    </label>
+  </form>
+
+  <form method="post">
+    <input type="hidden" name="date" value="{{ date_selectionnee.isoformat() }}">
+    <table class="table">
+      <thead><tr><th>Élève</th><th>Absent</th><th>Justifiée</th><th>Motif</th></tr></thead>
+      <tbody>
+        {% for e in eleves %}
+          {% set a = absences_existantes.get(e.id) %}
+          <tr>
+            <td>{{ e.nom_complet }}</td>
+            <td><input type="checkbox" name="absent_{{ e.id }}" {% if a %}checked{% endif %}></td>
+            <td><input type="checkbox" name="justifiee_{{ e.id }}" {% if a and a.justifiee %}checked{% endif %}></td>
+            <td><input type="text" name="motif_{{ e.id }}" value="{{ a.motif if a else '' }}" placeholder="ex : certificat médical"></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit">Enregistrer les absences</button>
+  </form>
+  <p class="lien-secondaire">Coche uniquement les élèves absents. Un élève non coché est considéré présent — décocher une case déjà enregistrée corrige l'absence (la supprime).</p>
+{% endblock %}

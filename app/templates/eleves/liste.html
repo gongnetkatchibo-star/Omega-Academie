@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Élèves{% endblock %}
+{% block content %}
+  <h1>Élèves</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p class="lien-secondaire"><a href="{{ url_for('eleves.nouveau') }}">+ Inscrire un élève</a></p>
+  {% endif %}
+
+  {% if classes %}
+    <form method="get">
+      <label>Filtrer par classe
+        <select name="classe_id" onchange="this.form.submit()">
+          <option value="">Toutes les classes</option>
+          {% for c in classes %}
+            <option value="{{ c.id }}" {% if classe_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+  {% endif %}
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p class="lien-secondaire">
+      Exporter {% if classe_id %}cette classe{% else %}toutes les classes{% endif %} :
+      <a href="{{ url_for('eleves.export', fmt='csv', classe_id=classe_id) }}">CSV</a> ·
+      <a href="{{ url_for('eleves.export', fmt='xlsx', classe_id=classe_id) }}">Excel</a> ·
+      <a href="{{ url_for('eleves.export', fmt='pdf', classe_id=classe_id) }}">PDF</a>
+    </p>
+  {% endif %}
+
+  {% if eleves %}
+    <ul class="liste-demandes">
+      {% for e in eleves %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ e.nom_complet }}</strong>
+            <span>{{ e.matricule }} — {{ e.classe.nom }}</span>
+          </div>
+          <div class="actions">
+            <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">Voir le dossier</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun élève pour l'instant.</p>
+  {% endif %}
+{% endblock %}

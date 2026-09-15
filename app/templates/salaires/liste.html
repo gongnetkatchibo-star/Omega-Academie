@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Salaires{% endblock %}
+{% block content %}
+  <h1>Salaires du personnel</h1>
+  <p class="lien-secondaire"><a href="{{ url_for('salaires.nouveau') }}">+ Nouveau salaire</a></p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <div class="grille-cartes" style="margin-bottom:20px;">
+    <div class="carte-module"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
+    <div class="carte-module"><h3>Total impayé</h3><p class="solde-du">{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
+  </div>
+
+  {% if salaires %}
+    <table class="table">
+      <thead><tr><th>Personnel</th><th>Période</th><th>Montant</th><th>Statut</th><th>Date paiement</th><th></th></tr></thead>
+      <tbody>
+        {% for s in salaires %}
+          <tr>
+            <td>{{ s.personnel.nom_complet }} <span class="lien-secondaire">({{ s.personnel.role }})</span></td>
+            <td>{{ s.libelle_periode }}</td>
+            <td>{{ s.montant|int }}</td>
+            <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ s.statut }}</td>
+            <td>{{ s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "—" }}</td>
+            <td>
+              {% if s.statut == "impaye" %}
+                <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}" style="display:inline;">
+                  <button type="submit">Marquer payé</button>
+                </form>
+              {% endif %}
+              {% if acces("fondateur", "administrateur_general") %}
+                <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette ligne de salaire ?');">
+                  <button type="submit">Supprimer</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun salaire enregistré.</p>
+  {% endif %}
+{% endblock %}

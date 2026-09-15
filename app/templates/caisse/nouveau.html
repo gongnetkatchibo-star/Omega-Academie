@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Nouveau mouvement de caisse{% endblock %}
+{% block content %}
+  <h1>Nouveau mouvement de caisse</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <label>Date
+      <input type="date" name="date" value="{{ form.get('date', '') }}" required>
+    </label>
+    <label>Type
+      <select name="type" required>
+        <option value="">— Choisir —</option>
+        {% for t in types %}
+          <option value="{{ t }}" {% if form.get('type') == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Référence (optionnel)
+      <input type="text" name="reference" value="{{ form.get('reference', '') }}" placeholder="ex : n° pièce, n° chèque">
+    </label>
+    <label>Libellé
+      <input type="text" name="libelle" value="{{ form.get('libelle', '') }}" required>
+    </label>
+    <label>Recette (si entrée d'argent)
+      <input type="number" step="1" min="0" name="recette" value="{{ form.get('recette', '') }}">
+    </label>
+    <label>Dépense (si sortie d'argent)
+      <input type="number" step="1" min="0" name="depense" value="{{ form.get('depense', '') }}">
+    </label>
+    <label>Observation (optionnel)
+      <input type="text" name="observation" value="{{ form.get('observation', '') }}">
+    </label>
+    <button type="submit">Enregistrer</button>
+  </form>
+  <p class="lien-secondaire">Remplis soit « Recette », soit « Dépense » — jamais les deux sur la même ligne.</p>
+{% endblock %}
