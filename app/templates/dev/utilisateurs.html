@@ -55,7 +55,7 @@
           <td>
             <form id="form-{{ u.id }}" method="post" action="{{ url_for('dev.modifier_utilisateur', user_id=u.id) }}"></form>
             <button type="submit" form="form-{{ u.id }}">Enregistrer</button>
-            {% if u.id != current_user.id %}
+            {% if u.id != current_user.id and current_user.role == "developpeur" %}
               <form method="post" action="{{ url_for('dev.supprimer_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement le compte de {{ u.nom_complet }} ? Cette action est irréversible.');">
                 <button type="submit">Supprimer</button>
               </form>

@@ -63,8 +63,8 @@
         {% if acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
           <a href="{{ url_for('secretariat.demandes') }}">Demandes</a>
         {% endif %}
-        {% if current_user.role == "developpeur" %}
-          <a href="{{ url_for('dev.utilisateurs') }}">Développeur</a>
+        {% if current_user.role in ["developpeur", "fondateur"] %}
+          <a href="{{ url_for('dev.utilisateurs') }}">{{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
         {% endif %}
         <a href="{{ url_for('main.index') }}">Tableau de bord</a>
         <a href="{{ url_for('auth.deconnexion') }}">Déconnexion</a>

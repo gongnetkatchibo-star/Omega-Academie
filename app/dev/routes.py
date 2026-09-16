@@ -12,10 +12,10 @@ from app.utils import roles_required
 
 @dev_bp.route("/")
 @login_required
-@roles_required("developpeur")
+@roles_required("developpeur", "fondateur")
 def utilisateurs():
-    """Espace développeur : seule zone de l'application qui peut changer
-    le rôle ou le statut de n'importe quel compte. Le secrétariat ne peut
+    """Attribution des rôles et statuts — accessible au développeur et au
+    fondateur (décision du fondateur, sept. 2026). Le secrétariat ne peut
     qu'approuver/refuser (statut) les comptes en attente ; il ne peut pas
     changer un rôle une fois le compte créé."""
     q = request.args.get("q", "").strip()
@@ -32,7 +32,7 @@ def utilisateurs():
 
 @dev_bp.route("/utilisateur/<int:user_id>", methods=["POST"])
 @login_required
-@roles_required("developpeur")
+@roles_required("developpeur", "fondateur")
 def modifier_utilisateur(user_id):
     utilisateur = User.query.get_or_404(user_id)
 
@@ -47,8 +47,8 @@ def modifier_utilisateur(user_id):
         flash("Statut invalide.", "error")
         return redirect(url_for("dev.utilisateurs"))
 
-    if utilisateur.id == current_user.id and nouveau_role != "developpeur":
-        flash("Tu ne peux pas retirer ton propre rôle développeur depuis cet écran.", "error")
+    if utilisateur.id == current_user.id and nouveau_role != current_user.role:
+        flash("Tu ne peux pas changer ton propre rôle depuis cet écran — demande à un autre développeur ou fondateur de le faire.", "error")
         return redirect(url_for("dev.utilisateurs"))
 
     utilisateur.role = nouveau_role

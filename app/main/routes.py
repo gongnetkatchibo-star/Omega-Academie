@@ -44,6 +44,10 @@ def _modules_pour(role):
         modules.append({"label": "Demandes de comptes", "endpoint": "secretariat.demandes",
                          "description": "Approuver ou refuser les inscriptions en attente."})
 
+    if role == "fondateur":
+        modules.append({"label": "Rôles des comptes", "endpoint": "dev.utilisateurs",
+                         "description": "Attribuer un rôle à un compte."})
+
     modules.append({"label": "Bibliothèque", "endpoint": "bibliotheque.liste",
                      "description": "Livres, cours et exercices numériques."})
     modules.append({"label": "Annonces", "endpoint": "communication.liste",
