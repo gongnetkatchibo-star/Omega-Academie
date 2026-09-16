@@ -1,22 +1,28 @@
 :root {
-  --navy: #00387b;
-  --gold: #dea230;
-  --cream: #fffff7;
-  --carte: #f4f1e8;
+  --navy: #0F5FA6;        /* bleu vif de l'en-tête, comme Moodle */
+  --gold: #00A99D;        /* sarcelle — accent, onglets actifs (remplace l'or) */
+  --cream: #F4F1EA;       /* fond général */
+  --carte: #E8F6F8;       /* fond bleu clair des cartes de module */
+  --sombre: #3C4858;      /* pied de page fonce */
+  --alerte-fond: #E4F7F7; /* bandeau d'alerte clair */
 }
 
 body {
   font-family: -apple-system, "Segoe UI", sans-serif;
   background-color: var(--cream);
-  color: var(--navy);
+  color: #2c2c2c;
   margin: 0;
   padding: 0;
 }
 
+h1, h2, h3 {
+  color: var(--navy);
+}
+
 .navbar {
   background-color: var(--navy);
-  color: var(--cream);
-  padding: 16px 24px;
+  color: white;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,15 +43,55 @@ body {
   display: block;
 }
 
-.navbar-liens a {
-  color: var(--cream);
-  text-decoration: none;
-  margin-left: 16px;
+.navbar-marque span {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.navbar-utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
+}
+
+.navbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.navbar-onglets {
+  background: white;
+  border-bottom: 1px solid #e2ded2;
+  padding: 0 24px;
+  position: relative;
+}
+
+.navbar-liens {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.navbar-liens a {
+  color: #2c2c2c;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 12px 14px;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
 }
 
 .navbar-liens a:hover {
   color: var(--gold);
+  border-bottom-color: var(--gold);
 }
 
 .container {
@@ -233,16 +279,17 @@ textarea {
 .carte-module {
   display: block;
   background: var(--carte);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 16px;
   text-decoration: none;
   color: var(--navy);
-  border: 1px solid #e5e0d0;
-  transition: border-color 0.15s ease;
+  border: none;
+  border-top: 4px solid var(--gold);
+  transition: transform 0.15s ease;
 }
 
 .carte-module:hover {
-  border-color: var(--gold);
+  transform: translateY(-2px);
 }
 
 .carte-module h3 {
@@ -379,10 +426,13 @@ textarea {
   min-width: 0;
 }
 
-/* Page d'accueil publique */
+/* Page d'accueil publique — bandeau façon banniere de cours Moodle */
 .hero {
   text-align: center;
-  padding: 48px 20px 32px;
+  padding: 56px 20px;
+  background: linear-gradient(135deg, var(--gold), #007b73);
+  border-radius: 12px;
+  margin-top: 24px;
 }
 
 .hero-logo {
@@ -391,16 +441,19 @@ textarea {
   border-radius: 16px;
   object-fit: cover;
   margin-bottom: 16px;
+  background: white;
+  padding: 6px;
 }
 
 .hero h1 {
   font-size: 34px;
   margin: 0 0 6px;
-  color: var(--navy);
+  color: white;
 }
 
 .hero-devise {
-  color: var(--gold);
+  color: white;
+  opacity: 0.9;
   font-weight: 600;
   margin: 0 0 20px;
 }
@@ -408,7 +461,8 @@ textarea {
 .hero-texte {
   max-width: 560px;
   margin: 0 auto 28px;
-  color: #555;
+  color: white;
+  opacity: 0.95;
   line-height: 1.6;
 }
 
@@ -428,14 +482,14 @@ textarea {
 }
 
 .bouton-principal {
-  background: var(--navy);
-  color: var(--cream);
+  background: white;
+  color: var(--gold);
 }
 
 .bouton-secondaire {
-  background: var(--carte);
-  color: var(--navy);
-  border: 1px solid var(--navy);
+  background: transparent;
+  color: white;
+  border: 1px solid white;
 }
 
 .fonctionnalites {
@@ -447,7 +501,8 @@ textarea {
 
 .fonctionnalite {
   background: var(--carte);
-  border-radius: 12px;
+  border-top: 4px solid var(--gold);
+  border-radius: 4px;
   padding: 20px;
 }
 
@@ -466,8 +521,81 @@ textarea {
 .pied-accueil {
   text-align: center;
   padding: 24px 0;
-  color: #888;
+  color: #cfd3d9;
   font-size: 13px;
-  border-top: 1px solid #e5e0d0;
-  margin-top: 20px;
+  background: var(--sombre);
+  margin: 40px -20px -40px;
+}
+
+/* Responsive — telephone et petits ecrans */
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--cream);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.table thead, .table tbody, .table tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+@media (max-width: 800px) {
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-liens {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--navy);
+    padding: 10px 20px 20px;
+    z-index: 20;
+  }
+
+  .navbar-liens-ouvert {
+    display: flex !important;
+  }
+
+  .navbar-liens a {
+    margin: 2px 0;
+    color: var(--cream);
+    border-bottom: none;
+  }
+
+  .navbar-liens a:hover {
+    color: var(--gold);
+  }
+
+  .stats-layout {
+    flex-direction: column;
+  }
+
+  .stats-sidebar {
+    flex: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .hero h1 {
+    font-size: 26px;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
 }

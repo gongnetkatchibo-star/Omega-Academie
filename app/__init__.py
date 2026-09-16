@@ -37,6 +37,17 @@ def create_app(config_name=None):
             return role_a_acces(current_user.role, module, roles)
         return current_user.role == "developpeur" or current_user.role in roles
 
+    @app.template_filter("initiales")
+    def initiales(nom_complet):
+        """Deux lettres pour l'avatar rond du menu (comme Moodle) —
+        premières lettres du premier et du dernier mot du nom."""
+        if not nom_complet:
+            return "?"
+        mots = nom_complet.split()
+        if len(mots) == 1:
+            return mots[0][0].upper()
+        return (mots[0][0] + mots[-1][0]).upper()
+
     from app.models.user import User
 
     @login_manager.user_loader
