@@ -22,7 +22,7 @@
       <p>Votre compte sera activé dès validation par le secrétariat.</p>
     </div>
   {% else %}
-    <form method="post" id="form-inscription">
+    <form method="post" id="form-inscription" autocomplete="off">
       <label>Je suis…
         <select name="role" id="champ-role" required>
           <option value="">Choisir un profil</option>
@@ -34,33 +34,33 @@
 
       <div id="champs-standard">
         <label>Nom complet
-          <input type="text" name="nom_complet" id="champ-nom-complet">
+          <input type="text" name="nom_complet" id="champ-nom-complet" autocomplete="off">
         </label>
       </div>
 
       <div id="champs-parent" style="display:none;">
         <label>Prénom
-          <input type="text" name="prenom" id="champ-prenom">
+          <input type="text" name="prenom" id="champ-prenom" autocomplete="off">
         </label>
         <label>Nom
-          <input type="text" name="nom" id="champ-nom">
+          <input type="text" name="nom" id="champ-nom" autocomplete="off">
         </label>
         <label>Profession
-          <input type="text" name="profession" id="champ-profession">
+          <input type="text" name="profession" id="champ-profession" autocomplete="off">
         </label>
       </div>
 
       <label>Email
-        <input type="email" name="email" required>
+        <input type="email" name="email" autocomplete="off" required>
       </label>
       <label>Téléphone{% if True %} <span id="tel-obligatoire" style="display:none;">(obligatoire, unique)</span>{% endif %}
-        <input type="tel" name="telephone" id="champ-telephone">
+        <input type="tel" name="telephone" id="champ-telephone" autocomplete="off">
       </label>
       <label>Mot de passe
-        <input type="password" name="mot_de_passe" required>
+        <input type="password" name="mot_de_passe" autocomplete="new-password" required>
       </label>
       <label>Confirmer le mot de passe
-        <input type="password" name="confirmation" required>
+        <input type="password" name="confirmation" autocomplete="new-password" required>
       </label>
       <button type="submit">Envoyer ma demande</button>
     </form>

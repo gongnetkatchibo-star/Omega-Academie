@@ -14,9 +14,9 @@
     {% endif %}
   {% endwith %}
 
-  <form method="post">
+  <form method="post" autocomplete="off">
     <label>Code de vérification
-      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required autofocus>
+      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="off" required autofocus>
     </label>
     <button type="submit">Valider</button>
   </form>

@@ -16,12 +16,12 @@
     {% endif %}
   {% endwith %}
 
-  <form method="post">
+  <form method="post" autocomplete="off">
     <label>Email
-      <input type="email" name="email" required>
+      <input type="email" name="email" autocomplete="off" required>
     </label>
     <label>Mot de passe
-      <input type="password" name="mot_de_passe" required>
+      <input type="password" name="mot_de_passe" autocomplete="new-password" required>
     </label>
     <button type="submit">Se connecter</button>
   </form>
