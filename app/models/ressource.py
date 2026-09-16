@@ -17,6 +17,11 @@ class Ressource(db.Model):
     ajoute_par_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     date_ajout = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Le bibliothécaire peut verrouiller une ressource sensible ou rare :
+    # elle reste consultable en ligne (lecture inline) mais ne peut plus
+    # être téléchargée ni sortir dans un export groupé (sept. 2026).
+    consultation_sur_place = db.Column(db.Boolean, default=False, nullable=False)
+
     ajoute_par = db.relationship("User")
 
     def __repr__(self):

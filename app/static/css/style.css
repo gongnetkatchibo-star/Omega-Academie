@@ -599,3 +599,26 @@ textarea {
     padding: 0 14px;
   }
 }
+
+/* Champ mot de passe avec bouton afficher/masquer */
+.champ-mdp-conteneur {
+  position: relative;
+  display: flex;
+}
+
+.champ-mdp-conteneur input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.mdp-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+}

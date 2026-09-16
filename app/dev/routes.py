@@ -59,6 +59,64 @@ def modifier_utilisateur(user_id):
     return redirect(url_for("dev.utilisateurs"))
 
 
+@dev_bp.route("/utilisateur/<int:user_id>/supprimer", methods=["POST"])
+@login_required
+@roles_required("developpeur")
+def supprimer_utilisateur(user_id):
+    """Suppression réelle d'un compte — jamais un simple changement de
+    statut. On nettoie d'abord tout ce qui pointe vers lui pour ne
+    jamais laisser une donnée orpheline ni casser l'intégrité de la
+    base (sept. 2026)."""
+    from app.models.eleve import Eleve
+    from app.models.enseignant import Enseignant
+    from app.models.paiement import Paiement
+    from app.models.mouvement_caisse import MouvementCaisse
+    from app.models.salaire import Salaire
+    from app.models.annonce import Annonce
+    from app.models.test_niveau import TestNiveau
+
+    utilisateur = User.query.get_or_404(user_id)
+
+    if utilisateur.id == current_user.id:
+        flash("Tu ne peux pas supprimer ton propre compte depuis cet écran.", "error")
+        return redirect(url_for("dev.utilisateurs"))
+
+    # On bloque si des salaires existent pour cette personne — les
+    # supprimer silencieusement effacerait un historique de paiement
+    # réel. Il faut d'abord les traiter (ex. les réaffecter) à la main.
+    if Salaire.query.filter_by(personnel_id=utilisateur.id).count() > 0:
+        flash(
+            f"Impossible de supprimer {utilisateur.nom_complet} : des salaires lui sont "
+            f"rattachés dans l'historique. Traite-les d'abord dans le module Salaires.",
+            "error",
+        )
+        return redirect(url_for("dev.utilisateurs"))
+
+    # L'association élève-parents (table de liaison) est nettoyée
+    # automatiquement par SQLAlchemy à la suppression.
+
+    eleve_lie = Eleve.query.filter_by(user_id=utilisateur.id).first()
+    if eleve_lie:
+        eleve_lie.user_id = None
+
+    profil_enseignant = Enseignant.query.filter_by(user_id=utilisateur.id).first()
+    if profil_enseignant:
+        db.session.delete(profil_enseignant)  # supprime aussi ses affectations (cascade)
+
+    Paiement.query.filter_by(enregistre_par_id=utilisateur.id).update({"enregistre_par_id": None})
+    MouvementCaisse.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})
+    Salaire.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})
+    Annonce.query.filter_by(auteur_id=utilisateur.id).update({"auteur_id": None})
+    TestNiveau.query.filter_by(evaluateur_id=utilisateur.id).update({"evaluateur_id": None})
+
+    nom = utilisateur.nom_complet
+    db.session.delete(utilisateur)
+    db.session.commit()
+
+    flash(f"Compte de {nom} supprimé définitivement.", "info")
+    return redirect(url_for("dev.utilisateurs"))
+
+
 ROLES_MATRICE = [r for r in ROLES if r != "developpeur"]  # accès complet, inutile à afficher/modifier
 
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import champ_mot_de_passe %}
 {% block title %}Connexion{% endblock %}
 {% block content %}
   <div class="logo-page">
@@ -21,7 +22,7 @@
       <input type="email" name="email" autocomplete="off" required>
     </label>
     <label>Mot de passe
-      <input type="password" name="mot_de_passe" autocomplete="new-password" required>
+      {{ champ_mot_de_passe("mot_de_passe") }}
     </label>
     <button type="submit">Se connecter</button>
   </form>

@@ -29,9 +29,21 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ r.titre }}</strong>
+            {% if r.consultation_sur_place %}<span class="badge-retard">🔒 Consultation sur place</span>{% endif %}
             <span>{{ r.type }}{% if r.matiere %} · {{ r.matiere }}{% endif %}</span>
           </div>
-          <div class="actions"><a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}">Télécharger</a></div>
+          <div class="actions">
+            {% if r.consultation_sur_place %}
+              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}" target="_blank">Consulter en ligne</a>
+            {% else %}
+              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}">Télécharger</a>
+            {% endif %}
+            {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
+              <form method="post" action="{{ url_for('bibliotheque.basculer_verrouillage', ressource_id=r.id) }}" style="display:inline;">
+                <button type="submit">{{ "Déverrouiller" if r.consultation_sur_place else "Verrouiller (sur place)" }}</button>
+              </form>
+            {% endif %}
+          </div>
         </li>
       {% endfor %}
     </ul>

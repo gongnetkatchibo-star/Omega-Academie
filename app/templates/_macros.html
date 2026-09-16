@@ -15,3 +15,15 @@
          value="{% if valeur not in options %}{{ valeur|int }}{% endif %}"
          placeholder="Montant exact">
 {% endmacro %}
+
+{% macro champ_mot_de_passe(name, autocomplete="new-password", required=True) %}
+  <div class="champ-mdp-conteneur">
+    <input type="password" name="{{ name }}" id="mdp-{{ name }}" autocomplete="{{ autocomplete }}" {% if required %}required{% endif %}>
+    <button type="button" class="mdp-toggle" onclick="
+        var champ = document.getElementById('mdp-{{ name }}');
+        var visible = champ.type === 'text';
+        champ.type = visible ? 'password' : 'text';
+        this.textContent = visible ? '👁' : '🙈';
+      " aria-label="Afficher ou masquer le mot de passe">👁</button>
+  </div>
+{% endmacro %}

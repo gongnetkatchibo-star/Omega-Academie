@@ -44,6 +44,7 @@ def nouvelle():
         matiere = request.form.get("matiere", "").strip()
         description = request.form.get("description", "").strip()
         fichier = request.files.get("fichier")
+        verrouillee = request.form.get("consultation_sur_place") == "on"
 
         if not titre or type_ not in TYPES_RESSOURCE or not fichier or fichier.filename == "":
             flash("Merci de remplir le titre, le type et de choisir un fichier.", "error")
@@ -56,6 +57,7 @@ def nouvelle():
         db.session.add(Ressource(
             titre=titre, type=type_, matiere=matiere or None, description=description or None,
             nom_fichier=nom_unique, ajoute_par_id=current_user.id,
+            consultation_sur_place=verrouillee,
         ))
         db.session.commit()
         flash("Ressource ajoutée.", "info")
@@ -68,9 +70,26 @@ def nouvelle():
 @login_required
 def telecharger(ressource_id):
     ressource = Ressource.query.get_or_404(ressource_id)
+    if ressource.consultation_sur_place:
+        # Verrouillée par le bibliothécaire : consultable en ligne
+        # (ouverture dans le navigateur), mais jamais enregistrable
+        # comme un vrai téléchargement (sept. 2026).
+        return send_from_directory(_dossier_upload(), ressource.nom_fichier, as_attachment=False)
     return send_from_directory(
         _dossier_upload(), ressource.nom_fichier, as_attachment=True, download_name=ressource.titre
     )
+
+
+@bibliotheque_bp.route("/<int:ressource_id>/verrouiller", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="bibliotheque")
+def basculer_verrouillage(ressource_id):
+    ressource = Ressource.query.get_or_404(ressource_id)
+    ressource.consultation_sur_place = not ressource.consultation_sur_place
+    db.session.commit()
+    etat = "verrouillée (consultation sur place)" if ressource.consultation_sur_place else "déverrouillée (téléchargeable)"
+    flash(f"« {ressource.titre} » est maintenant {etat}.", "info")
+    return redirect(url_for("bibliotheque.liste"))
 
 
 @bibliotheque_bp.route("/importer", methods=["GET", "POST"])
@@ -84,6 +103,7 @@ def importer():
         type_ = request.form.get("type")
         matiere = request.form.get("matiere", "").strip()
         fichiers = request.files.getlist("fichiers")
+        verrouillee = request.form.get("consultation_sur_place") == "on"
 
         if type_ not in TYPES_RESSOURCE or not fichiers or all(f.filename == "" for f in fichiers):
             flash("Merci de choisir un type et au moins un fichier.", "error")
@@ -100,6 +120,7 @@ def importer():
             db.session.add(Ressource(
                 titre=titre, type=type_, matiere=matiere or None,
                 nom_fichier=nom_unique, ajoute_par_id=current_user.id,
+                consultation_sur_place=verrouillee,
             ))
             nb_importes += 1
 
@@ -120,10 +141,13 @@ def exporter():
     requete = Ressource.query
     if type_filtre:
         requete = requete.filter_by(type=type_filtre)
-    ressources = requete.all()
+    # Une ressource verrouillée (consultation sur place) ne sort jamais
+    # dans un export groupé — sinon le verrouillage individuel ne
+    # servirait à rien (sept. 2026).
+    ressources = requete.filter_by(consultation_sur_place=False).all()
 
     if not ressources:
-        flash("Aucune ressource à exporter.", "error")
+        flash("Aucune ressource téléchargeable à exporter (les ressources verrouillées ne sont jamais incluses).", "error")
         return redirect(url_for("bibliotheque.liste"))
 
     tampon = io.BytesIO()
