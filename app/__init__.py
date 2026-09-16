@@ -134,5 +134,7 @@ def create_app(config_name=None):
     # commande manuellement (sept. 2026).
     with app.app_context():
         db.create_all()
+        from app.services.auto_migration import ajouter_colonnes_manquantes
+        ajouter_colonnes_manquantes(app, db)
 
     return app
