@@ -1,30 +1,17 @@
 """Notifications automatiques par email — paiement enregistré, nouvelle
 annonce (document complémentaire, sept. 2026).
 
-Réutilise le même principe que le code 2FA et la réinitialisation de mot
-de passe : envoi réel si MAIL_SERVER est configuré, sinon on se contente
-de logguer (jamais d'erreur qui casserait l'action principale — une
-notification ratée ne doit jamais empêcher un paiement d'être enregistré)."""
+Envoyées via l'API Brevo (voir app/extensions.py) — jamais SMTP, bloqué
+par Render sur son plan gratuit. Ne lève jamais d'exception : une
+notification ratée ne doit jamais empêcher un paiement d'être enregistré."""
 
-from flask import current_app
-from flask_mail import Message
-
-from app.extensions import mail, envoyer_email_securise
+from app.extensions import envoyer_email
 
 
 def notifier(destinataires, sujet, corps):
     """destinataires : liste d'emails (les entrées vides/None sont
-    ignorées). Ne lève jamais d'exception — un échec d'envoi est
-    seulement consigné dans les logs."""
-    destinataires = [d for d in destinataires if d]
-    if not destinataires or not current_app.config.get("MAIL_SERVER"):
-        return False
-    try:
-        msg = Message(subject=sujet, recipients=destinataires, body=corps)
-        return envoyer_email_securise(msg)
-    except Exception:
-        current_app.logger.exception("Échec de l'envoi d'une notification par email.")
-        return False
+    ignorées)."""
+    return envoyer_email(destinataires, sujet, corps)
 
 
 def notifier_paiement(paiement, eleve):

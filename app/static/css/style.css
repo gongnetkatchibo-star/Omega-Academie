@@ -107,6 +107,12 @@ form {
   margin-top: 16px;
 }
 
+/* Formulaires de connexion/inscription — plus étroits, pas besoin de
+   toute la largeur de page pour un email et un mot de passe. */
+.formulaire-etroit {
+  max-width: 380px;
+}
+
 label {
   display: flex;
   flex-direction: column;

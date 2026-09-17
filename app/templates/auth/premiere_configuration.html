@@ -9,7 +9,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
-  <form method="post" autocomplete="off">
+  <form method="post" autocomplete="off" class="formulaire-etroit">
     <label>Nom complet
       <input type="text" name="nom_complet" autocomplete="off" required>
     </label>

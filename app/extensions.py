@@ -11,26 +11,44 @@ login_manager.login_message = "Connectez-vous pour accéder à cette page."
 mail = Mail()
 
 
-def envoyer_email_securise(msg, delai_max=10):
-    """Envoie un email avec un délai maximum strict.
+def envoyer_email(destinataires, sujet, corps):
+    """Envoie un email via l'API Brevo (HTTPS, port 443) — jamais via
+    SMTP classique (ports 25/465/587), que Render bloque sur son plan
+    gratuit depuis le 26 septembre 2025 (constaté sept. 2026, cause du
+    blocage indéfini corrigé précédemment). Passer par une API web est
+    la solution recommandée par Render lui-même dans cette situation.
 
-    Sans ça, une connexion SMTP qui reste bloquée (réseau, pare-feu,
-    serveur qui ne répond pas) fait attendre le serveur indéfiniment —
-    jusqu'à ce que Render tue le processus de force (SIGKILL), plantant
-    la page entière avec une "Internal Server Error", quelle que soit la
-    boîte mail utilisée (constaté sept. 2026, worker timeout sur Render).
+    destinataires : liste d'emails. Ne lève jamais d'exception — un
+    échec d'envoi ne doit jamais faire planter la page qui l'a demandé.
+    Retourne True si l'envoi a réussi, False sinon (pas de clé API
+    configurée, ou erreur réseau/authentification)."""
+    import requests
+    from flask import current_app
 
-    Retourne True si l'envoi a réussi, False sinon (jamais d'exception
-    qui remonte — un email qui ne part pas ne doit jamais faire planter
-    la page)."""
-    import socket
-
-    ancien_delai = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(delai_max)
-    try:
-        mail.send(msg)
-        return True
-    except Exception:
+    destinataires = [d for d in destinataires if d]
+    cle_api = current_app.config.get("BREVO_API_KEY")
+    if not destinataires or not cle_api:
         return False
-    finally:
-        socket.setdefaulttimeout(ancien_delai)
+
+    expediteur_email = current_app.config.get("MAIL_DEFAULT_SENDER") or "no-reply@omega-academie.local"
+    expediteur_nom = current_app.config.get("MAIL_DEFAULT_SENDER_NOM", "Omega Académie")
+
+    corps_html = "<br>".join(ligne for ligne in corps.split("\n"))
+
+    try:
+        reponse = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={"api-key": cle_api, "Content-Type": "application/json", "accept": "application/json"},
+            json={
+                "sender": {"name": expediteur_nom, "email": expediteur_email},
+                "to": [{"email": d} for d in destinataires],
+                "subject": sujet,
+                "htmlContent": corps_html,
+                "textContent": corps,
+            },
+            timeout=10,
+        )
+        return reponse.status_code in (200, 201)
+    except Exception:
+        current_app.logger.exception("Échec de l'envoi d'un email via Brevo.")
+        return False

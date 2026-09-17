@@ -28,6 +28,11 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
+    MAIL_DEFAULT_SENDER_NOM = os.environ.get("MAIL_DEFAULT_SENDER_NOM", "Omega Académie")
+
+    # Envoi d'email via l'API Brevo (HTTPS) — remplace le SMTP classique,
+    # bloqué par Render sur son plan gratuit (sept. 2026).
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
 
     # Format officiel des matricules pour l'année scolaire en cours,
     # fourni par la direction (fiche 2026-2027) : OA26-CLASSE-XXX.

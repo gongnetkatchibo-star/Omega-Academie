@@ -1,9 +1,8 @@
 from flask import render_template, redirect, url_for, flash, request, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from flask_mail import Message
 
-from app.extensions import db, mail, envoyer_email_securise
+from app.extensions import db, envoyer_email
 from app.models.user import User
 from app.auth import auth_bp
 
@@ -33,75 +32,44 @@ def email_depuis_token(token, max_age=DUREE_VALIDITE_TOKEN):
 
 
 def _envoyer_email_reset(user, lien_reset):
-    """Envoie l'email si un serveur SMTP est configuré (MAIL_SERVER dans
-    .env). Retourne True si l'envoi a réussi, False sinon (pas configuré,
-    ou erreur réseau/identifiants)."""
-    if not current_app.config.get("MAIL_SERVER"):
-        return False
-    try:
-        msg = Message(
-            subject="Réinitialisation de votre mot de passe — Omega Académie",
-            recipients=[user.email],
-            body=(
-                f"Bonjour {user.nom_complet},\n\n"
-                f"Voici le lien pour choisir un nouveau mot de passe "
-                f"(valable 30 minutes) :\n{lien_reset}\n\n"
-                f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
-            ),
-        )
-        return envoyer_email_securise(msg)
-    except Exception:
-        current_app.logger.exception("Échec de l'envoi de l'email de réinitialisation.")
-        return False
+    """Envoie l'email via Brevo si une clé API est configurée. Retourne
+    True si l'envoi a réussi, False sinon (pas configuré, ou erreur)."""
+    corps = (
+        f"Bonjour {user.nom_complet},\n\n"
+        f"Voici le lien pour choisir un nouveau mot de passe "
+        f"(valable 30 minutes) :\n{lien_reset}\n\n"
+        f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
+    )
+    return envoyer_email([user.email], "Réinitialisation de votre mot de passe — Omega Académie", corps)
 
 
 def _envoyer_email_reset_multi(destinataires, user, lien_reset):
     """Comme _envoyer_email_reset, mais pour un ou plusieurs destinataires
     (cas du compte élève : le lien part chez le ou les parents liés, pas
     sur l'email généré automatiquement à l'inscription)."""
-    if not current_app.config.get("MAIL_SERVER"):
-        return False
-    try:
-        msg = Message(
-            subject="Réinitialisation de mot de passe — Omega Académie",
-            recipients=destinataires,
-            body=(
-                f"Bonjour,\n\n"
-                f"Une demande de réinitialisation de mot de passe a été faite pour "
-                f"le compte de {user.nom_complet}.\n\n"
-                f"Voici le lien pour choisir un nouveau mot de passe "
-                f"(valable 30 minutes) :\n{lien_reset}\n\n"
-                f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
-            ),
-        )
-        return envoyer_email_securise(msg)
-    except Exception:
-        current_app.logger.exception("Échec de l'envoi de l'email de réinitialisation.")
-        return False
+    corps = (
+        f"Bonjour,\n\n"
+        f"Une demande de réinitialisation de mot de passe a été faite pour "
+        f"le compte de {user.nom_complet}.\n\n"
+        f"Voici le lien pour choisir un nouveau mot de passe "
+        f"(valable 30 minutes) :\n{lien_reset}\n\n"
+        f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
+    )
+    return envoyer_email(destinataires, "Réinitialisation de mot de passe — Omega Académie", corps)
 
 
 def _envoyer_code_verification(user, code):
     """Code envoyé une seule fois, à l'inscription, pour vérifier que
     l'email fourni est valide et accessible — plus de code demandé
     ensuite à chaque connexion (décision de la direction, sept. 2026)."""
-    if not current_app.config.get("MAIL_SERVER"):
-        return False
-    try:
-        msg = Message(
-            subject="Vérifie ton email — Omega Académie",
-            recipients=[user.email],
-            body=(
-                f"Bonjour {user.nom_complet},\n\n"
-                f"Voici ton code de vérification d'inscription "
-                f"(valable 10 minutes) : {code}\n\n"
-                f"Une fois vérifié, ta demande de compte sera transmise "
-                f"au secrétariat pour validation."
-            ),
-        )
-        return envoyer_email_securise(msg)
-    except Exception:
-        current_app.logger.exception("Échec de l'envoi du code de vérification d'inscription.")
-        return False
+    corps = (
+        f"Bonjour {user.nom_complet},\n\n"
+        f"Voici ton code de vérification d'inscription "
+        f"(valable 10 minutes) : {code}\n\n"
+        f"Une fois vérifié, ta demande de compte sera transmise "
+        f"au secrétariat pour validation."
+    )
+    return envoyer_email([user.email], "Vérifie ton email — Omega Académie", corps)
 
 
 @auth_bp.route("/inscription", methods=["GET", "POST"])
