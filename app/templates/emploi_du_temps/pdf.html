@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; color: #0F5FA6; font-size: 11px; }
+  h1 { color: #0F5FA6; font-size: 18px; margin-bottom: 2px; }
+  h2 { color: #555555; font-size: 13px; font-weight: normal; margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  th { background-color: #0F5FA6; color: #FFFFFF; padding: 6px; font-size: 10px; }
+  td { border: 1px solid #cccccc; padding: 6px; font-size: 10px; vertical-align: top; }
+  td.heure { background-color: #F4F1E8; font-weight: bold; white-space: nowrap; }
+  .matiere { font-weight: bold; }
+  .enseignant { color: #555555; font-size: 9px; }
+  .entete { border-bottom: 2px solid #00A99D; padding-bottom: 8px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="entete">
+    <h1>{{ etablissement }} — Emploi du temps</h1>
+    <h2>Année scolaire {{ annee_scolaire }} — Classe {{ classe.nom }}{% if enseignant %} — Enseignant : {{ enseignant.nom_complet }}{% endif %}</h2>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Heure</th>
+        {% for jour in jours %}<th>{{ jour }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in grille %}
+        <tr>
+          <td class="heure">{{ ligne.heure_debut }}–{{ ligne.heure_fin }}</td>
+          {% for jour in jours %}
+            {% set c = ligne.jours[jour] %}
+            <td>
+              {% if c %}
+                <span class="matiere">{{ c.matiere }}</span><br>
+                {% if c.enseignant %}<span class="enseignant">{{ c.enseignant.nom_complet }}</span>{% endif %}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

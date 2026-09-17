@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Caisse{% endblock %}
+{% block content %}
+  <h1>Caisse générale</h1>
+  <p class="lien-secondaire">
+    <a href="{{ url_for('caisse.nouveau_paiement') }}">+ Nouveau paiement officiel (scolarité)</a>
+    ·
+    <a href="{{ url_for('caisse.nouveau') }}">+ Autre mouvement (recette/dépense)</a>
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <div class="grille-cartes" style="margin-bottom:20px;">
+    <div class="carte-module carte-stat">
+      <h3>Total recettes</h3>
+      <p>{{ "%.0f"|format(total_recettes) }} FCFA</p>
+    </div>
+    <div class="carte-module carte-stat">
+      <h3>Total dépenses</h3>
+      <p>{{ "%.0f"|format(total_depenses) }} FCFA</p>
+    </div>
+    <div class="carte-module carte-stat">
+      <h3>Solde actuel</h3>
+      <p class="{% if solde_actuel < 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(solde_actuel) }} FCFA</p>
+    </div>
+  </div>
+
+  {% if lignes %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th><th>Type</th><th>Référence</th><th>Libellé</th><th>Élève</th>
+          <th>Recette</th><th>Dépense</th><th>Solde</th><th>Responsable</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lignes %}
+          <tr>
+            <td>{{ l.mouvement.date.strftime("%d/%m/%Y") }}</td>
+            <td>{{ l.mouvement.type }} {% if l.mouvement.automatique %}<span class="badge-retard">auto</span>{% endif %}</td>
+            <td>{{ l.mouvement.reference or "—" }}</td>
+            <td>{{ l.mouvement.libelle }}</td>
+            <td>
+              {% if l.mouvement.eleve %}
+                <a href="{{ url_for('eleves.detail', eleve_id=l.mouvement.eleve.id) }}">{{ l.mouvement.eleve.nom_complet }}</a>
+              {% else %}—{% endif %}
+            </td>
+            <td>{{ "%.0f"|format(l.mouvement.recette) if l.mouvement.recette else "—" }}</td>
+            <td>{{ "%.0f"|format(l.mouvement.depense) if l.mouvement.depense else "—" }}</td>
+            <td class="{% if l.solde < 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(l.solde) }}</td>
+            <td>{{ l.mouvement.responsable.nom_complet if l.mouvement.responsable else "—" }}</td>
+            <td>
+              <a href="{{ url_for('caisse.recu_pdf', mouvement_id=l.mouvement.id) }}">Reçu PDF</a>
+              {% if not l.mouvement.automatique %}
+                · <a href="{{ url_for('caisse.modifier', mouvement_id=l.mouvement.id) }}">Corriger</a>
+                {% if acces("fondateur", "administrateur_general") %}
+                  · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce mouvement de caisse ?');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit">Supprimer</button>
+                    </form>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun mouvement de caisse pour l'instant.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Mon emploi du temps{% endblock %}
+{% block content %}
+  <h1>Mon emploi du temps</h1>
+  {% if not profil %}
+    <p>Aucun profil enseignant associé à votre compte pour l'instant — contactez la direction.</p>
+  {% elif not classes %}
+    <p>Aucune classe ne t'est encore attribuée.</p>
+  {% else %}
+    <p class="lien-secondaire">Sélectionne une classe pour voir son emploi du temps complet et le télécharger en PDF.</p>
+    <div class="grille-cartes">
+      {% for c in classes %}
+        <a class="carte-module" href="{{ url_for('emploi_du_temps.moi_classe', classe_id=c.id) }}">
+          <h3>{{ c.nom }}</h3>
+          <p>Voir mon emploi du temps dans cette classe</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

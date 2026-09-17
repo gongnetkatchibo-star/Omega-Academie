@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Permissions{% endblock %}
+{% block content %}
+  <h1>Permissions par rôle</h1>
+  <p class="lien-secondaire">Coche pour autoriser, décoche pour retirer — l'accès de chaque rôle à chaque module se recalcule immédiatement. Le rôle développeur garde toujours un accès complet et n'apparaît pas ici.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('dev.enregistrer_permissions') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="overflow-x:auto;">
+      <table class="table-dev">
+        <thead>
+          <tr>
+            <th>Rôle</th>
+            {% for cle, libelle in modules %}<th>{{ libelle }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for role in roles %}
+            <tr>
+              <td>{{ role }}</td>
+              {% for cle, libelle in modules %}
+                <td style="text-align:center;">
+                  <input type="checkbox" name="{{ role }}__{{ cle }}" {% if etat[(role, cle)] %}checked{% endif %}>
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="submit" style="margin-top:16px;">Enregistrer les permissions</button>
+  </form>
+{% endblock %}

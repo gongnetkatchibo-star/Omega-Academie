@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}{{ eleve.nom_complet }}{% endblock %}
+{% block content %}
+  <h1>{{ eleve.nom_complet }}</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <p><strong>Matricule :</strong> {{ eleve.matricule }}</p>
+  <p><strong>Classe actuelle :</strong> {{ eleve.classe.nom }}</p>
+  <p><strong>Date de naissance :</strong> {{ eleve.date_naissance or "—" }}</p>
+  <p><strong>Téléphone parent/tuteur :</strong> {{ eleve.telephone_parent or "—" }}</p>
+  <p><strong>Inscrit le :</strong> {{ eleve.date_inscription.strftime("%d/%m/%Y") }}</p>
+  <p><strong>Parents liés :</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p>
+      <strong>Statut du dossier (automatique) :</strong>
+      <span class="{% if eleve.statut_dossier == 'complet' %}solde-ok{% else %}solde-du{% endif %}">{{ eleve.statut_dossier }}</span>
+    </p>
+    {% if eleve.statut_dossier != "complet" %}
+      <p class="lien-secondaire">
+        Il manque :
+        {% if not eleve.date_naissance %}date de naissance{% endif %}
+        {% if not eleve.sexe %}· sexe{% endif %}
+        {% if not eleve.parents %}· au moins un parent lié{% endif %}
+        {% if not eleve.telephone_parent and not (eleve.parents|selectattr('telephone')|list) %}· téléphone de contact{% endif %}
+      </p>
+    {% endif %}
+  {% endif %}
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <h2>Parents ({{ eleve.parents|length }}/{{ max_parents }})</h2>
+    {% if eleve.parents %}
+      <ul>
+        {% for p in eleve.parents %}
+          <li>
+            {{ p.nom_complet }} ({{ p.email }}{% if p.telephone %} — {{ p.telephone }}{% endif %})
+            <form method="post" action="{{ url_for('eleves.retirer_parent', eleve_id=eleve.id, parent_id=p.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Retirer</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if eleve.parents|length < max_parents %}
+      {% set parents_restants = parents_disponibles|rejectattr('id', 'in', eleve.parents|map(attribute='id')|list)|list %}
+      {% if parents_restants %}
+        <form method="post" action="{{ url_for('eleves.ajouter_parent', eleve_id=eleve.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label>Ajouter un parent
+            <select name="parent_id">
+              {% for p in parents_restants %}
+                <option value="{{ p.id }}">{{ p.nom_complet }} ({{ p.email }})</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit">Lier</button>
+        </form>
+      {% else %}
+        <p class="lien-secondaire">Aucun autre compte parent actif disponible pour l'instant.</p>
+      {% endif %}
+    {% else %}
+      <p class="lien-secondaire">Maximum de {{ max_parents }} parents atteint — retire un parent avant d'en ajouter un autre.</p>
+    {% endif %}
+  {% endif %}
+
+  <p class="lien-secondaire">
+    {% if acces("enseignant", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
+      <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id) }}">Voir le bulletin</a>
+    {% endif %}
+    {% if acces("comptable", "fondateur", "administrateur_general") %}
+      · <a href="{{ url_for('finances.detail', eleve_id=eleve.id) }}">Finances</a>
+    {% endif %}
+    · <a href="{{ url_for('absences.historique', eleve_id=eleve.id) }}">Absences</a>
+  </p>
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p>
+      <strong>Moyenne générale ({{ eleve.classe.annee_scolaire }}) :</strong>
+      {% if moyenne is not none %}
+        {{ moyenne }}/{{ 10 if eleve.classe.niveau <= 6 else 20 }} —
+        <span class="{% if reussite %}solde-ok{% else %}solde-du{% endif %}">
+          {{ "Admissible" if reussite else "Sous le seuil requis" }}
+        </span>
+        (seuil : {{ seuil }})
+      {% else %}
+        Aucune note enregistrée cette année — admission indéterminable.
+      {% endif %}
+    </p>
+    {% if classe_superieure %}
+      <form method="post" action="{{ url_for('eleves.passage', eleve_id=eleve.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">Évaluer et faire passer en {{ classe_superieure.nom }}</button>
+      </form>
+      <p class="lien-secondaire">L'admission est déterminée automatiquement à partir de la moyenne ci-dessus — pas de passage possible sans notes suffisantes.</p>
+    {% else %}
+      <p class="lien-secondaire">Aucune classe supérieure définie après {{ eleve.classe.nom }}.</p>
+    {% endif %}
+  {% endif %}
+
+  <h2>Historique scolaire</h2>
+  {% if eleve.historique %}
+    <ul class="liste-demandes">
+      {% for h in eleve.historique %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ h.annee_scolaire }}</strong>
+            <span>{{ h.classe.nom }} — {{ h.resultat }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun historique.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Erreur{% endblock %}
+{% block content %}
+  <h1>Une erreur est survenue</h1>
+  <p>Le problème a été enregistré. Réessaie dans quelques instants, ou contacte le développeur si ça persiste.</p>
+  <p class="lien-secondaire"><a href="{{ url_for('main.index') }}">Retour au tableau de bord</a></p>
+{% endblock %}

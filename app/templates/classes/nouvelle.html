@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import champ_montant %}
+{% block title %}Nouvelle classe{% endblock %}
+{% block content %}
+  <h1>Nouvelle classe</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Nom de la classe
+      <input type="text" name="nom" placeholder="ex : CM2 ou 6ème A" required>
+    </label>
+    <label>Niveau
+      <select name="niveau" required>
+        <option value="">Choisir un niveau</option>
+        {% for position, nom_niveau in niveaux %}
+          <option value="{{ position }}">{{ nom_niveau }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Année scolaire
+      <input type="text" name="annee_scolaire" placeholder="ex : 2025-2026" required>
+    </label>
+    <label>Frais d'inscription
+      {{ champ_montant("frais_inscription", 0, 30000) }}
+    </label>
+    <label>Frais tranche 1 (novembre)
+      {{ champ_montant("frais_tranche1") }}
+    </label>
+    <label>Frais tranche 2 (février)
+      {{ champ_montant("frais_tranche2") }}
+    </label>
+    <button type="submit">Créer la classe</button>
+  </form>
+  <p class="lien-secondaire">Si d'autres classes du même groupe (CP1-CE2, CM1-CM2, ou 6ème-4ème) ont déjà un échéancier, il sera repris automatiquement — laisse alors les montants à 0.</p>
+{% endblock %}

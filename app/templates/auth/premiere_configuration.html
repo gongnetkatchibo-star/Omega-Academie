@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import champ_mot_de_passe %}
+{% block title %}Première configuration{% endblock %}
+{% block content %}
+  <h1>Première configuration</h1>
+  <p class="lien-secondaire">Cette page ne fonctionne qu'une seule fois — tant qu'aucun compte n'existe encore dans l'application. Elle crée le tout premier compte, avec accès complet (développeur).</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Nom complet
+      <input type="text" name="nom_complet" autocomplete="off" required>
+    </label>
+    <label>Email
+      <input type="email" name="email" autocomplete="off" required>
+    </label>
+    <label>Mot de passe
+      {{ champ_mot_de_passe("mot_de_passe") }}
+    </label>
+    <label>Confirmer le mot de passe
+      {{ champ_mot_de_passe("confirmation") }}
+    </label>
+    <button type="submit">Créer le compte développeur</button>
+  </form>
+{% endblock %}

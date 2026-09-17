@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Enseignants{% endblock %}
+{% block content %}
+  <h1>Enseignants</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
+    <p class="lien-secondaire"><a href="{{ url_for('enseignants.nouveau') }}">+ Créer un profil enseignant</a></p>
+    <p class="lien-secondaire">
+      Exporter :
+      <a href="{{ url_for('enseignants.export', fmt='csv') }}">CSV</a> ·
+      <a href="{{ url_for('enseignants.export', fmt='xlsx') }}">Excel</a> ·
+      <a href="{{ url_for('enseignants.export', fmt='pdf') }}">PDF</a>
+    </p>
+  {% endif %}
+
+  {% if enseignants %}
+    <ul class="liste-demandes">
+      {% for e in enseignants %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ e.nom_complet }}</strong>
+            <span>{{ e.specialite or "Spécialité non précisée" }} — {{ e.affectations|length }} classe(s)</span>
+          </div>
+          <div class="actions"><a href="{{ url_for('enseignants.detail', enseignant_id=e.id) }}">Voir</a></div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun profil enseignant pour l'instant.</p>
+  {% endif %}
+{% endblock %}

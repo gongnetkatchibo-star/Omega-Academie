@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Inscrire un élève{% endblock %}
+{% block content %}
+  <h1>Inscrire un élève</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if classes %}
+    <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Nom complet
+        <input type="text" name="nom_complet" required>
+      </label>
+      <label>Date de naissance
+        <input type="date" name="date_naissance">
+      </label>
+      <label>Sexe
+        <select name="sexe">
+          <option value="">Non précisé</option>
+          <option value="M">Masculin</option>
+          <option value="F">Féminin</option>
+        </select>
+      </label>
+      <label>Classe
+        <select name="classe_id" required>
+          <option value="">Choisir une classe</option>
+          {% for c in classes %}
+            <option value="{{ c.id }}">{{ c.nom }} — {{ c.annee_scolaire }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Inscrire l'élève</button>
+    </form>
+    <p class="lien-secondaire">Le téléphone et les autres informations du parent se rempliront automatiquement dès qu'un parent sera lié à ce dossier (depuis la fiche de l'élève, une fois créée).</p>
+  {% else %}
+    <p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p>
+  {% endif %}
+{% endblock %}

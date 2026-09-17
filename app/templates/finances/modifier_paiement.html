@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Corriger un paiement{% endblock %}
+{% block content %}
+  <h1>Corriger le paiement {{ paiement.numero_recu }}</h1>
+  <p class="lien-secondaire">Élève : {{ eleve.nom_complet }}</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Échéance
+      <select name="echeance" required>
+        {% for ech in echeances %}<option value="{{ ech }}" {% if ech == paiement.echeance %}selected{% endif %}>{{ libelles_echeance[ech] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Montant
+      <input type="number" step="1" min="1" name="montant" value="{{ paiement.montant|int }}" required>
+    </label>
+    <label>Mode de paiement
+      <select name="mode" required>
+        {% for m in modes %}<option value="{{ m }}" {% if m == paiement.mode %}selected{% endif %}>{{ m.replace('_', ' ') }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Référence (optionnel)
+      <input type="text" name="reference" value="{{ paiement.reference or '' }}">
+    </label>
+    <button type="submit">Enregistrer la correction</button>
+  </form>
+  <p class="lien-secondaire">La référence de reçu ({{ paiement.numero_recu }}) ne change pas. La ligne correspondante dans la Caisse sera mise à jour automatiquement.</p>
+{% endblock %}

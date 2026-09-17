@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Emploi du temps — {{ classe.nom }}{% endblock %}
+{% block content %}
+  <h1>Emploi du temps — {{ classe.nom }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if vue_enseignant %}
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.moi_classe_pdf', classe_id=classe.id) }}">📄 Télécharger en PDF</a></p>
+  {% else %}
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">📄 Télécharger en PDF</a></p>
+  {% endif %}
+
+  {% if grille %}
+    <table class="table table-edt">
+      <thead>
+        <tr>
+          <th>Heure</th>
+          {% for jour in jours %}<th>{{ jour }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for ligne in grille %}
+          <tr>
+            <td><strong>{{ ligne.heure_debut }}–{{ ligne.heure_fin }}</strong></td>
+            {% for jour in jours %}
+              {% set c = ligne.jours[jour] %}
+              <td class="{% if vue_enseignant and c and c.enseignant_id == vue_enseignant.id %}cellule-edt-moi{% endif %}">
+                {% if c %}
+                  <strong>{{ c.matiere }}</strong>
+                  {% if c.enseignant %}<br><span class="lien-secondaire">{{ c.enseignant.nom_complet }}</span>{% endif %}
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun créneau enregistré pour cette classe.</p>
+  {% endif %}
+
+  {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") and not vue_enseignant %}
+    <h2>Ajouter un créneau</h2>
+    <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Matière
+        <input type="text" name="matiere" required>
+      </label>
+      <label>Enseignant
+        <select name="enseignant_id">
+          <option value="">Non assigné</option>
+          {% for e in enseignants %}<option value="{{ e.id }}">{{ e.nom_complet }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Jour
+        <select name="jour" required>
+          {% for j in jours %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Heure de début
+        <input type="time" name="heure_debut" required>
+      </label>
+      <label>Heure de fin
+        <input type="time" name="heure_fin" required>
+      </label>
+      <button type="submit">Ajouter</button>
+    </form>
+  {% endif %}
+{% endblock %}

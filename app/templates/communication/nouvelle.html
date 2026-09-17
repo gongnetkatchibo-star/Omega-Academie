@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle annonce{% endblock %}
+{% block content %}
+  <h1>Nouvelle annonce</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Titre
+      <input type="text" name="titre" required>
+    </label>
+    <label>Contenu
+      <textarea name="contenu" rows="4" required></textarea>
+    </label>
+    <label>Destinataires
+      <select name="destinataire" required>
+        {% for d in destinataires %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Pièce jointe (optionnel)
+      <input type="file" name="fichier">
+    </label>
+    <button type="submit">Publier</button>
+  </form>
+  {% if current_user.role == "enseignant" %}
+    <p class="lien-secondaire">En tant qu'enseignant, tu ne peux pas diffuser à toute l'école — choisis un destinataire ciblé.</p>
+  {% endif %}
+  <p class="lien-secondaire">Note : ceci publie l'annonce dans l'application. L'envoi réel par SMS/email nécessitera un service comme Twilio ou une passerelle SMS locale (§9 du cahier des charges).</p>
+{% endblock %}

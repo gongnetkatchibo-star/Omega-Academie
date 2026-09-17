@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Nouveau salaire{% endblock %}
+{% block content %}
+  <h1>Nouveau salaire</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Personnel
+      <select name="personnel_id" required>
+        <option value="">— Choisir —</option>
+        {% for p in personnel %}<option value="{{ p.id }}">{{ p.nom_complet }} ({{ p.role }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>Mois
+      <select name="mois" required>
+        {% for i in range(1, 13) %}<option value="{{ i }}">{{ mois_libelles[i-1] }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Année
+      <input type="number" name="annee" value="2026" required>
+    </label>
+    <label>Montant
+      <input type="number" step="1" min="1" name="montant" required>
+    </label>
+    <button type="submit">Enregistrer (impayé)</button>
+  </form>
+  <p class="lien-secondaire">Le salaire est créé au statut "impayé". Clique sur "Marquer payé" une fois le versement réellement effectué — ça enregistrera automatiquement la dépense dans la Caisse.</p>
+{% endblock %}

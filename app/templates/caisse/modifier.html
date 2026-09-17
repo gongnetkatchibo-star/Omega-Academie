@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Corriger un mouvement de caisse{% endblock %}
+{% block content %}
+  <h1>Corriger le mouvement</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Date
+      <input type="date" name="date" value="{{ mouvement.date.isoformat() }}" required>
+    </label>
+    <label>Type
+      <select name="type" required>
+        {% for t in types %}<option value="{{ t }}" {% if t == mouvement.type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Référence (optionnel)
+      <input type="text" name="reference" value="{{ mouvement.reference or '' }}">
+    </label>
+    <label>Libellé
+      <input type="text" name="libelle" value="{{ mouvement.libelle }}" required>
+    </label>
+    <label>Recette (si entrée d'argent)
+      <input type="number" step="1" min="0" name="recette" value="{{ mouvement.recette|int if mouvement.recette else '' }}">
+    </label>
+    <label>Dépense (si sortie d'argent)
+      <input type="number" step="1" min="0" name="depense" value="{{ mouvement.depense|int if mouvement.depense else '' }}">
+    </label>
+    <label>Observation (optionnel)
+      <input type="text" name="observation" value="{{ mouvement.observation or '' }}">
+    </label>
+    <button type="submit">Enregistrer la correction</button>
+  </form>
+{% endblock %}

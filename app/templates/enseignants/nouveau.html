@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Nouveau profil enseignant{% endblock %}
+{% block content %}
+  <h1>Créer un profil enseignant</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% if candidats %}
+    <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Compte enseignant (déjà approuvé)
+        <select name="user_id" required>
+          <option value="">Choisir un compte</option>
+          {% for u in candidats %}<option value="{{ u.id }}">{{ u.nom_complet }} — {{ u.email }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Spécialité / matière principale
+        <input type="text" name="specialite" placeholder="ex : Mathématiques">
+      </label>
+      <button type="submit">Créer le profil</button>
+    </form>
+  {% else %}
+    <p>Aucun compte enseignant approuvé sans profil pour l'instant. Un enseignant doit d'abord s'inscrire et être validé par le secrétariat.</p>
+  {% endif %}
+{% endblock %}

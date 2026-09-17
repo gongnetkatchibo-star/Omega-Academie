@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Toumaï Edu School{% endblock %}</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-marque">
+      <img class="logo-mark" src="{{ url_for('static', filename='images/logo-omega-icone.png') }}" alt="Omega Académie">
+      <span>Omega Académie</span>
+    </div>
+    <div class="navbar-utilisateur">
+      {% if current_user.is_authenticated %}
+        <span class="navbar-avatar">{{ current_user.nom_complet|initiales }}</span>
+        <span>{{ current_user.nom_complet }}</span>
+        <button class="navbar-toggle" onclick="document.querySelector('.navbar-liens').classList.toggle('navbar-liens-ouvert')" aria-label="Ouvrir le menu">☰</button>
+      {% else %}
+        <a href="{{ url_for('auth.connexion') }}" style="color:white; text-decoration:none;">Connexion</a>
+      {% endif %}
+    </div>
+  </div>
+  {% if current_user.is_authenticated %}
+  <div class="navbar-onglets">
+    <nav class="navbar-liens">
+      {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") or current_user.role == "enseignant" %}
+        <a href="{{ url_for('classes.liste') }}">Classes</a>
+        <a href="{{ url_for('eleves.liste') }}">Élèves</a>
+      {% endif %}
+        {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="tests_niveau") %}
+          <a href="{{ url_for('tests_niveau.liste') }}">Tests de niveau</a>
+        {% endif %}
+        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="enseignants") %}
+          <a href="{{ url_for('enseignants.liste') }}">Enseignants</a>
+        {% endif %}
+        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="suivi_cours") %}
+          <a href="{{ url_for('suivi_cours.tableau') }}">Suivi cours</a>
+        {% endif %}
+        {% if current_user.role == "enseignant" %}
+          <a href="{{ url_for('emploi_du_temps.moi') }}">Mon EDT</a>
+          {% if current_user.profil_enseignant %}
+            <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">Mes classes</a>
+          {% endif %}
+        {% endif %}
+        {% if acces("comptable", "fondateur", "administrateur_general", module="finances") %}
+          <a href="{{ url_for('finances.liste') }}">Finances</a>
+        {% endif %}
+        {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
+          <a href="{{ url_for('caisse.liste') }}">Caisse</a>
+        {% endif %}
+        {% if acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
+          <a href="{{ url_for('salaires.liste') }}">Salaires</a>
+        {% endif %}
+        {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
+          <a href="{{ url_for('statistiques.tableau') }}">Statistiques</a>
+        {% endif %}
+        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire", module="alertes") %}
+          <a href="{{ url_for('alertes.tableau') }}">Alertes</a>
+        {% endif %}
+        <a href="{{ url_for('bibliotheque.liste') }}">Bibliothèque</a>
+        <a href="{{ url_for('communication.liste') }}">Annonces</a>
+        <a href="{{ url_for('assistant.index') }}">Assistant</a>
+        {% if acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
+          <a href="{{ url_for('secretariat.demandes') }}">Demandes</a>
+        {% endif %}
+        {% if acces("developpeur", module="gestion_roles") %}
+          <a href="{{ url_for('dev.utilisateurs') }}">{{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
+        {% endif %}
+        <a href="{{ url_for('main.index') }}">Tableau de bord</a>
+        <a href="{{ url_for('auth.deconnexion') }}">Déconnexion</a>
+    </nav>
+  </div>
+  {% endif %}
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

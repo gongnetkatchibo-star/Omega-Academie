@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Alertes{% endblock %}
+{% block content %}
+  <h1>Alertes</h1>
+  <p class="lien-secondaire">Calculées automatiquement à partir des notes et absences déjà enregistrées.</p>
+
+  <h2>Absences répétées ({{ seuil_absences }} ou plus, non justifiées)</h2>
+  {% if absences %}
+    <table class="table">
+      <thead><tr><th>Élève</th><th>Classe</th><th>Absences non justifiées</th><th></th></tr></thead>
+      <tbody>
+        {% for a in absences %}
+          <tr>
+            <td>{{ a.eleve.nom_complet }}</td>
+            <td>{{ a.eleve.classe.nom }}</td>
+            <td class="solde-du">{{ a.nb_absences }}</td>
+            <td><a href="{{ url_for('absences.historique', eleve_id=a.eleve.id) }}">Voir le détail</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun élève au-delà du seuil pour l'instant.</p>
+  {% endif %}
+
+  <h2>Moyenne sous le seuil de réussite</h2>
+  {% if moyennes_faibles %}
+    <table class="table">
+      <thead><tr><th>Élève</th><th>Classe</th><th>Moyenne</th><th>Seuil</th><th></th></tr></thead>
+      <tbody>
+        {% for m in moyennes_faibles %}
+          <tr>
+            <td>{{ m.eleve.nom_complet }}</td>
+            <td>{{ m.eleve.classe.nom }}</td>
+            <td class="solde-du">{{ m.moyenne }}</td>
+            <td>{{ m.seuil }}</td>
+            <td><a href="{{ url_for('notes.bulletin', eleve_id=m.eleve.id) }}">Voir le bulletin</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun élève sous le seuil pour l'instant.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Mot de passe oublié{% endblock %}
+{% block content %}
+  <h1>Mot de passe oublié</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if lien_reset %}
+    <div class="carte-attente">
+      <p><strong>Lien de réinitialisation (valable 30 minutes) :</strong></p>
+      <p><a href="{{ lien_reset }}">{{ lien_reset }}</a></p>
+      <p class="lien-secondaire">Aucun service d'envoi d'email n'est encore configuré sur cette
+         installation, le lien est donc affiché ici directement. Une fois un service
+         d'email réel branché, ce lien sera envoyé automatiquement à l'adresse indiquée.</p>
+    </div>
+  {% else %}
+    <p>Indique ton email, ou ton matricule si tu es élève (l'email généré à l'inscription n'est pas consultable — le lien partira alors chez ton/tes parent(s) lié(s)).</p>
+    <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Email ou matricule
+        <input type="text" name="email" autocomplete="off" required>
+      </label>
+      <button type="submit">Envoyer le lien</button>
+    </form>
+  {% endif %}
+
+  <p class="lien-secondaire"><a href="{{ url_for('auth.connexion') }}">Retour à la connexion</a></p>
+{% endblock %}

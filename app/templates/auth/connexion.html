@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_macros.html" import champ_mot_de_passe %}
+{% block title %}Connexion{% endblock %}
+{% block content %}
+  <div class="logo-page">
+    <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie">
+  </div>
+  <h1>Connexion</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+    <label>Email
+      <input type="email" name="email" autocomplete="off" required>
+    </label>
+    <label>Mot de passe
+      {{ champ_mot_de_passe("mot_de_passe") }}
+    </label>
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <p class="lien-secondaire">Pas encore de compte ? <a href="{{ url_for('auth.inscription') }}">Créer un compte</a></p>
+  <p class="lien-secondaire"><a href="{{ url_for('auth.mot_de_passe_oublie') }}">Mot de passe oublié ?</a></p>
+{% endblock %}

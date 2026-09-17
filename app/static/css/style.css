@@ -1,0 +1,771 @@
+:root {
+  --navy: #0F5FA6;        /* bleu vif de l'en-tête, comme Moodle */
+  --gold: #00A99D;        /* sarcelle — accent, onglets actifs (remplace l'or) */
+  --cream: #F4F1EA;       /* fond général */
+  --carte: #E8F6F8;       /* fond bleu clair des cartes de module */
+  --sombre: #3C4858;      /* pied de page fonce */
+  --alerte-fond: #E4F7F7; /* bandeau d'alerte clair */
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--cream);
+  color: #2c2c2c;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  color: var(--navy);
+}
+
+.navbar {
+  background-color: var(--navy);
+  color: white;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-marque {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar .logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--cream);
+  object-fit: cover;
+  display: block;
+}
+
+.navbar-marque span {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.navbar-utilisateur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.navbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.navbar-onglets {
+  background: white;
+  border-bottom: 1px solid #e2ded2;
+  padding: 0 24px;
+  position: relative;
+}
+
+.navbar-liens {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.navbar-liens a {
+  color: #2c2c2c;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 12px 14px;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.navbar-liens a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Formulaires de connexion/inscription — plus étroits, pas besoin de
+   toute la largeur de page pour un email et un mot de passe. */
+.formulaire-etroit {
+  max-width: 380px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: #333;
+}
+
+input, select {
+  padding: 9px 11px;
+  border: 1px solid #d6d2c4;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  max-width: 380px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  border-color: var(--gold);
+}
+
+button {
+  background-color: var(--navy);
+  color: #fff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.lien-secondaire {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #333;
+}
+
+.flashes {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.flash-error { color: #a32d2d; }
+.flash-info { color: #185fa5; }
+.flash-warning { color: #854f0b; }
+
+.carte-attente {
+  background: var(--carte);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #333;
+}
+
+.liste-demandes {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.carte-demande {
+  background: #fff;
+  border: 1px solid #e2ddcd;
+  border-left: 4px solid var(--gold);
+  border-radius: 6px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.carte-demande .infos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  color: #555;
+  min-width: 240px;
+  flex: 1 1 auto;
+}
+
+.carte-demande .infos strong {
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.carte-demande .actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.carte-demande .actions a {
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  text-decoration: none;
+  background: #fff;
+}
+
+.carte-demande .actions a:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.carte-demande form {
+  margin: 0;
+}
+
+.bouton-approuver {
+  background-color: var(--navy);
+}
+
+.bouton-refuser {
+  background-color: transparent;
+  color: #a32d2d;
+  border: 1px solid #a32d2d;
+}
+
+textarea {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.ligne-case {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.badge-retard {
+  display: inline-block;
+  background: var(--carte);
+  color: #a32d2d;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.table th, .table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ece8da;
+}
+
+.table th {
+  color: #fff;
+  background: var(--navy);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #faf8f2;
+}
+
+.table tbody tr:hover {
+  background: var(--carte);
+}
+
+.solde-du {
+  color: #a32d2d;
+  font-weight: 600;
+}
+
+.solde-ok {
+  color: #1a7a3c;
+  font-weight: 600;
+}
+
+/* Tableau de bord (cartes par module) */
+.role-badge {
+  display: inline-block;
+  background: transparent;
+  color: #5b5b5b;
+  padding-left: 0 !important;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.grille-cartes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  align-items: stretch;
+}
+
+.carte-module {
+  display: block;
+  flex: 1 1 250px;
+  max-width: 320px;
+  min-height: 74px;
+  background: var(--carte);
+  border-radius: 6px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--navy);
+  border: 1px solid #d5e9ee;
+  border-top: 4px solid var(--gold);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.carte-module:hover {
+  box-shadow: 0 3px 10px rgba(15, 95, 166, 0.14);
+}
+
+.carte-module:hover {
+  transform: translateY(-2px);
+}
+
+.carte-module h3 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+}
+
+.carte-module p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+}
+
+/* Espace développeur */
+.barre-recherche {
+  margin: 12px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.table-dev {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.table-dev th, .table-dev td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.table-dev th {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.table-dev select {
+  padding: 4px;
+}
+
+/* En-tête d'accueil avec logo */
+.accueil-entete {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.accueil-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.accueil-entete h1 {
+  margin-bottom: 4px;
+}
+
+/* Logo pleine taille sur les pages de connexion / inscription */
+.logo-page {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.logo-page img {
+  width: 160px;
+  height: auto;
+}
+
+/* Grille emploi du temps */
+.table-edt th, .table-edt td {
+  border: 1px solid #e5e0d0;
+  text-align: center;
+  vertical-align: top;
+  padding: 8px;
+}
+.table-edt th {
+  background-color: var(--navy);
+  color: var(--cream);
+}
+.cellule-edt-moi {
+  background-color: #FFF3E0;
+}
+
+.ligne-lecture-seule {
+  background-color: #FAFAF5;
+  font-style: italic;
+}
+
+/* Statistiques — barre laterale */
+.stats-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-top: 16px;
+}
+
+.stats-sidebar {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--carte);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.stats-lien {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.stats-lien:hover {
+  background: #ecebe0;
+}
+
+.stats-lien-actif {
+  background: var(--navy);
+  color: var(--cream);
+  font-weight: 600;
+}
+
+.stats-contenu {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Page d'accueil publique — bandeau façon banniere de cours Moodle */
+.hero {
+  text-align: center;
+  padding: 56px 20px;
+  background: linear-gradient(135deg, var(--gold), #007b73);
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.hero-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+  object-fit: cover;
+  margin-bottom: 16px;
+  background: white;
+  padding: 6px;
+}
+
+.hero h1 {
+  font-size: 34px;
+  margin: 0 0 6px;
+  color: white;
+}
+
+.hero-devise {
+  color: white;
+  opacity: 0.9;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.hero-texte {
+  max-width: 560px;
+  margin: 0 auto 28px;
+  color: white;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bouton-principal, .bouton-secondaire {
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.bouton-principal {
+  background: white;
+  color: var(--gold);
+}
+
+.bouton-secondaire {
+  background: transparent;
+  color: white;
+  border: 1px solid white;
+}
+
+.fonctionnalites {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.fonctionnalite {
+  background: var(--carte);
+  border-top: 4px solid var(--gold);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.fonctionnalite h3 {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.fonctionnalite p {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.pied-accueil {
+  text-align: center;
+  padding: 24px 0;
+  color: #cfd3d9;
+  font-size: 13px;
+  background: var(--sombre);
+  margin: 40px -20px -40px;
+}
+
+/* Responsive — telephone et petits ecrans */
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--cream);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.table thead, .table tbody, .table tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+@media (max-width: 800px) {
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-liens {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--navy);
+    padding: 10px 20px 20px;
+    z-index: 20;
+  }
+
+  .navbar-liens-ouvert {
+    display: flex !important;
+  }
+
+  .navbar-liens a {
+    margin: 2px 0;
+    color: var(--cream);
+    border-bottom: none;
+  }
+
+  .navbar-liens a:hover {
+    color: var(--gold);
+  }
+
+  .stats-layout {
+    flex-direction: column;
+  }
+
+  .stats-sidebar {
+    flex: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .hero h1 {
+    font-size: 26px;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
+}
+
+/* Champ mot de passe avec bouton afficher/masquer */
+.champ-mdp-conteneur {
+  position: relative;
+  display: flex;
+}
+
+.champ-mdp-conteneur input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.mdp-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+/* Ligne de saisie des frais dans la liste des classes */
+.ligne-frais {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2ddcd;
+}
+
+.ligne-frais label {
+  font-size: 12px;
+  color: #666;
+  gap: 4px;
+}
+
+.ligne-frais select,
+.ligne-frais input {
+  max-width: 130px;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+/* En-tête de page : titre + actions alignés */
+.entete-page {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+/* Messages (succès / erreur) en bandeau net */
+.flashes {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+}
+
+.flashes li {
+  padding: 11px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--gold);
+  background: var(--carte);
+  color: #22443f;
+}
+
+.flashes .flash-error {
+  border-left-color: #a32d2d;
+  background: #fbeceb;
+  color: #7d2020;
+}
+
+/* Cartes de chiffres : le nombre doit primer sur l'étiquette */
+.carte-stat {
+  min-height: 0;
+  padding: 14px 16px 16px;
+}
+
+.carte-stat h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5d6b70;
+  margin: 0 0 6px 0;
+}
+
+.carte-stat p {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--navy);
+}
+
+.carte-stat p.solde-du,
+.carte-stat p.solde-ok {
+  font-size: 26px;
+}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Finances{% endblock %}
+{% block content %}
+  <h1>Finances — frais de scolarité</h1>
+  {% if lignes %}
+    <table class="table">
+      <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        {% for l in lignes %}
+          <tr>
+            <td>{{ l.eleve.nom_complet }}</td>
+            <td>{{ l.eleve.classe.nom }}</td>
+            <td>{{ l.du|int }}</td>
+            <td>{{ l.paye|int }}</td>
+            <td class="{% if l.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ l.solde|int }}</td>
+            <td class="{% if l.statut == 'PAYÉ' %}solde-ok{% else %}solde-du{% endif %}">{{ l.statut }}</td>
+            <td><a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}">Détail</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun élève pour l'instant.</p>
+  {% endif %}
+{% endblock %}

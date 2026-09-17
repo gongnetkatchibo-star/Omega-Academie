@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Fichier trop volumineux{% endblock %}
+{% block content %}
+  <h1>Fichier trop volumineux</h1>
+  <p>Le fichier envoyé dépasse la taille maximale autorisée (20 Mo). Réduis sa taille et réessaie.</p>
+  <p class="lien-secondaire"><a href="{{ url_for('main.index') }}">Retour au tableau de bord</a></p>
+{% endblock %}

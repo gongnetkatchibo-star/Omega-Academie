@@ -1,0 +1,29 @@
+{% macro champ_montant(name, valeur=0, max=200000, pas=5000) %}
+  {% set options = range(0, max + 1, pas)|list %}
+  <select name="{{ name }}" class="champ-montant-select" onchange="
+      var autre = this.nextElementSibling;
+      autre.style.display = (this.value === '') ? 'inline-block' : 'none';
+    ">
+    {% for o in options %}
+      <option value="{{ o }}" {% if valeur == o %}selected{% endif %}>{{ o }}</option>
+    {% endfor %}
+    <option value="" {% if valeur not in options %}selected{% endif %}>Autre montant…</option>
+  </select>
+  <input type="number" step="1" min="0" class="champ-montant-autre"
+         style="display:{% if valeur not in options %}inline-block{% else %}none{% endif %};"
+         name="{{ name }}_autre"
+         value="{% if valeur not in options %}{{ valeur|int }}{% endif %}"
+         placeholder="Montant exact">
+{% endmacro %}
+
+{% macro champ_mot_de_passe(name, autocomplete="new-password", required=True) %}
+  <div class="champ-mdp-conteneur">
+    <input type="password" name="{{ name }}" id="mdp-{{ name }}" autocomplete="{{ autocomplete }}" {% if required %}required{% endif %}>
+    <button type="button" class="mdp-toggle" onclick="
+        var champ = document.getElementById('mdp-{{ name }}');
+        var visible = champ.type === 'text';
+        champ.type = visible ? 'password' : 'text';
+        this.textContent = visible ? '👁' : '🙈';
+      " aria-label="Afficher ou masquer le mot de passe">👁</button>
+  </div>
+{% endmacro %}

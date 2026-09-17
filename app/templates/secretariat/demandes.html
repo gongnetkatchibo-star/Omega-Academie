@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Demandes de compte{% endblock %}
+{% block content %}
+  <h1>Demandes de compte en attente</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if demandes %}
+    <ul class="liste-demandes">
+      {% for u in demandes %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ u.nom_complet }}</strong>
+            <span>{{ u.role }} — {{ u.email }}</span>
+          </div>
+          <div class="actions">
+            <form method="post" action="{{ url_for('secretariat.approuver', user_id=u.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="bouton-approuver">Approuver</button>
+            </form>
+            <form method="post" action="{{ url_for('secretariat.refuser', user_id=u.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="bouton-refuser">Refuser</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune demande en attente.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Omega Académie — Plateforme scolaire{% endblock %}
+{% block content %}
+  <section class="hero">
+    <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie" class="hero-logo">
+    <h1>Omega Académie</h1>
+    <p class="hero-devise">Vers l'excellence et la sagesse</p>
+    <p class="hero-texte">La plateforme de gestion scolaire de l'école : inscriptions, notes, finances, emploi du temps et communication, réunis en un seul endroit pour la direction, le personnel, les enseignants, les parents et les élèves.</p>
+    <div class="hero-actions">
+      <a class="bouton-principal" href="{{ url_for('auth.connexion') }}">Se connecter</a>
+      <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">Créer un compte</a>
+    </div>
+  </section>
+
+  <footer class="pied-accueil">
+    <p>Omega Académie — Plateforme Toumaï Edu School</p>
+  </footer>
+{% endblock %}
