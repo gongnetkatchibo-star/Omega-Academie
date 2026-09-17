@@ -14,6 +14,33 @@
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant") %}
     <p class="lien-secondaire"><a href="{{ url_for('communication.nouvelle') }}">+ Nouvelle annonce</a></p>
   {% endif %}
+
+  <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+    <label>Date précise
+      <input type="date" name="date" value="{{ filtre_date or '' }}">
+    </label>
+    <label>Mois
+      <select name="mois">
+        <option value="">Tous</option>
+        {% for i in range(1, 13) %}
+          <option value="{{ i }}" {% if filtre_mois == i %}selected{% endif %}>{{ mois_libelles[i-1] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Année
+      <select name="annee">
+        <option value="">Toutes</option>
+        {% for a in annees_disponibles %}
+          <option value="{{ a }}" {% if filtre_annee == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Rechercher</button>
+    {% if filtre_date or filtre_mois or filtre_annee %}
+      <a href="{{ url_for('communication.liste') }}">Réinitialiser</a>
+    {% endif %}
+  </form>
+
   {% if annonces %}
     <ul class="liste-demandes">
       {% for a in annonces %}
@@ -24,8 +51,13 @@
             {% if a.nom_fichier %}
               <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">📎 Télécharger la pièce jointe</a></span>
             {% endif %}
-            <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }} · destinataire : {{ a.destinataire }}</span>
+            <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }}</span>
           </div>
+          {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire") or (current_user.role == "enseignant" and a.auteur_id == current_user.id) %}
+            <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm('Supprimer cette annonce ?');">
+              <button type="submit">Supprimer</button>
+            </form>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>

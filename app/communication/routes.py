@@ -23,12 +23,40 @@ def _dossier_upload():
 @login_required
 def liste():
     if current_user.role == "developpeur":
-        annonces = Annonce.query.order_by(Annonce.date_publication.desc()).all()
+        requete = Annonce.query
     else:
-        annonces = Annonce.query.filter(
+        requete = Annonce.query.filter(
             (Annonce.destinataire == "tous") | (Annonce.destinataire == current_user.role)
-        ).order_by(Annonce.date_publication.desc()).all()
-    return render_template("communication/liste.html", annonces=annonces)
+        )
+
+    filtre_date_str = request.args.get("date", "").strip()
+    filtre_mois = request.args.get("mois", type=int)
+    filtre_annee = request.args.get("annee", type=int)
+
+    filtre_date = None
+    if filtre_date_str:
+        try:
+            filtre_date = datetime.strptime(filtre_date_str, "%Y-%m-%d").date()
+            requete = requete.filter(db.func.date(Annonce.date_publication) == filtre_date)
+        except ValueError:
+            pass
+    if filtre_mois:
+        requete = requete.filter(db.extract("month", Annonce.date_publication) == filtre_mois)
+    if filtre_annee:
+        requete = requete.filter(db.extract("year", Annonce.date_publication) == filtre_annee)
+
+    annonces = requete.order_by(Annonce.date_publication.desc()).all()
+
+    toutes_les_annees = {a.date_publication.year for a in Annonce.query.all()}
+    annee_courante = datetime.utcnow().year
+    annees_disponibles = sorted(toutes_les_annees | {annee_courante}, reverse=True)
+
+    return render_template(
+        "communication/liste.html", annonces=annonces,
+        filtre_date=filtre_date_str, filtre_mois=filtre_mois, filtre_annee=filtre_annee,
+        annees_disponibles=annees_disponibles,
+        mois_libelles=["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+    )
 
 
 @communication_bp.route("/nouvelle", methods=["GET", "POST"])
@@ -72,6 +100,30 @@ def nouvelle():
         return redirect(url_for("communication.liste"))
 
     return render_template("communication/nouvelle.html", destinataires=destinataires_disponibles)
+
+
+@communication_bp.route("/<int:annonce_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer(annonce_id):
+    annonce = Annonce.query.get_or_404(annonce_id)
+
+    # Volontairement PAS la même liste que pour publier (ROLES_GESTION
+    # inclut "enseignant" en général) — ici, un enseignant ne peut
+    # supprimer QUE sa propre annonce, jamais celle d'un collègue.
+    ROLES_SUPPRESSION_LIBRE = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire"]
+    est_auteur = annonce.auteur_id == current_user.id
+    if current_user.role not in ROLES_SUPPRESSION_LIBRE and not (current_user.role == "enseignant" and est_auteur):
+        abort(403)
+
+    if annonce.nom_fichier:
+        chemin = os.path.join(_dossier_upload(), annonce.nom_fichier)
+        if os.path.exists(chemin):
+            os.remove(chemin)
+
+    db.session.delete(annonce)
+    db.session.commit()
+    flash("Annonce supprimée.", "info")
+    return redirect(url_for("communication.liste"))
 
 
 @communication_bp.route("/<int:annonce_id>/fichier")
