@@ -15,6 +15,7 @@
   {% endwith %}
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Code de vérification
       <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="off" required autofocus>
     </label>
@@ -22,6 +23,7 @@
   </form>
 
   <form method="post" action="{{ url_for('auth.renvoyer_code_verification') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Renvoyer le code</button>
   </form>
 

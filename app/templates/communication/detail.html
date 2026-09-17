@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ annonce.titre }}{% endblock %}
+{% block content %}
+  <h1>{{ annonce.titre }}</h1>
+  <p class="lien-secondaire">{{ annonce.date_publication.strftime("%d/%m/%Y") }} — {{ annonce.auteur.nom_complet if annonce.auteur else "—" }}</p>
+
+  <div class="carte-attente">
+    <p>{{ annonce.contenu }}</p>
+  </div>
+
+  {% if annonce.nom_fichier %}
+    <p class="lien-secondaire"><a href="{{ url_for('communication.telecharger', annonce_id=annonce.id) }}">Télécharger la pièce jointe</a></p>
+  {% endif %}
+
+  <p class="lien-secondaire"><a href="{{ url_for('communication.liste') }}">← Toutes les annonces</a></p>
+{% endblock %}

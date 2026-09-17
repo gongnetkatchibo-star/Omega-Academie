@@ -20,6 +20,7 @@
             <td class="{% if t.decision == 'admis' %}solde-ok{% elif t.decision == 'refuse' %}solde-du{% endif %}">{{ t.decision }}</td>
             <td>
               <form method="post" action="{{ url_for('tests_niveau.decision', test_id=t.id) }}" style="display:flex; gap:6px; align-items:center;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="number" step="0.5" name="note_obtenue" value="{{ t.note_obtenue or '' }}" placeholder="Note" style="width:70px;">
                 <select name="decision">
                   <option value="en_attente" {% if t.decision == "en_attente" %}selected{% endif %}>En attente</option>

@@ -24,6 +24,7 @@
   {% else %}
     <p>Indique ton email, ou ton matricule si tu es élève (l'email généré à l'inscription n'est pas consultable — le lien partira alors chez ton/tes parent(s) lié(s)).</p>
     <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Email ou matricule
         <input type="text" name="email" autocomplete="off" required>
       </label>

@@ -18,6 +18,8 @@
   {% endwith %}
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
     <label>Email
       <input type="email" name="email" autocomplete="off" required>
     </label>

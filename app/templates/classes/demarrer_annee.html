@@ -6,6 +6,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nouvelle année scolaire
       <input type="text" name="annee_scolaire" value="{{ annee_suggeree }}" placeholder="ex : 2027-2028" required>
     </label>

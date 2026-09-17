@@ -8,6 +8,7 @@
 
   {% if matieres %}
     <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Matière
         <select name="matiere" required>
           {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}

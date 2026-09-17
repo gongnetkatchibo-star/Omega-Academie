@@ -8,6 +8,7 @@
   {% endif %}
 
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Ta question
       <input type="text" name="question" value="{{ question or '' }}" placeholder="ex : quel est le solde de mon enfant ?" required>
     </label>

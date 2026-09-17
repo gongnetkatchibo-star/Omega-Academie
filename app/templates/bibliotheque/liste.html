@@ -40,7 +40,13 @@
             {% endif %}
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
               <form method="post" action="{{ url_for('bibliotheque.basculer_verrouillage', ressource_id=r.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit">{{ "Déverrouiller" if r.consultation_sur_place else "Verrouiller (sur place)" }}</button>
+              </form>
+            {% endif %}
+            {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") or (current_user.role == "enseignant" and r.ajoute_par_id == current_user.id) %}
+              <form method="post" action="{{ url_for('bibliotheque.supprimer', ressource_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement cette ressource ?');">
+                <button type="submit">Supprimer</button>
               </form>
             {% endif %}
           </div>

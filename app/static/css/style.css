@@ -122,20 +122,31 @@ label {
 }
 
 input, select {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
+  padding: 9px 11px;
+  border: 1px solid #d6d2c4;
   border-radius: 6px;
   font-size: 14px;
+  background: #fff;
+  max-width: 380px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  border-color: var(--gold);
 }
 
 button {
   background-color: var(--navy);
-  color: var(--cream);
+  color: #fff;
   border: none;
-  padding: 10px;
+  padding: 9px 18px;
   border-radius: 6px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  align-self: flex-start;
+  white-space: nowrap;
 }
 
 button:hover {
@@ -176,25 +187,52 @@ button:hover {
 }
 
 .carte-demande {
-  background: var(--carte);
-  border-radius: 10px;
-  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e2ddcd;
+  border-left: 4px solid var(--gold);
+  border-radius: 6px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .carte-demande .infos {
   display: flex;
   flex-direction: column;
+  gap: 3px;
   font-size: 13px;
-  color: #333;
+  color: #555;
+  min-width: 240px;
+  flex: 1 1 auto;
+}
+
+.carte-demande .infos strong {
+  font-size: 15px;
+  color: var(--navy);
 }
 
 .carte-demande .actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.carte-demande .actions a {
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  text-decoration: none;
+  background: #fff;
+}
+
+.carte-demande .actions a:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .carte-demande form {
@@ -245,13 +283,24 @@ textarea {
 
 .table th, .table td {
   text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid #eee;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ece8da;
 }
 
 .table th {
-  color: var(--navy);
+  color: #fff;
+  background: var(--navy);
   font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #faf8f2;
+}
+
+.table tbody tr:hover {
+  background: var(--carte);
 }
 
 .solde-du {
@@ -267,8 +316,9 @@ textarea {
 /* Tableau de bord (cartes par module) */
 .role-badge {
   display: inline-block;
-  background: var(--carte);
-  color: var(--navy);
+  background: transparent;
+  color: #5b5b5b;
+  padding-left: 0 !important;
   border-radius: 6px;
   padding: 2px 10px;
   font-size: 13px;
@@ -276,22 +326,30 @@ textarea {
 }
 
 .grille-cartes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 14px;
-  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  align-items: stretch;
 }
 
 .carte-module {
   display: block;
+  flex: 1 1 250px;
+  max-width: 320px;
+  min-height: 74px;
   background: var(--carte);
-  border-radius: 4px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 14px 16px;
   text-decoration: none;
   color: var(--navy);
-  border: none;
+  border: 1px solid #d5e9ee;
   border-top: 4px solid var(--gold);
-  transition: transform 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.carte-module:hover {
+  box-shadow: 0 3px 10px rgba(15, 95, 166, 0.14);
 }
 
 .carte-module:hover {
@@ -348,9 +406,9 @@ textarea {
 }
 
 .accueil-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -627,4 +685,87 @@ textarea {
   cursor: pointer;
   font-size: 16px;
   padding: 4px 8px;
+}
+
+/* Ligne de saisie des frais dans la liste des classes */
+.ligne-frais {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2ddcd;
+}
+
+.ligne-frais label {
+  font-size: 12px;
+  color: #666;
+  gap: 4px;
+}
+
+.ligne-frais select,
+.ligne-frais input {
+  max-width: 130px;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+/* En-tête de page : titre + actions alignés */
+.entete-page {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+/* Messages (succès / erreur) en bandeau net */
+.flashes {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+}
+
+.flashes li {
+  padding: 11px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--gold);
+  background: var(--carte);
+  color: #22443f;
+}
+
+.flashes .flash-error {
+  border-left-color: #a32d2d;
+  background: #fbeceb;
+  color: #7d2020;
+}
+
+/* Cartes de chiffres : le nombre doit primer sur l'étiquette */
+.carte-stat {
+  min-height: 0;
+  padding: 14px 16px 16px;
+}
+
+.carte-stat h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5d6b70;
+  margin: 0 0 6px 0;
+}
+
+.carte-stat p {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--navy);
+}
+
+.carte-stat p.solde-du,
+.carte-stat p.solde-ok {
+  font-size: 26px;
 }

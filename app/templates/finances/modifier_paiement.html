@@ -7,6 +7,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Échéance
       <select name="echeance" required>
         {% for ech in echeances %}<option value="{{ ech }}" {% if ech == paiement.echeance %}selected{% endif %}>{{ libelles_echeance[ech] }}</option>{% endfor %}

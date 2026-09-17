@@ -13,6 +13,7 @@
   </form>
 
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="date" value="{{ date_selectionnee.isoformat() }}">
     <table class="table">
       <thead><tr><th>Élève</th><th>Absent</th><th>Justifiée</th><th>Motif</th></tr></thead>

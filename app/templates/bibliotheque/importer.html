@@ -6,6 +6,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Type (appliqué à tous les fichiers)
       <select name="type" required>
         {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}

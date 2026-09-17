@@ -44,6 +44,7 @@
           <li>
             {{ p.nom_complet }} ({{ p.email }}{% if p.telephone %} — {{ p.telephone }}{% endif %})
             <form method="post" action="{{ url_for('eleves.retirer_parent', eleve_id=eleve.id, parent_id=p.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit">Retirer</button>
             </form>
           </li>
@@ -54,6 +55,7 @@
       {% set parents_restants = parents_disponibles|rejectattr('id', 'in', eleve.parents|map(attribute='id')|list)|list %}
       {% if parents_restants %}
         <form method="post" action="{{ url_for('eleves.ajouter_parent', eleve_id=eleve.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <label>Ajouter un parent
             <select name="parent_id">
               {% for p in parents_restants %}
@@ -96,6 +98,7 @@
     </p>
     {% if classe_superieure %}
       <form method="post" action="{{ url_for('eleves.passage', eleve_id=eleve.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit">Évaluer et faire passer en {{ classe_superieure.nom }}</button>
       </form>
       <p class="lien-secondaire">L'admission est déterminée automatiquement à partir de la moyenne ci-dessus — pas de passage possible sans notes suffisantes.</p>

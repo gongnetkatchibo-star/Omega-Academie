@@ -19,15 +19,15 @@
   {% endwith %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module">
+    <div class="carte-module carte-stat">
       <h3>Total recettes</h3>
       <p>{{ "%.0f"|format(total_recettes) }} FCFA</p>
     </div>
-    <div class="carte-module">
+    <div class="carte-module carte-stat">
       <h3>Total dépenses</h3>
       <p>{{ "%.0f"|format(total_depenses) }} FCFA</p>
     </div>
-    <div class="carte-module">
+    <div class="carte-module carte-stat">
       <h3>Solde actuel</h3>
       <p class="{% if solde_actuel < 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(solde_actuel) }} FCFA</p>
     </div>
@@ -63,6 +63,7 @@
                 · <a href="{{ url_for('caisse.modifier', mouvement_id=l.mouvement.id) }}">Corriger</a>
                 {% if acces("fondateur", "administrateur_general") %}
                   · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce mouvement de caisse ?');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit">Supprimer</button>
                     </form>
                 {% endif %}

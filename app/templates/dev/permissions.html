@@ -9,6 +9,7 @@
   {% endwith %}
 
   <form method="post" action="{{ url_for('dev.enregistrer_permissions') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div style="overflow-x:auto;">
       <table class="table-dev">
         <thead>

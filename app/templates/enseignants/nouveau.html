@@ -7,6 +7,7 @@
   {% endwith %}
   {% if candidats %}
     <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Compte enseignant (déjà approuvé)
         <select name="user_id" required>
           <option value="">Choisir un compte</option>

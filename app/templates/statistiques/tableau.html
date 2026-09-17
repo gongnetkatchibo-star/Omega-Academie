@@ -28,9 +28,9 @@
 
       {% if vue != 'finances' %}
         <div class="grille-cartes">
-          <div class="carte-module"><h3>Effectif</h3><p>{{ effectif_total }}</p></div>
-          <div class="carte-module"><h3>Garçons</h3><p>{{ garcons }}</p></div>
-          <div class="carte-module"><h3>Filles</h3><p>{{ filles }}</p></div>
+          <div class="carte-module carte-stat"><h3>Effectif</h3><p>{{ effectif_total }}</p></div>
+          <div class="carte-module carte-stat"><h3>Garçons</h3><p>{{ garcons }}</p></div>
+          <div class="carte-module carte-stat"><h3>Filles</h3><p>{{ filles }}</p></div>
         </div>
 
         <h3>Réussite par sexe</h3>
@@ -63,13 +63,13 @@
 
       {% else %}
         <div class="grille-cartes">
-          <div class="carte-module"><h3>Total à recouvrer</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
-          <div class="carte-module"><h3>Total encaissé</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
-          <div class="carte-module">
+          <div class="carte-module carte-stat"><h3>Total à recouvrer</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
+          <div class="carte-module carte-stat"><h3>Total encaissé</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
+          <div class="carte-module carte-stat">
             <h3>Solde à recouvrer</h3>
             <p class="{% if solde_a_recouvrer > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(solde_a_recouvrer) }}</p>
           </div>
-          <div class="carte-module"><h3>Taux de recouvrement</h3><p>{{ "%.1f"|format(taux_recouvrement) }} %</p></div>
+          <div class="carte-module carte-stat"><h3>Taux de recouvrement</h3><p>{{ "%.1f"|format(taux_recouvrement) }} %</p></div>
         </div>
 
         <h3>Par échéance</h3>

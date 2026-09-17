@@ -15,6 +15,7 @@
 
   {% if classes %}
     <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Nom complet
         <input type="text" name="nom_complet" required>
       </label>

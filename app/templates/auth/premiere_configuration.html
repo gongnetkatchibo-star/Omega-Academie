@@ -10,6 +10,7 @@
   {% endwith %}
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nom complet
       <input type="text" name="nom_complet" autocomplete="off" required>
     </label>

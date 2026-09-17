@@ -15,6 +15,7 @@
   {% endwith %}
 
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nom de la classe
       <input type="text" name="nom" placeholder="ex : CM2 ou 6ème A" required>
     </label>

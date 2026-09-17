@@ -44,6 +44,7 @@
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") and not vue_enseignant %}
     <h2>Ajouter un créneau</h2>
     <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Matière
         <input type="text" name="matiere" required>
       </label>

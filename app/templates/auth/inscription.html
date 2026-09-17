@@ -24,6 +24,7 @@
     </div>
   {% else %}
     <form method="post" id="form-inscription" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Je suis…
         <select name="role" id="champ-role" required>
           <option value="">Choisir un profil</option>

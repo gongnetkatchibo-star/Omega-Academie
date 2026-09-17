@@ -8,8 +8,8 @@
   {% endwith %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
-    <div class="carte-module"><h3>Total impayé</h3><p class="solde-du">{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
+    <div class="carte-module carte-stat"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
+    <div class="carte-module carte-stat"><h3>Total impayé</h3><p class="solde-du">{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
   </div>
 
   {% if salaires %}
@@ -26,11 +26,13 @@
             <td>
               {% if s.statut == "impaye" %}
                 <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit">Marquer payé</button>
                 </form>
               {% endif %}
               {% if acces("fondateur", "administrateur_general") %}
                 <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette ligne de salaire ?');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit">Supprimer</button>
                 </form>
               {% endif %}

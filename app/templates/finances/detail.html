@@ -14,6 +14,12 @@
     <span class="{% if resume.statut == 'PAYÉ' %}solde-ok{% else %}solde-du{% endif %}">{{ resume.statut }}</span>
   </p>
 
+  {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general") %}
+    <form method="post" action="{{ url_for('finances.relancer', eleve_id=eleve.id) }}">
+      <button type="submit">Envoyer une relance de paiement au(x) parent(s)</button>
+    </form>
+  {% endif %}
+
   <h2>Détail par échéance</h2>
   <table class="table">
     <thead><tr><th>Échéance</th><th>Attendu</th><th>Payé</th><th>Solde</th></tr></thead>
@@ -32,6 +38,7 @@
   {% if acces("comptable", "fondateur", "administrateur_general") %}
   <h2>Nouveau paiement</h2>
   <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Échéance
       <select name="echeance" required>
         {% for ech in echeances %}<option value="{{ ech }}">{{ libelles_echeance[ech] }}</option>{% endfor %}
@@ -72,6 +79,7 @@
                 <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">Corriger</a>
                 {% if acces("fondateur", "administrateur_general") %}
                   · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce paiement et sa ligne de Caisse associée ?');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit">Supprimer</button>
                     </form>
                 {% endif %}

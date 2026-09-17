@@ -4,7 +4,15 @@
   <h1>Espace développeur</h1>
   <p>Seul ce rôle peut attribuer ou changer un rôle. Le secrétariat approuve
      seulement les comptes en attente (statut), il ne choisit pas le rôle.</p>
-  <p class="lien-secondaire"><a href="{{ url_for('dev.permissions') }}">Gérer les permissions par module</a></p>
+  {% if current_user.role == "developpeur" %}
+    <p class="lien-secondaire"><a href="{{ url_for('dev.permissions') }}">Gérer les permissions par module</a></p>
+  {% endif %}
+  {% if acces("developpeur", module="sauvegarde") %}
+    <p class="lien-secondaire"><a href="{{ url_for('sauvegarde.exporter') }}">Télécharger une sauvegarde complète (.zip)</a></p>
+  {% endif %}
+  {% if acces("developpeur", module="journal_actions") %}
+    <p class="lien-secondaire"><a href="{{ url_for('dev.journal') }}">Consulter le journal d'actions</a></p>
+  {% endif %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -53,10 +61,12 @@
           </td>
           <td>{{ u.date_creation.strftime("%d/%m/%Y") if u.date_creation else "" }}</td>
           <td>
-            <form id="form-{{ u.id }}" method="post" action="{{ url_for('dev.modifier_utilisateur', user_id=u.id) }}"></form>
+            <form id="form-{{ u.id }}" method="post" action="{{ url_for('dev.modifier_utilisateur', user_id=u.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>
             <button type="submit" form="form-{{ u.id }}">Enregistrer</button>
             {% if u.id != current_user.id and current_user.role == "developpeur" %}
               <form method="post" action="{{ url_for('dev.supprimer_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement le compte de {{ u.nom_complet }} ? Cette action est irréversible.');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit">Supprimer</button>
               </form>
             {% endif %}

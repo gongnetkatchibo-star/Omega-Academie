@@ -30,6 +30,7 @@
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
     <h2>Affecter une classe</h2>
     <form method="post" action="{{ url_for('enseignants.affecter', enseignant_id=enseignant.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Classe
         <select name="classe_id" required>
           <option value="">Choisir une classe</option>

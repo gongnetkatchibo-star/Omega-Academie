@@ -57,13 +57,16 @@
         {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
           <a href="{{ url_for('statistiques.tableau') }}">Statistiques</a>
         {% endif %}
+        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire", module="alertes") %}
+          <a href="{{ url_for('alertes.tableau') }}">Alertes</a>
+        {% endif %}
         <a href="{{ url_for('bibliotheque.liste') }}">Bibliothèque</a>
         <a href="{{ url_for('communication.liste') }}">Annonces</a>
         <a href="{{ url_for('assistant.index') }}">Assistant</a>
         {% if acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
           <a href="{{ url_for('secretariat.demandes') }}">Demandes</a>
         {% endif %}
-        {% if current_user.role in ["developpeur", "fondateur"] %}
+        {% if acces("developpeur", module="gestion_roles") %}
           <a href="{{ url_for('dev.utilisateurs') }}">{{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
         {% endif %}
         <a href="{{ url_for('main.index') }}">Tableau de bord</a>

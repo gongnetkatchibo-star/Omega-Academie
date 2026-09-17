@@ -15,6 +15,7 @@
   {% endwith %}
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nouveau mot de passe
       {{ champ_mot_de_passe("mot_de_passe") }}
     </label>
