@@ -23,6 +23,8 @@ def _modules_pour(role):
                          "description": "Profils et affectations."})
         modules.append({"label": "Suivi des cours", "endpoint": "suivi_cours.tableau",
                          "description": "Avancement des programmes par classe."})
+        modules.append({"label": "Alertes", "endpoint": "alertes.tableau",
+                         "description": "Absences répétées et moyennes faibles."})
 
     if role == "enseignant":
         modules.append({"label": "Mon emploi du temps", "endpoint": "emploi_du_temps.moi",
@@ -44,7 +46,8 @@ def _modules_pour(role):
         modules.append({"label": "Demandes de comptes", "endpoint": "secretariat.demandes",
                          "description": "Approuver ou refuser les inscriptions en attente."})
 
-    if role == "fondateur":
+    from app.services.permissions import role_a_acces
+    if role != "developpeur" and role_a_acces(role, "gestion_roles", []):
         modules.append({"label": "Rôles des comptes", "endpoint": "dev.utilisateurs",
                          "description": "Attribuer un rôle à un compte."})
 
@@ -62,6 +65,7 @@ def _modules_pour(role):
         modules.append({"label": "Tests de niveau", "endpoint": "tests_niveau.liste", "description": "Admissions à évaluer."})
         modules.append({"label": "Enseignants", "endpoint": "enseignants.liste", "description": "Profils et affectations."})
         modules.append({"label": "Suivi des cours", "endpoint": "suivi_cours.tableau", "description": "Avancement des programmes par classe."})
+        modules.append({"label": "Alertes", "endpoint": "alertes.tableau", "description": "Absences répétées et moyennes faibles."})
         modules.append({"label": "Finances", "endpoint": "finances.liste", "description": "Frais dus, paiements, soldes par élève."})
         modules.append({"label": "Caisse", "endpoint": "caisse.liste", "description": "Recettes et dépenses générales de l'école."})
         modules.append({"label": "Statistiques", "endpoint": "statistiques.tableau", "description": "Effectifs, recouvrement, indicateurs de l'école."})

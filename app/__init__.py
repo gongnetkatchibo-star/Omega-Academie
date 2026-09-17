@@ -1,10 +1,13 @@
 import os
 import click
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import current_user
+from flask_wtf import CSRFProtect
 
 from config import config
 from app.extensions import db, migrate, login_manager, mail
+
+csrf = CSRFProtect()
 
 
 def create_app(config_name=None):
@@ -19,6 +22,23 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
+    csrf.init_app(app)
+
+    @app.errorhandler(403)
+    def erreur_403(e):
+        return render_template("errors/403.html"), 403
+
+    @app.errorhandler(404)
+    def erreur_404(e):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(413)
+    def erreur_413(e):
+        return render_template("errors/413.html"), 413
+
+    @app.errorhandler(500)
+    def erreur_500(e):
+        return render_template("errors/500.html"), 500
 
     @app.template_global()
     def acces(*roles, module=None):
@@ -83,6 +103,12 @@ def create_app(config_name=None):
 
     from app.absences import absences_bp
     app.register_blueprint(absences_bp)
+
+    from app.sauvegarde import sauvegarde_bp
+    app.register_blueprint(sauvegarde_bp)
+
+    from app.alertes import alertes_bp
+    app.register_blueprint(alertes_bp)
 
     from app.notes import notes_bp
     app.register_blueprint(notes_bp)

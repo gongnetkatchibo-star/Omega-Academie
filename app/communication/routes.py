@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.annonce import Annonce, DESTINATAIRES, DESTINATAIRES_ENSEIGNANT
 from app.communication import communication_bp
-from app.utils import roles_required
+from app.utils import roles_required, EXTENSIONS_PIECE_JOINTE, extension_autorisee
 
 ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant"]
 
@@ -80,6 +80,10 @@ def nouvelle():
             flash("Merci de remplir tous les champs (et de choisir un destinataire autorisé).", "error")
             return render_template("communication/nouvelle.html", destinataires=destinataires_disponibles)
 
+        if fichier and fichier.filename and not extension_autorisee(fichier.filename, EXTENSIONS_PIECE_JOINTE):
+            flash("Type de pièce jointe non autorisé (document ou image uniquement).", "error")
+            return render_template("communication/nouvelle.html", destinataires=destinataires_disponibles)
+
         nom_unique = None
         if fichier and fichier.filename:
             nom_securise = secure_filename(fichier.filename)
@@ -100,6 +104,21 @@ def nouvelle():
         return redirect(url_for("communication.liste"))
 
     return render_template("communication/nouvelle.html", destinataires=destinataires_disponibles)
+
+
+@communication_bp.route("/<int:annonce_id>")
+@login_required
+def detail(annonce_id):
+    """Page d'une seule annonce — cible du lien « Voir plus » envoyé par
+    email (sept. 2026). Si la personne n'est pas connectée, elle est
+    d'abord renvoyée vers la connexion, puis ramenée ici."""
+    annonce = Annonce.query.get_or_404(annonce_id)
+
+    destinee_a_moi = annonce.destinataire in ("tous", current_user.role)
+    if not destinee_a_moi and current_user.role != "developpeur":
+        abort(403)
+
+    return render_template("communication/detail.html", annonce=annonce)
 
 
 @communication_bp.route("/<int:annonce_id>/supprimer", methods=["POST"])

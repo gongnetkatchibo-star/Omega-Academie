@@ -111,3 +111,19 @@ def export_pdf_liste(titre, sous_titre, entetes, lignes, nom_fichier):
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}.pdf"
     return reponse
+
+
+# Extensions autorisées pour les fichiers envoyés par les utilisateurs —
+# jamais d'exécutable ni de script, quel que soit le module (sept. 2026).
+EXTENSIONS_DOCUMENTS = {"pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "txt", "csv"}
+EXTENSIONS_IMAGES = {"jpg", "jpeg", "png", "gif", "webp"}
+EXTENSIONS_VIDEOS = {"mp4", "webm", "mov"}
+EXTENSIONS_BIBLIOTHEQUE = EXTENSIONS_DOCUMENTS | EXTENSIONS_IMAGES | EXTENSIONS_VIDEOS
+EXTENSIONS_PIECE_JOINTE = EXTENSIONS_DOCUMENTS | EXTENSIONS_IMAGES
+
+
+def extension_autorisee(nom_fichier, extensions_autorisees):
+    if "." not in nom_fichier:
+        return False
+    extension = nom_fichier.rsplit(".", 1)[1].lower()
+    return extension in extensions_autorisees

@@ -37,6 +37,7 @@ def saisie(classe_id):
     }
 
     if request.method == "POST":
+        eleves_nouvellement_absents = []
         for eleve in eleves:
             est_absent = request.form.get(f"absent_{eleve.id}") == "on"
             justifiee = request.form.get(f"justifiee_{eleve.id}") == "on"
@@ -52,12 +53,32 @@ def saisie(classe_id):
                         eleve_id=eleve.id, classe_id=classe_id, date=date_selectionnee,
                         justifiee=justifiee, motif=motif or None, enseignant_id=profil.id,
                     ))
+                    if not justifiee:
+                        eleves_nouvellement_absents.append(eleve)
             elif existante:
                 # Décoché après avoir été marqué absent : on corrige, on ne
                 # laisse pas une absence fantôme.
                 db.session.delete(existante)
 
         db.session.commit()
+
+        # Alerte automatique au parent dès que le seuil est franchi
+        # (pile à ce moment, pas à chaque absence suivante — sept. 2026).
+        from app.services.alertes import SEUIL_ABSENCES_INJUSTIFIEES
+        from app.services.notifications import notifier
+        for eleve in eleves_nouvellement_absents:
+            nb = Absence.query.filter_by(eleve_id=eleve.id, justifiee=False).count()
+            if nb == SEUIL_ABSENCES_INJUSTIFIEES and eleve.parents:
+                notifier(
+                    [p.email for p in eleve.parents],
+                    f"Absences répétées — {eleve.nom_complet}",
+                    (
+                        f"Bonjour,\n\n"
+                        f"{eleve.nom_complet} a atteint {nb} absences non justifiées "
+                        f"cette année. Nous t'invitons à contacter l'école si besoin.\n\n"
+                        f"Ceci est une notification automatique."
+                    ),
+                )
         flash(f"Absences enregistrées pour le {date_selectionnee.strftime('%d/%m/%Y')}.", "info")
         return redirect(url_for("absences.saisie", classe_id=classe_id, date=date_selectionnee.isoformat()))
 

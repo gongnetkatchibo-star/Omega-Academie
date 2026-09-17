@@ -44,6 +44,20 @@ class Config:
     # coût). Renseigner une clé pour activer un vrai modèle plus tard.
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
+    # Cookies de session durcis (sept. 2026) :
+    # - HTTPONLY : inaccessible en JavaScript, limite le vol de session par une faille XSS.
+    # - SAMESITE=Lax : bloque l'envoi du cookie depuis un site tiers (protection CSRF supplémentaire).
+    # - SECURE activé uniquement en production (HTTPS) — désactivé en dev, où il n'y a pas de HTTPS local.
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = False
+
+    # Taille maximale d'un fichier envoyé (upload) — au-delà, Flask
+    # refuse la requête automatiquement (erreur 413), avant même
+    # d'atteindre le code de la route (sept. 2026). 20 Mo couvre
+    # largement un document ou une photo de bonne qualité.
+    MAX_CONTENT_LENGTH = 20 * 1024 * 1024
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -51,10 +65,21 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    SESSION_COOKIE_SECURE = True
+
+
+class TestingConfig(Config):
+    """Utilisée uniquement par la suite de tests (pytest) — base en
+    mémoire, jamais la vraie base, et CSRF désactivé pour ne pas avoir à
+    extraire un jeton à chaque requête de test (sept. 2026)."""
+    TESTING = True
+    WTF_CSRF_ENABLED = False
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
 
 config = {
     "development": DevelopmentConfig,
     "production": ProductionConfig,
+    "testing": TestingConfig,
     "default": DevelopmentConfig,
 }

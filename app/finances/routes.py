@@ -7,6 +7,7 @@ from app.models.paiement import Paiement, MODES_PAIEMENT, ECHEANCES, LIBELLES_EC
 from app.finances import finances_bp
 from app.utils import roles_required
 from app.services.paiements import enregistrer_paiement, resume_paiements
+from app.services.journal import journaliser
 from app.models.mouvement_caisse import MouvementCaisse
 
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
@@ -26,6 +27,42 @@ def liste():
         r = resume_paiements(e)
         lignes.append({"eleve": e, "du": r["du"], "paye": r["paye"], "solde": r["solde"], "statut": r["statut"]})
     return render_template("finances/liste.html", lignes=lignes)
+
+
+@finances_bp.route("/<int:eleve_id>/relancer", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="finances")
+def relancer(eleve_id):
+    """Relance manuelle — le comptable déclenche l'email quand il le
+    juge utile, plutôt qu'un envoi automatique qui pourrait harceler une
+    famille en cours d'arrangement avec l'école (sept. 2026)."""
+    from app.services.notifications import notifier
+
+    eleve = Eleve.query.get_or_404(eleve_id)
+    resume = resume_paiements(eleve)
+
+    if resume["solde"] <= 0:
+        flash("Rien à relancer, le solde est déjà à jour.", "error")
+        return redirect(url_for("finances.detail", eleve_id=eleve_id))
+
+    if not eleve.parents:
+        flash("Aucun parent lié à ce dossier pour recevoir la relance.", "error")
+        return redirect(url_for("finances.detail", eleve_id=eleve_id))
+
+    envoye = notifier(
+        [p.email for p in eleve.parents],
+        f"Rappel de paiement — {eleve.nom_complet}",
+        (
+            f"Bonjour,\n\n"
+            f"Nous te rappelons qu'un solde de {resume['solde']:.0f} reste à régler "
+            f"pour la scolarité de {eleve.nom_complet}.\n\n"
+            f"Merci de régulariser dès que possible, ou de contacter le secrétariat "
+            f"pour un arrangement.\n\n"
+            f"Ceci est une notification envoyée par l'école."
+        ),
+    )
+    flash("Relance envoyée." if envoye else "Échec de l'envoi — vérifie la configuration email.", "info" if envoye else "error")
+    return redirect(url_for("finances.detail", eleve_id=eleve_id))
 
 
 @finances_bp.route("/<int:eleve_id>", methods=["GET", "POST"])
@@ -92,6 +129,12 @@ def modifier_paiement(paiement_id):
         paiement.echeance = echeance
         paiement.reference = reference or None
 
+        journaliser(
+            "correction_paiement",
+            details=f"{eleve.nom_complet} — reçu {paiement.numero_recu} → {montant:.0f} ({mode})",
+            cible_type="Paiement", cible_id=paiement.id,
+        )
+
         # La ligne de Caisse liée doit rester synchronisée — on ne
         # ressaisit jamais la même correction à deux endroits.
         mouvement = MouvementCaisse.query.filter_by(origine_module="finances", origine_id=paiement.id).first()
@@ -120,6 +163,11 @@ def supprimer_paiement(paiement_id):
     eleve_id = paiement.eleve_id
     numero = paiement.numero_recu
 
+    journaliser(
+        "suppression_paiement",
+        details=f"{paiement.eleve.nom_complet} — reçu {numero} ({paiement.montant:.0f})",
+        cible_type="Paiement", cible_id=paiement.id,
+    )
     MouvementCaisse.query.filter_by(origine_module="finances", origine_id=paiement.id).delete()
     db.session.delete(paiement)
     db.session.commit()
