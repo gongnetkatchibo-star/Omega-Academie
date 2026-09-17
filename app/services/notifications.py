@@ -9,7 +9,7 @@ notification ratée ne doit jamais empêcher un paiement d'être enregistré).""
 from flask import current_app
 from flask_mail import Message
 
-from app.extensions import mail
+from app.extensions import mail, envoyer_email_securise
 
 
 def notifier(destinataires, sujet, corps):
@@ -21,8 +21,7 @@ def notifier(destinataires, sujet, corps):
         return False
     try:
         msg = Message(subject=sujet, recipients=destinataires, body=corps)
-        mail.send(msg)
-        return True
+        return envoyer_email_securise(msg)
     except Exception:
         current_app.logger.exception("Échec de l'envoi d'une notification par email.")
         return False

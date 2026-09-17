@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from flask_mail import Message
 
-from app.extensions import db, mail
+from app.extensions import db, mail, envoyer_email_securise
 from app.models.user import User
 from app.auth import auth_bp
 
@@ -49,8 +49,7 @@ def _envoyer_email_reset(user, lien_reset):
                 f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
             ),
         )
-        mail.send(msg)
-        return True
+        return envoyer_email_securise(msg)
     except Exception:
         current_app.logger.exception("Échec de l'envoi de l'email de réinitialisation.")
         return False
@@ -75,8 +74,7 @@ def _envoyer_email_reset_multi(destinataires, user, lien_reset):
                 f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
             ),
         )
-        mail.send(msg)
-        return True
+        return envoyer_email_securise(msg)
     except Exception:
         current_app.logger.exception("Échec de l'envoi de l'email de réinitialisation.")
         return False
@@ -100,8 +98,7 @@ def _envoyer_code_verification(user, code):
                 f"au secrétariat pour validation."
             ),
         )
-        mail.send(msg)
-        return True
+        return envoyer_email_securise(msg)
     except Exception:
         current_app.logger.exception("Échec de l'envoi du code de vérification d'inscription.")
         return False
