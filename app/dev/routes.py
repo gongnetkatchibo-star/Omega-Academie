@@ -6,13 +6,14 @@ from app.models.user import User, ROLES, STATUTS
 from app.models.permission import Permission, MODULES
 from app.services.permissions import toutes_les_permissions, vider_cache
 from app.services.modules_par_defaut import ROLES_PAR_DEFAUT
+from app.services.journal import journaliser
 from app.dev import dev_bp
 from app.utils import roles_required
 
 
 @dev_bp.route("/")
 @login_required
-@roles_required("developpeur", "fondateur")
+@roles_required("developpeur", module="gestion_roles")
 def utilisateurs():
     """Attribution des rôles et statuts — accessible au développeur et au
     fondateur (décision du fondateur, sept. 2026). Le secrétariat ne peut
@@ -32,7 +33,7 @@ def utilisateurs():
 
 @dev_bp.route("/utilisateur/<int:user_id>", methods=["POST"])
 @login_required
-@roles_required("developpeur", "fondateur")
+@roles_required("developpeur", module="gestion_roles")
 def modifier_utilisateur(user_id):
     utilisateur = User.query.get_or_404(user_id)
 
@@ -51,8 +52,14 @@ def modifier_utilisateur(user_id):
         flash("Tu ne peux pas changer ton propre rôle depuis cet écran — demande à un autre développeur ou fondateur de le faire.", "error")
         return redirect(url_for("dev.utilisateurs"))
 
+    ancien_role, ancien_statut = utilisateur.role, utilisateur.statut
     utilisateur.role = nouveau_role
     utilisateur.statut = nouveau_statut
+    journaliser(
+        "modification_role_statut",
+        details=f"{utilisateur.nom_complet} : {ancien_role}/{ancien_statut} → {nouveau_role}/{nouveau_statut}",
+        cible_type="User", cible_id=utilisateur.id,
+    )
     db.session.commit()
 
     flash(f"{utilisateur.nom_complet} : rôle « {nouveau_role} », statut « {nouveau_statut} ».", "info")
@@ -110,6 +117,12 @@ def supprimer_utilisateur(user_id):
     TestNiveau.query.filter_by(evaluateur_id=utilisateur.id).update({"evaluateur_id": None})
 
     nom = utilisateur.nom_complet
+    role_supprime = utilisateur.role
+    journaliser(
+        "suppression_utilisateur",
+        details=f"{nom} ({role_supprime}, {utilisateur.email})",
+        cible_type="User", cible_id=utilisateur.id,
+    )
     db.session.delete(utilisateur)
     db.session.commit()
 
@@ -118,6 +131,32 @@ def supprimer_utilisateur(user_id):
 
 
 ROLES_MATRICE = [r for r in ROLES if r != "developpeur"]  # accès complet, inutile à afficher/modifier
+
+
+@dev_bp.route("/journal")
+@login_required
+@roles_required("developpeur", module="journal_actions")
+def journal():
+    from app.models.journal import JournalAction
+
+    utilisateur_id = request.args.get("utilisateur_id", type=int)
+    action = request.args.get("action", "").strip()
+
+    requete = JournalAction.query
+    if utilisateur_id:
+        requete = requete.filter_by(utilisateur_id=utilisateur_id)
+    if action:
+        requete = requete.filter(JournalAction.action == action)
+
+    entrees = requete.order_by(JournalAction.date_action.desc()).limit(500).all()
+    actions_disponibles = sorted({a for (a,) in db.session.query(JournalAction.action).distinct()})
+    utilisateurs_disponibles = User.query.order_by(User.nom_complet).all()
+
+    return render_template(
+        "dev/journal.html", entrees=entrees, actions_disponibles=actions_disponibles,
+        utilisateurs_disponibles=utilisateurs_disponibles,
+        filtre_utilisateur_id=utilisateur_id, filtre_action=action,
+    )
 
 
 @dev_bp.route("/permissions")
@@ -154,6 +193,7 @@ def enregistrer_permissions():
             else:
                 db.session.add(Permission(role=role, module=module, autorise=autorise))
 
+    journaliser("modification_permissions", details="Matrice de permissions mise à jour")
     db.session.commit()
     vider_cache()
     flash("Permissions mises à jour.", "info")

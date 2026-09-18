@@ -33,6 +33,7 @@ def notifier_paiement(paiement, eleve):
 
 def notifier_annonce(annonce):
     from app.models.user import User
+    from flask import url_for
 
     if annonce.destinataire == "tous":
         comptes = User.query.filter_by(statut="actif").all()
@@ -40,11 +41,12 @@ def notifier_annonce(annonce):
         comptes = User.query.filter_by(statut="actif", role=annonce.destinataire).all()
 
     destinataires = [u.email for u in comptes]
+    lien = url_for("communication.detail", annonce_id=annonce.id, _external=True)
     corps = (
         f"Bonjour,\n\n"
         f"Une nouvelle annonce vient d'être publiée sur la plateforme :\n\n"
         f"{annonce.titre}\n\n"
         f"{annonce.contenu}\n\n"
-        f"Connecte-toi à l'application pour plus de détails."
+        f"Voir plus : {lien}"
     )
     return notifier(destinataires, f"Nouvelle annonce — {annonce.titre}", corps)

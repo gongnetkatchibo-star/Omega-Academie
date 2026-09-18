@@ -3,14 +3,15 @@ import io
 import zipfile
 from datetime import datetime
 
-from flask import render_template, redirect, url_for, flash, request, send_from_directory, send_file, current_app
+from flask import render_template, redirect, url_for, flash, request, send_from_directory, send_file, current_app, abort
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.ressource import Ressource, TYPES_RESSOURCE
 from app.bibliotheque import bibliotheque_bp
-from app.utils import roles_required
+from app.utils import roles_required, EXTENSIONS_BIBLIOTHEQUE, extension_autorisee
+from app.services.journal import journaliser
 
 ROLES_GESTION = ["bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant"]
 
@@ -48,6 +49,10 @@ def nouvelle():
 
         if not titre or type_ not in TYPES_RESSOURCE or not fichier or fichier.filename == "":
             flash("Merci de remplir le titre, le type et de choisir un fichier.", "error")
+            return render_template("bibliotheque/nouvelle.html", types=TYPES_RESSOURCE)
+
+        if not extension_autorisee(fichier.filename, EXTENSIONS_BIBLIOTHEQUE):
+            flash("Type de fichier non autorisé (document, image ou vidéo uniquement).", "error")
             return render_template("bibliotheque/nouvelle.html", types=TYPES_RESSOURCE)
 
         nom_securise = secure_filename(fichier.filename)
@@ -92,6 +97,31 @@ def basculer_verrouillage(ressource_id):
     return redirect(url_for("bibliotheque.liste"))
 
 
+@bibliotheque_bp.route("/<int:ressource_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer(ressource_id):
+    """Le bibliothécaire et la direction peuvent supprimer n'importe
+    quelle ressource ; un enseignant ne peut supprimer que celles qu'il
+    a lui-même ajoutées (même logique que les annonces, sept. 2026)."""
+    ressource = Ressource.query.get_or_404(ressource_id)
+
+    ROLES_SUPPRESSION_LIBRE = ["bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "developpeur"]
+    est_auteur = ressource.ajoute_par_id == current_user.id
+    if current_user.role not in ROLES_SUPPRESSION_LIBRE and not (current_user.role == "enseignant" and est_auteur):
+        abort(403)
+
+    chemin = os.path.join(_dossier_upload(), ressource.nom_fichier)
+    if os.path.exists(chemin):
+        os.remove(chemin)
+
+    titre = ressource.titre
+    journaliser("suppression_ressource", details=titre, cible_type="Ressource", cible_id=ressource.id)
+    db.session.delete(ressource)
+    db.session.commit()
+    flash(f"« {titre} » supprimée de la bibliothèque.", "info")
+    return redirect(url_for("bibliotheque.liste"))
+
+
 @bibliotheque_bp.route("/importer", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_GESTION, module="bibliotheque")
@@ -110,8 +140,12 @@ def importer():
             return render_template("bibliotheque/importer.html", types=TYPES_RESSOURCE)
 
         nb_importes = 0
+        nb_rejetes = 0
         for fichier in fichiers:
             if not fichier or fichier.filename == "":
+                continue
+            if not extension_autorisee(fichier.filename, EXTENSIONS_BIBLIOTHEQUE):
+                nb_rejetes += 1
                 continue
             nom_securise = secure_filename(fichier.filename)
             nom_unique = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}_{nom_securise}"
@@ -125,7 +159,10 @@ def importer():
             nb_importes += 1
 
         db.session.commit()
-        flash(f"{nb_importes} fichier(s) importé(s).", "info")
+        message = f"{nb_importes} fichier(s) importé(s)."
+        if nb_rejetes:
+            message += f" {nb_rejetes} fichier(s) rejeté(s) (type non autorisé)."
+        flash(message, "info")
         return redirect(url_for("bibliotheque.liste"))
 
     return render_template("bibliotheque/importer.html", types=TYPES_RESSOURCE)

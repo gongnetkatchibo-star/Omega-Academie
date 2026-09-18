@@ -38,6 +38,28 @@ def _construire_grille(creneaux):
     return grille
 
 
+def _se_chevauchent(debut1, fin1, debut2, fin2):
+    return debut1 < fin2 and debut2 < fin1
+
+
+def _conflit_creneau(classe_id, enseignant_id, jour, heure_debut, heure_fin, exclure_id=None):
+    """Détecte un conflit avant de créer un créneau : la même classe ne
+    peut pas avoir deux matières en même temps, et un enseignant ne peut
+    pas être dans deux classes à la fois (sept. 2026)."""
+    requete = Creneau.query.filter_by(jour=jour)
+    if exclure_id:
+        requete = requete.filter(Creneau.id != exclure_id)
+
+    for c in requete.all():
+        if not _se_chevauchent(heure_debut, heure_fin, c.heure_debut, c.heure_fin):
+            continue
+        if c.classe_id == classe_id:
+            return f"Conflit : {c.classe.nom} a déjà {c.matiere} de {c.heure_debut} à {c.heure_fin} le {jour}."
+        if enseignant_id and c.enseignant_id == enseignant_id:
+            return f"Conflit : {c.enseignant.nom_complet} enseigne déjà {c.classe.nom} de {c.heure_debut} à {c.heure_fin} le {jour}."
+    return None
+
+
 @emploi_du_temps_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_LECTURE)
@@ -60,13 +82,19 @@ def classe(classe_id):
 
         if not all([matiere, jour, heure_debut, heure_fin]):
             flash("Merci de remplir tous les champs.", "error")
+        elif heure_fin <= heure_debut:
+            flash("L'heure de fin doit être après l'heure de début.", "error")
         else:
-            db.session.add(Creneau(
-                classe_id=classe_id, enseignant_id=enseignant_id, matiere=matiere,
-                jour=jour, heure_debut=heure_debut, heure_fin=heure_fin,
-            ))
-            db.session.commit()
-            flash("Créneau ajouté.", "info")
+            conflit = _conflit_creneau(classe_id, enseignant_id, jour, heure_debut, heure_fin)
+            if conflit:
+                flash(conflit, "error")
+            else:
+                db.session.add(Creneau(
+                    classe_id=classe_id, enseignant_id=enseignant_id, matiere=matiere,
+                    jour=jour, heure_debut=heure_debut, heure_fin=heure_fin,
+                ))
+                db.session.commit()
+                flash("Créneau ajouté.", "info")
         return redirect(url_for("emploi_du_temps.classe", classe_id=classe_id))
 
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()

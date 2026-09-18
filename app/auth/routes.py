@@ -165,6 +165,14 @@ def connexion():
 
         login_user(user)
         flash(f"Bienvenue, {user.nom_complet}.", "info")
+
+        # Retour direct à la page demandée avant la connexion (ex. le
+        # lien « Voir plus » d'un email d'annonce). On n'accepte qu'un
+        # chemin interne, jamais une adresse externe, pour ne pas servir
+        # de rebond vers un autre site (sept. 2026).
+        destination = request.args.get("next") or request.form.get("next")
+        if destination and destination.startswith("/") and not destination.startswith("//"):
+            return redirect(destination)
         return redirect(url_for("main.index"))
 
     return render_template("auth/connexion.html")

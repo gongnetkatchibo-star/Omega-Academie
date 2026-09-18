@@ -9,6 +9,7 @@ from app.models.salaire import Salaire, STATUTS_SALAIRE, LIBELLES_STATUT_SALAIRE
 from app.models.mouvement_caisse import MouvementCaisse
 from app.salaires import salaires_bp
 from app.utils import roles_required
+from app.services.journal import journaliser
 
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
 ROLES_SUPPRESSION = ["fondateur", "administrateur_general"]
@@ -77,6 +78,7 @@ def marquer_paye(salaire_id):
 
     salaire.statut = "paye"
     salaire.date_paiement = datetime.utcnow().date()
+    journaliser("salaire_marque_paye", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode} ({salaire.montant:.0f})", cible_type="Salaire", cible_id=salaire.id)
     db.session.flush()
 
     db.session.add(MouvementCaisse(
@@ -101,6 +103,7 @@ def marquer_paye(salaire_id):
 @roles_required(*ROLES_SUPPRESSION)
 def supprimer(salaire_id):
     salaire = Salaire.query.get_or_404(salaire_id)
+    journaliser("suppression_salaire", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode}", cible_type="Salaire", cible_id=salaire.id)
     MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).delete()
     db.session.delete(salaire)
     db.session.commit()

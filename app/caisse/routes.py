@@ -11,6 +11,7 @@ from app.models.paiement import MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
 from app.caisse import caisse_bp
 from app.utils import roles_required, html_vers_pdf
 from app.services.paiements import enregistrer_paiement
+from app.services.journal import journaliser
 
 # Même périmètre que le module Finances (le secrétariat n'y a plus accès,
 # décision de la direction — sept. 2026). Le comptable et la direction
@@ -148,6 +149,7 @@ def modifier(mouvement_id):
         mouvement.recette = recette
         mouvement.depense = depense
         mouvement.observation = observation
+        journaliser("correction_mouvement_caisse", details=libelle, cible_type="MouvementCaisse", cible_id=mouvement.id)
         db.session.commit()
         flash("Mouvement de caisse corrigé.", "info")
         return redirect(url_for("caisse.liste"))
@@ -163,6 +165,7 @@ def supprimer(mouvement_id):
     if mouvement.automatique:
         flash("Cette ligne vient d'un paiement de scolarité : supprime le paiement depuis Finances plutôt que la ligne de Caisse.", "error")
         return redirect(url_for("caisse.liste"))
+    journaliser("suppression_mouvement_caisse", details=mouvement.libelle, cible_type="MouvementCaisse", cible_id=mouvement.id)
     db.session.delete(mouvement)
     db.session.commit()
     flash("Mouvement de caisse supprimé.", "info")

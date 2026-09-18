@@ -20,6 +20,12 @@ MODULES = [
     ("statistiques", "Statistiques"),
     ("secretariat", "Validation des comptes"),
     ("absences", "Absences"),
+    ("alertes", "Alertes (absences/moyennes)"),
+    # Zones d'administration technique — réservées au développeur par
+    # défaut, à accorder explicitement s'il le décide (sept. 2026).
+    ("gestion_roles", "Attribution des rôles"),
+    ("journal_actions", "Journal d'actions"),
+    ("sauvegarde", "Sauvegarde des données"),
 ]
 MODULES_CLES = [cle for cle, _ in MODULES]
 
