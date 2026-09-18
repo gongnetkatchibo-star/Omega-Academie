@@ -10,8 +10,11 @@
     <label>Personnel
       <select name="personnel_id" required>
         <option value="">— Choisir —</option>
-        {% for p in personnel %}<option value="{{ p.id }}">{{ p.nom_complet }} ({{ p.role }})</option>{% endfor %}
+        {% for p in personnel %}<option value="{{ p.id }}">{{ p.nom_complet }}</option>{% endfor %}
       </select>
+    </label>
+    <label>Fonction
+      <input type="text" name="fonction" placeholder="Ex. Enseignant, Comptable, Surveillant">
     </label>
     <label>Mois
       <select name="mois" required>
@@ -24,7 +27,13 @@
     <label>Montant
       <input type="number" step="1" min="1" name="montant" required>
     </label>
+    <label>Email de contact (pour l'avis de paiement)
+      <input type="email" name="email_contact" placeholder="Laisser vide pour utiliser l'email du compte">
+    </label>
+    <label>Téléphone de contact
+      <input type="text" name="telephone_contact" placeholder="Laisser vide pour utiliser celui du compte">
+    </label>
     <button type="submit">Enregistrer (impayé)</button>
   </form>
-  <p class="lien-secondaire">Le salaire est créé au statut "impayé". Clique sur "Marquer payé" une fois le versement réellement effectué — ça enregistrera automatiquement la dépense dans la Caisse.</p>
+  <p class="lien-secondaire">Le salaire est créé au statut "impayé". Clique sur "Marquer payé" une fois le versement réellement effectué — ça enregistrera automatiquement la dépense dans la Caisse et enverra un avis de paiement par email.</p>
 {% endblock %}

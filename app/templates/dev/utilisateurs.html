@@ -11,6 +11,9 @@
   {% if acces("developpeur", module="journal_actions") %}
     <p class="lien-secondaire"><a href="{{ url_for('dev.journal') }}">Consulter le journal d'actions</a></p>
   {% endif %}
+  {% if acces("developpeur", module="journal_emails") %}
+    <p class="lien-secondaire"><a href="{{ url_for('dev.journal_emails') }}">Consulter le journal des emails envoyés</a></p>
+  {% endif %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}

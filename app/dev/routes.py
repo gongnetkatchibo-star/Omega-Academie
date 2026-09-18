@@ -198,3 +198,20 @@ def enregistrer_permissions():
     vider_cache()
     flash("Permissions mises à jour.", "info")
     return redirect(url_for("dev.permissions"))
+
+
+@dev_bp.route("/journal-emails")
+@login_required
+@roles_required("developpeur", module="journal_emails")
+def journal_emails():
+    from app.models.journal_email import JournalEmail
+
+    statut = request.args.get("statut")
+    requete = JournalEmail.query
+    if statut == "reussi":
+        requete = requete.filter_by(reussi=True)
+    elif statut == "echec":
+        requete = requete.filter_by(reussi=False)
+
+    entrees = requete.order_by(JournalEmail.date_envoi.desc()).limit(500).all()
+    return render_template("dev/journal_emails.html", entrees=entrees, filtre_statut=statut)

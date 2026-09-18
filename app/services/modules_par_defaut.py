@@ -29,5 +29,6 @@ ROLES_PAR_DEFAUT = {
     # autre rôle doit se voir accorder l'accès explicitement.
     "gestion_roles": [],
     "journal_actions": [],
+    "journal_emails": [],
     "sauvegarde": [],
 }

@@ -25,6 +25,7 @@ MODULES = [
     # défaut, à accorder explicitement s'il le décide (sept. 2026).
     ("gestion_roles", "Attribution des rôles"),
     ("journal_actions", "Journal d'actions"),
+    ("journal_emails", "Journal des emails envoyés"),
     ("sauvegarde", "Sauvegarde des données"),
 ]
 MODULES_CLES = [cle for cle, _ in MODULES]

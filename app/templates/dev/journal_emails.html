@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Journal des emails{% endblock %}
+{% block content %}
+  <h1>Journal des emails envoyés</h1>
+  <p class="lien-secondaire">Les 500 tentatives d'envoi les plus récentes (réussies ou non) — inscription, mots de passe, paiements, salaires, annonces.</p>
+
+  <form method="get" class="formulaire-filtre">
+    <label>Statut
+      <select name="statut">
+        <option value="">Tous</option>
+        <option value="reussi" {% if filtre_statut == "reussi" %}selected{% endif %}>Réussis</option>
+        <option value="echec" {% if filtre_statut == "echec" %}selected{% endif %}>Échecs</option>
+      </select>
+    </label>
+    <button type="submit">Filtrer</button>
+    {% if filtre_statut %}<a href="{{ url_for('dev.journal_emails') }}">Réinitialiser</a>{% endif %}
+  </form>
+
+  {% if entrees %}
+    <table class="table">
+      <thead><tr><th>Date</th><th>Destinataire(s)</th><th>Sujet</th><th>Statut</th></tr></thead>
+      <tbody>
+        {% for e in entrees %}
+          <tr>
+            <td>{{ e.date_envoi.strftime("%d/%m/%Y %H:%M") }}</td>
+            <td>{{ e.destinataires }}</td>
+            <td>{{ e.sujet }}</td>
+            <td class="{{ 'solde-ok' if e.reussi else 'solde-du' }}">{{ "Envoyé" if e.reussi else "Échec" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Aucun email envoyé pour l'instant.</p>
+  {% endif %}
+{% endblock %}

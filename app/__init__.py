@@ -50,6 +50,19 @@ def create_app(config_name=None):
         return render_template("errors/500.html"), 500
 
     @app.template_global()
+    def version_fichier_statique(chemin_relatif):
+        """Ajoute un paramètre basé sur la date de modification du
+        fichier (ex. ?v=1758...) pour forcer le navigateur à retélécharger
+        le CSS/JS après un déploiement, au lieu de garder une version en
+        cache qui ne change jamais visuellement (constaté sept. 2026)."""
+        import os
+        chemin_complet = os.path.join(app.static_folder, chemin_relatif)
+        try:
+            return int(os.path.getmtime(chemin_complet))
+        except OSError:
+            return 0
+
+    @app.template_global()
     def acces(*roles, module=None):
         """À utiliser dans les templates à la place de
         `current_user.role in [...]`. Inclut toujours le rôle
@@ -168,6 +181,13 @@ def create_app(config_name=None):
     # le plan gratuit Render, qui n'a pas de Shell pour lancer la
     # commande manuellement (sept. 2026).
     with app.app_context():
+        # Import explicite de tout modèle qui ne serait autrement chargé
+        # qu'à l'intérieur d'une fonction (import paresseux) — sans ça,
+        # SQLAlchemy ne connaît pas encore sa table au moment de
+        # db.create_all() et ne la crée jamais (constaté sept. 2026 avec
+        # JournalEmail, jamais importé au niveau module).
+        from app.models.journal_email import JournalEmail  # noqa: F401
+
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes
         ajouter_colonnes_manquantes(app, db)

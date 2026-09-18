@@ -18,7 +18,7 @@
       <tbody>
         {% for s in salaires %}
           <tr>
-            <td>{{ s.personnel.nom_complet }} <span class="lien-secondaire">({{ s.personnel.role }})</span></td>
+            <td>{{ s.personnel.nom_complet }}{% if s.fonction %} <span class="lien-secondaire">— {{ s.fonction }}</span>{% endif %}</td>
             <td>{{ s.libelle_periode }}</td>
             <td>{{ s.montant|int }}</td>
             <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ s.statut }}</td>

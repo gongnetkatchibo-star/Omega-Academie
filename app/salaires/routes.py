@@ -41,6 +41,9 @@ def nouveau():
         mois = request.form.get("mois", type=int)
         annee = request.form.get("annee", type=int)
         montant = request.form.get("montant", type=float)
+        fonction = request.form.get("fonction", "").strip()
+        email_contact = request.form.get("email_contact", "").strip()
+        telephone_contact = request.form.get("telephone_contact", "").strip()
 
         employe = User.query.get(personnel_id) if personnel_id else None
         erreur = None
@@ -55,7 +58,8 @@ def nouveau():
 
         db.session.add(Salaire(
             personnel_id=personnel_id, mois=mois, annee=annee, montant=montant,
-            responsable_id=current_user.id,
+            responsable_id=current_user.id, fonction=fonction or None,
+            email_contact=email_contact or employe.email, telephone_contact=telephone_contact or employe.telephone,
         ))
         db.session.commit()
         flash(f"Salaire de {employe.nom_complet} enregistré pour {MOIS_LIBELLES[mois-1]} {annee} — statut impayé.", "info")
@@ -94,6 +98,20 @@ def marquer_paye(salaire_id):
         automatique=True,
     ))
     db.session.commit()
+
+    if salaire.email_contact:
+        from app.services.notifications import notifier
+        notifier(
+            [salaire.email_contact],
+            f"Salaire versé — {salaire.libelle_periode}",
+            (
+                f"Bonjour {salaire.personnel.nom_complet},\n\n"
+                f"Ton salaire de {salaire.libelle_periode} d'un montant de {salaire.montant:.0f} "
+                f"vient d'être enregistré comme versé.\n\n"
+                f"Ceci est une notification automatique d'Omega Académie."
+            ),
+        )
+
     flash(f"Salaire de {salaire.personnel.nom_complet} marqué payé — dépense enregistrée en Caisse.", "info")
     return redirect(url_for("salaires.liste"))
 

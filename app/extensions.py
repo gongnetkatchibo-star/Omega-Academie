@@ -35,6 +35,7 @@ def envoyer_email(destinataires, sujet, corps):
 
     corps_html = "<br>".join(ligne for ligne in corps.split("\n"))
 
+    reussi = False
     try:
         reponse = requests.post(
             "https://api.brevo.com/v3/smtp/email",
@@ -48,7 +49,21 @@ def envoyer_email(destinataires, sujet, corps):
             },
             timeout=10,
         )
-        return reponse.status_code in (200, 201)
+        reussi = reponse.status_code in (200, 201)
+        return reussi
     except Exception:
         current_app.logger.exception("Échec de l'envoi d'un email via Brevo.")
         return False
+    finally:
+        # Journalisé quoi qu'il arrive (succès ou échec) — pour pouvoir
+        # vérifier après coup ce qui est réellement parti en cas de
+        # réclamation ("je n'ai rien reçu") ou d'incident (sept. 2026).
+        try:
+            from app.models.journal_email import JournalEmail
+            db.session.add(JournalEmail(
+                destinataires=", ".join(destinataires), sujet=sujet, reussi=reussi,
+            ))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception("Échec de la journalisation d'un email.")

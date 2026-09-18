@@ -26,6 +26,14 @@ class Salaire(db.Model):
     responsable_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Coordonnées de la personne payée au moment du salaire — utile
+    # quand elles diffèrent de son compte (ex. email personnel pour
+    # recevoir l'avis de paiement), et pour garder une trace même si le
+    # compte change plus tard (sept. 2026).
+    fonction = db.Column(db.String(80))
+    email_contact = db.Column(db.String(150))
+    telephone_contact = db.Column(db.String(30))
+
     personnel = db.relationship("User", foreign_keys=[personnel_id])
     responsable = db.relationship("User", foreign_keys=[responsable_id])
 
