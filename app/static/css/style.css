@@ -627,13 +627,17 @@ textarea {
 .table {
   display: block;
   overflow-x: auto;
-  white-space: nowrap;
 }
 
 .table thead, .table tbody, .table tr {
   display: table;
   width: 100%;
   table-layout: fixed;
+}
+
+.table th, .table td {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 @media (max-width: 800px) {

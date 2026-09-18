@@ -8,24 +8,86 @@ from app.models.user import User
 from app.models.salaire import Salaire, STATUTS_SALAIRE, LIBELLES_STATUT_SALAIRE, MOIS_LIBELLES
 from app.models.mouvement_caisse import MouvementCaisse
 from app.salaires import salaires_bp
-from app.utils import roles_required
+from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
 from app.services.journal import journaliser
 
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
 ROLES_SUPPRESSION = ["fondateur", "administrateur_general"]
 
 
+def _salaires_filtres():
+    """Filtres communs à l'affichage et à chacun des exports — pour que
+    ce qu'on voit à l'écran soit toujours exactement ce qu'on télécharge."""
+    nom = request.args.get("nom", "").strip()
+    date_debut = request.args.get("date_debut", "").strip()
+    date_fin = request.args.get("date_fin", "").strip()
+
+    requete = Salaire.query.join(User, Salaire.personnel_id == User.id)
+    if nom:
+        requete = requete.filter(User.nom_complet.ilike(f"%{nom}%"))
+    if date_debut:
+        try:
+            requete = requete.filter(Salaire.date_paiement >= datetime.strptime(date_debut, "%Y-%m-%d").date())
+        except ValueError:
+            pass
+    if date_fin:
+        try:
+            requete = requete.filter(Salaire.date_paiement <= datetime.strptime(date_fin, "%Y-%m-%d").date())
+        except ValueError:
+            pass
+
+    salaires = requete.order_by(Salaire.annee.desc(), Salaire.mois.desc()).all()
+    return salaires, nom, date_debut, date_fin
+
+
 @salaires_bp.route("/")
 @login_required
 @roles_required(*ROLES_GESTION, module="salaires")
 def liste():
-    salaires = Salaire.query.order_by(Salaire.annee.desc(), Salaire.mois.desc()).all()
+    salaires, nom, date_debut, date_fin = _salaires_filtres()
     total_paye = sum(s.montant for s in salaires if s.statut == "paye")
     total_impaye = sum(s.montant for s in salaires if s.statut == "impaye")
     return render_template(
         "salaires/liste.html", salaires=salaires, total_paye=total_paye,
         total_impaye=total_impaye, mois_libelles=MOIS_LIBELLES,
+        filtre_nom=nom, filtre_date_debut=date_debut, filtre_date_fin=date_fin,
     )
+
+
+def _lignes_export(salaires):
+    entetes = ["Bénéficiaire", "Fonction", "Email", "Téléphone", "Période", "Montant", "Statut", "Date de paiement"]
+    lignes = [
+        (
+            s.personnel.nom_complet, s.fonction or "", s.email_contact or "", s.telephone_contact or "",
+            s.libelle_periode, s.montant, LIBELLES_STATUT_SALAIRE.get(s.statut, s.statut),
+            s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "",
+        )
+        for s in salaires
+    ]
+    return entetes, lignes
+
+
+@salaires_bp.route("/export/<format_fichier>")
+@login_required
+@roles_required(*ROLES_GESTION, module="salaires")
+def exporter(format_fichier):
+    salaires, nom, date_debut, date_fin = _salaires_filtres()
+    entetes, lignes = _lignes_export(salaires)
+
+    if format_fichier == "csv":
+        return export_csv(entetes, lignes, "journal_salaires")
+    if format_fichier == "xlsx":
+        return export_xlsx(entetes, lignes, "journal_salaires", titre_feuille="Salaires")
+    if format_fichier == "pdf":
+        sous_titre = "Journal de paie"
+        if nom:
+            sous_titre += f" — {nom}"
+        if date_debut or date_fin:
+            sous_titre += f" — du {date_debut or '…'} au {date_fin or '…'}"
+        return export_pdf_liste("Salaires du personnel", sous_titre, entetes, lignes, "journal_salaires")
+
+    flash("Format d'export inconnu.", "error")
+    return redirect(url_for("salaires.liste"))
 
 
 @salaires_bp.route("/nouveau", methods=["GET", "POST"])

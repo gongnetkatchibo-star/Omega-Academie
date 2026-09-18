@@ -119,3 +119,38 @@ def test_marquer_paye_envoie_un_email_au_beneficiaire(client, creer_utilisateur,
     client.post(f"/salaires/{salaire.id}/payer")
 
     assert appels == [(["prof.perso@test.com"], "Salaire versé — Septembre 2026")]
+
+
+def test_journal_salaires_filtrable_par_nom_et_periode(client, creer_utilisateur, db):
+    from app.models.salaire import Salaire
+    from datetime import date
+
+    creer_utilisateur("Compt", "compt@test.com", "comptable")
+    awa = creer_utilisateur("Awa Mbaye", "awa@test.com", "enseignant")
+    ali = creer_utilisateur("Ali Hassan", "ali@test.com", "enseignant")
+    db.session.add(Salaire(personnel_id=awa.id, mois=9, annee=2026, montant=100000, statut="paye", date_paiement=date(2026, 9, 5)))
+    db.session.add(Salaire(personnel_id=ali.id, mois=9, annee=2026, montant=90000, statut="paye", date_paiement=date(2026, 9, 20)))
+    db.session.commit()
+
+    connecter(client, "compt@test.com")
+
+    html = client.get("/salaires/?nom=Awa").data.decode()
+    assert "Awa Mbaye" in html and "Ali Hassan" not in html
+
+    html = client.get("/salaires/?date_debut=2026-09-01&date_fin=2026-09-10").data.decode()
+    assert "Awa Mbaye" in html and "Ali Hassan" not in html
+
+
+def test_journal_salaires_exportable_pdf_excel_csv(client, creer_utilisateur, db):
+    from app.models.salaire import Salaire
+
+    creer_utilisateur("Compt", "compt@test.com", "comptable")
+    prof = creer_utilisateur("Prof Test", "prof@test.com", "enseignant")
+    db.session.add(Salaire(personnel_id=prof.id, mois=9, annee=2026, montant=100000, statut="paye"))
+    db.session.commit()
+
+    connecter(client, "compt@test.com")
+    for fmt in ["csv", "xlsx", "pdf"]:
+        r = client.get(f"/salaires/export/{fmt}")
+        assert r.status_code == 200
+        assert len(r.data) > 0

@@ -12,36 +12,65 @@
     <div class="carte-module carte-stat"><h3>Total impayé</h3><p class="solde-du">{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
   </div>
 
+  <form method="get" class="formulaire-filtre">
+    <label>Nom du bénéficiaire
+      <input type="text" name="nom" value="{{ filtre_nom }}" placeholder="Ex. Mbaye">
+    </label>
+    <label>Payé à partir du
+      <input type="date" name="date_debut" value="{{ filtre_date_debut }}">
+    </label>
+    <label>Jusqu'au
+      <input type="date" name="date_fin" value="{{ filtre_date_fin }}">
+    </label>
+    <button type="submit">Filtrer</button>
+    {% if filtre_nom or filtre_date_debut or filtre_date_fin %}
+      <a href="{{ url_for('salaires.liste') }}">Réinitialiser</a>
+    {% endif %}
+  </form>
+
+  <p class="lien-secondaire">
+    Télécharger cette liste (avec les mêmes filtres) :
+    {% set args = request.args %}
+    <a href="{{ url_for('salaires.exporter', format_fichier='pdf', **args) }}">PDF</a> ·
+    <a href="{{ url_for('salaires.exporter', format_fichier='xlsx', **args) }}">Excel</a> ·
+    <a href="{{ url_for('salaires.exporter', format_fichier='csv', **args) }}">CSV</a>
+  </p>
+
   {% if salaires %}
     <table class="table">
-      <thead><tr><th>Personnel</th><th>Période</th><th>Montant</th><th>Statut</th><th>Date paiement</th><th></th></tr></thead>
+      <thead><tr><th>Bénéficiaire</th><th>Fonction</th><th>Email</th><th>Téléphone</th><th>Période</th><th>Montant</th><th>Statut</th><th>Date paiement</th><th></th></tr></thead>
       <tbody>
         {% for s in salaires %}
           <tr>
-            <td>{{ s.personnel.nom_complet }}{% if s.fonction %} <span class="lien-secondaire">— {{ s.fonction }}</span>{% endif %}</td>
+            <td>{{ s.personnel.nom_complet }}</td>
+            <td>{{ s.fonction or "—" }}</td>
+            <td>{{ s.email_contact or "—" }}</td>
+            <td>{{ s.telephone_contact or "—" }}</td>
             <td>{{ s.libelle_periode }}</td>
             <td>{{ s.montant|int }}</td>
             <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ s.statut }}</td>
             <td>{{ s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "—" }}</td>
             <td>
-              {% if s.statut == "impaye" %}
-                <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}" style="display:inline;">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit">Marquer payé</button>
-                </form>
-              {% endif %}
-              {% if acces("fondateur", "administrateur_general") %}
-                <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette ligne de salaire ?');">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit">Supprimer</button>
-                </form>
-              {% endif %}
+              <div class="actions-tableau">
+                {% if s.statut == "impaye" %}
+                  <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit">Marquer payé</button>
+                  </form>
+                {% endif %}
+                {% if acces("fondateur", "administrateur_general") %}
+                  <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" onsubmit="return confirm('Supprimer cette ligne de salaire ?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="bouton-danger">Supprimer</button>
+                  </form>
+                {% endif %}
+              </div>
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <p>Aucun salaire enregistré.</p>
+    <p>Aucun salaire ne correspond à ces critères.</p>
   {% endif %}
 {% endblock %}
