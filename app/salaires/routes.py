@@ -36,6 +36,14 @@ def nouveau():
     # la direction et le personnel administratif ont aussi un salaire.
     personnel = User.query.filter_by(statut="actif").filter(User.role != "eleve").order_by(User.nom_complet).all()
 
+    # Dernière fonction utilisée pour chaque personne, pour pré-remplir
+    # le champ automatiquement (évite de la retaper à chaque salaire).
+    dernieres_fonctions = {}
+    for s in Salaire.query.filter(Salaire.fonction.isnot(None)).order_by(Salaire.date_creation.desc()).all():
+        dernieres_fonctions.setdefault(s.personnel_id, s.fonction)
+    for p in personnel:
+        p.derniere_fonction_salaire = dernieres_fonctions.get(p.id, "")
+
     if request.method == "POST":
         personnel_id = request.form.get("personnel_id", type=int)
         mois = request.form.get("mois", type=int)

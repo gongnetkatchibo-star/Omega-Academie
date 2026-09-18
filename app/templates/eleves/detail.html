@@ -57,7 +57,7 @@
         <form method="post" action="{{ url_for('eleves.ajouter_parent', eleve_id=eleve.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <label>Ajouter un parent
-            <select name="parent_id">
+            <select name="parent_id" class="recherche-nom">
               {% for p in parents_restants %}
                 <option value="{{ p.id }}">{{ p.nom_complet }} ({{ p.email }})</option>
               {% endfor %}

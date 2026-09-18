@@ -9,7 +9,7 @@
     <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>Compte enseignant (déjà approuvé)
-        <select name="user_id" required>
+        <select name="user_id" class="recherche-nom" required>
           <option value="">Choisir un compte</option>
           {% for u in candidats %}<option value="{{ u.id }}">{{ u.nom_complet }} — {{ u.email }}</option>{% endfor %}
         </select>

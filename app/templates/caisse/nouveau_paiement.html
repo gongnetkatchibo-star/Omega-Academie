@@ -8,7 +8,7 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Élève
-      <select name="eleve_id" required>
+      <select name="eleve_id" class="recherche-nom" required>
         <option value="">— Choisir —</option>
         {% for e in eleves %}
           <option value="{{ e.id }}">{{ e.nom_complet }} ({{ e.matricule }}) — {{ e.classe.nom }}</option>

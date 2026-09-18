@@ -1,20 +1,26 @@
 {% extends "base.html" %}
+{% from "_macros.html" import champ_montant %}
 {% block title %}Nouveau salaire{% endblock %}
 {% block content %}
   <h1>Nouveau salaire</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-  <form method="post">
+  <form method="post" id="form-salaire">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Personnel
-      <select name="personnel_id" required>
+      <select name="personnel_id" id="champ-personnel" class="recherche-nom" required>
         <option value="">— Choisir —</option>
-        {% for p in personnel %}<option value="{{ p.id }}">{{ p.nom_complet }}</option>{% endfor %}
+        {% for p in personnel %}
+          <option value="{{ p.id }}"
+            data-email="{{ p.email }}"
+            data-telephone="{{ p.telephone or '' }}"
+            data-fonction="{{ p.derniere_fonction_salaire or '' }}">{{ p.nom_complet }}</option>
+        {% endfor %}
       </select>
     </label>
     <label>Fonction
-      <input type="text" name="fonction" placeholder="Ex. Enseignant, Comptable, Surveillant">
+      <input type="text" name="fonction" id="champ-fonction" placeholder="Ex. Enseignant, Comptable, Surveillant">
     </label>
     <label>Mois
       <select name="mois" required>
@@ -24,16 +30,83 @@
     <label>Année
       <input type="number" name="annee" value="2026" required>
     </label>
-    <label>Montant
-      <input type="number" step="1" min="1" name="montant" required>
-    </label>
+
+    <div>
+      <strong>Somme à percevoir — un billet à la fois</strong>
+      <p class="lien-secondaire">Choisis un montant par billet ; ajoute autant de lignes que nécessaire pour reconstituer la somme totale.</p>
+      <div id="liste-billets">
+        <div class="ligne-billet">{{ champ_montant("billet_0", 0, 10000, 2000) }}</div>
+      </div>
+      <button type="button" id="bouton-ajouter-billet">+ Ajouter un billet</button>
+      <p><strong>Total : <span id="total-billets">0</span></strong></p>
+      <input type="hidden" name="montant" id="champ-montant-total" value="0">
+    </div>
+
     <label>Email de contact (pour l'avis de paiement)
-      <input type="email" name="email_contact" placeholder="Laisser vide pour utiliser l'email du compte">
+      <input type="email" name="email_contact" id="champ-email-contact" placeholder="Laisser vide pour utiliser l'email du compte">
     </label>
     <label>Téléphone de contact
-      <input type="text" name="telephone_contact" placeholder="Laisser vide pour utiliser celui du compte">
+      <input type="text" name="telephone_contact" id="champ-telephone-contact" placeholder="Laisser vide pour utiliser celui du compte">
     </label>
     <button type="submit">Enregistrer (impayé)</button>
   </form>
   <p class="lien-secondaire">Le salaire est créé au statut "impayé". Clique sur "Marquer payé" une fois le versement réellement effectué — ça enregistrera automatiquement la dépense dans la Caisse et enverra un avis de paiement par email.</p>
+
+  <script>
+    document.getElementById("champ-personnel").addEventListener("change", function () {
+      var option = this.options[this.selectedIndex];
+      document.getElementById("champ-email-contact").value = option.dataset.email || "";
+      document.getElementById("champ-telephone-contact").value = option.dataset.telephone || "";
+      document.getElementById("champ-fonction").value = option.dataset.fonction || "";
+    });
+
+    var compteurBillets = 1;
+    document.getElementById("bouton-ajouter-billet").addEventListener("click", function () {
+      var modele = document.querySelector("#liste-billets .ligne-billet");
+      var nouvelle = modele.cloneNode(true);
+      nouvelle.querySelectorAll("select, input").forEach(function (champ) {
+        champ.name = champ.name.replace(/billet_\d+/, "billet_" + compteurBillets);
+        if (champ.tagName === "SELECT") champ.selectedIndex = 0;
+        if (champ.classList.contains("champ-montant-autre")) { champ.value = ""; champ.style.display = "none"; }
+      });
+      document.getElementById("liste-billets").appendChild(nouvelle);
+      compteurBillets++;
+      attacherEcouteursBillets();
+      recalculerTotal();
+    });
+
+    function valeurLigneBillet(ligne) {
+      var select = ligne.querySelector(".champ-montant-select");
+      var autre = ligne.querySelector(".champ-montant-autre");
+      if (select.value === "") return parseFloat(autre.value) || 0;
+      return parseFloat(select.value) || 0;
+    }
+
+    function recalculerTotal() {
+      var total = 0;
+      document.querySelectorAll("#liste-billets .ligne-billet").forEach(function (ligne) {
+        total += valeurLigneBillet(ligne);
+      });
+      document.getElementById("total-billets").textContent = total;
+      document.getElementById("champ-montant-total").value = total;
+    }
+
+    function attacherEcouteursBillets() {
+      document.querySelectorAll("#liste-billets select, #liste-billets input").forEach(function (champ) {
+        champ.removeEventListener("input", recalculerTotal);
+        champ.removeEventListener("change", recalculerTotal);
+        champ.addEventListener("input", recalculerTotal);
+        champ.addEventListener("change", recalculerTotal);
+      });
+    }
+    attacherEcouteursBillets();
+
+    document.getElementById("form-salaire").addEventListener("submit", function (e) {
+      recalculerTotal();
+      if (parseFloat(document.getElementById("champ-montant-total").value) <= 0) {
+        e.preventDefault();
+        alert("Ajoute au moins un billet pour former la somme à percevoir.");
+      }
+    });
+  </script>
 {% endblock %}

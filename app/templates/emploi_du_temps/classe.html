@@ -49,7 +49,7 @@
         <input type="text" name="matiere" required>
       </label>
       <label>Enseignant
-        <select name="enseignant_id">
+        <select name="enseignant_id" class="recherche-nom">
           <option value="">Non assigné</option>
           {% for e in enseignants %}<option value="{{ e.id }}">{{ e.nom_complet }}</option>{% endfor %}
         </select>

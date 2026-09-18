@@ -6,7 +6,7 @@
 
   <form method="get" class="formulaire-filtre">
     <label>Utilisateur
-      <select name="utilisateur_id">
+      <select name="utilisateur_id" class="recherche-nom">
         <option value="">Tous</option>
         {% for u in utilisateurs_disponibles %}
           <option value="{{ u.id }}" {% if filtre_utilisateur_id == u.id %}selected{% endif %}>{{ u.nom_complet }}</option>

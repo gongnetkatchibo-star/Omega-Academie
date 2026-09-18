@@ -72,3 +72,50 @@ def test_fondateur_peut_supprimer_un_paiement_et_sa_ligne_de_caisse(client, cree
     client.post(f"/finances/paiement/{paiement.id}/supprimer", follow_redirects=True)
     assert Paiement.query.count() == 0
     assert MouvementCaisse.query.count() == 0
+
+
+def test_salaire_capture_fonction_et_contact(client, creer_utilisateur):
+    from app.models.salaire import Salaire
+
+    creer_utilisateur("Compt", "compt@test.com", "comptable")
+    prof = creer_utilisateur("Awa Mbaye", "awa@test.com", "enseignant")
+    connecter(client, "compt@test.com")
+
+    client.post("/salaires/nouveau", data={
+        "personnel_id": prof.id, "fonction": "Enseignante CP1", "mois": "9", "annee": "2026",
+        "montant": "150000", "email_contact": "awa.perso@test.com",
+    })
+    salaire = Salaire.query.first()
+    assert salaire.fonction == "Enseignante CP1"
+    assert salaire.email_contact == "awa.perso@test.com"
+
+
+def test_page_salaire_propose_donnees_pour_auto_remplissage(client, creer_utilisateur):
+    creer_utilisateur("Compt", "compt@test.com", "comptable")
+    creer_utilisateur("Awa Mbaye", "awa@test.com", "enseignant")
+    connecter(client, "compt@test.com")
+
+    html = client.get("/salaires/nouveau").data.decode()
+    assert 'data-email="awa@test.com"' in html
+
+
+def test_marquer_paye_envoie_un_email_au_beneficiaire(client, creer_utilisateur, monkeypatch):
+    from app.models.salaire import Salaire
+    from app.models.journal_email import JournalEmail
+    import app.services.notifications as notifications_module
+
+    appels = []
+    monkeypatch.setattr(notifications_module, "envoyer_email", lambda dest, sujet, corps: appels.append((dest, sujet)) or True)
+
+    creer_utilisateur("Compt", "compt@test.com", "comptable")
+    prof = creer_utilisateur("Prof", "prof@test.com", "enseignant")
+    connecter(client, "compt@test.com")
+
+    client.post("/salaires/nouveau", data={
+        "personnel_id": prof.id, "mois": "9", "annee": "2026", "montant": "100000",
+        "email_contact": "prof.perso@test.com",
+    })
+    salaire = Salaire.query.first()
+    client.post(f"/salaires/{salaire.id}/payer")
+
+    assert appels == [(["prof.perso@test.com"], "Salaire versé — Septembre 2026")]

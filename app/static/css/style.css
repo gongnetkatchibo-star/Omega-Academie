@@ -905,3 +905,32 @@ textarea {
 .formulaire-filtre input {
   max-width: 180px;
 }
+
+/* Menu déroulant avec recherche par nom (voir recherche-nom.js) */
+.recherche-nom-conteneur {
+  position: relative;
+}
+
+.recherche-nom-resultats {
+  position: absolute;
+  z-index: 30;
+  background: #fff;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  display: none;
+}
+
+.recherche-nom-resultats div {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.recherche-nom-resultats div:hover,
+.recherche-nom-resultats div.actif {
+  background: var(--carte);
+}

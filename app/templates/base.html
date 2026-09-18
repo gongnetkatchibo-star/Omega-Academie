@@ -78,5 +78,6 @@
   <div class="container">
     {% block content %}{% endblock %}
   </div>
+  <script src="{{ url_for('static', filename='js/recherche-nom.js') }}?v={{ version_fichier_statique('js/recherche-nom.js') }}"></script>
 </body>
 </html>
