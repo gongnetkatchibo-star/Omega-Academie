@@ -127,3 +127,31 @@ def extension_autorisee(nom_fichier, extensions_autorisees):
         return False
     extension = nom_fichier.rsplit(".", 1)[1].lower()
     return extension in extensions_autorisees
+
+
+def normaliser_numero_tchad(saisie):
+    """Valide et normalise un numéro mobile tchadien.
+
+    Accepte avec ou sans indicatif (+235, 00235, ou rien), espaces
+    ignorés. Un mobile tchadien a 8 chiffres et commence par 6 ou 9
+    (les numéros en 22 sont des lignes fixes, exclues ici puisqu'on veut
+    pouvoir joindre la personne sur mobile). Retourne le numéro au
+    format +235XXXXXXXX, ou None si invalide.
+
+    Remarque : depuis la portabilité des numéros (2020), le premier
+    chiffre ne garantit plus l'opérateur d'origine à 100% — c'est pour
+    ça que l'opérateur est choisi par la personne elle-même dans le
+    formulaire, plutôt que deviné automatiquement à partir du numéro."""
+    import re
+
+    chiffres = re.sub(r"[^0-9]", "", saisie)
+
+    if chiffres.startswith("00235"):
+        chiffres = chiffres[5:]
+    elif chiffres.startswith("235"):
+        chiffres = chiffres[3:]
+
+    if len(chiffres) != 8 or chiffres[0] not in "69":
+        return None
+
+    return f"+235{chiffres}"

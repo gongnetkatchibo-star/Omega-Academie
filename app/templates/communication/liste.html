@@ -15,7 +15,7 @@
     <p class="lien-secondaire"><a href="{{ url_for('communication.nouvelle') }}">+ Nouvelle annonce</a></p>
   {% endif %}
 
-  <form method="get" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+  <form method="get" class="formulaire-filtre">
     <label>Date précise
       <input type="date" name="date" value="{{ filtre_date or '' }}">
     </label>

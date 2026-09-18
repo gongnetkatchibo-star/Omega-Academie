@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Mon profil{% endblock %}
+{% block content %}
+  <h1>Mon profil</h1>
+  <p class="lien-secondaire">Ajoute un ou plusieurs numéros pour être joignable en dehors de l'application (Tchad uniquement pour l'instant).</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <h2>Mes numéros</h2>
+  {% if numeros %}
+    <ul class="liste-demandes">
+      {% for n in numeros %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ n.numero }}</strong>
+            <span>{{ "Airtel Tchad" if n.operateur == "airtel" else "Moov Africa Tchad" }}{% if n.libelle %} · {{ n.libelle }}{% endif %}</span>
+          </div>
+          <div class="actions">
+            <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm('Supprimer ce numéro ?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="bouton-danger">Supprimer</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun numéro enregistré pour l'instant.</p>
+  {% endif %}
+
+  <h2>Ajouter un numéro</h2>
+  <form method="post" action="{{ url_for('main.ajouter_numero') }}" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Numéro (ex. 66 12 34 56)
+      <input type="text" name="numero" placeholder="66 12 34 56" required>
+    </label>
+    <label>Opérateur
+      <select name="operateur" required>
+        <option value="">Choisir…</option>
+        {% for cle, nom in operateurs %}
+          <option value="{{ cle }}">{{ nom }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Nom (optionnel, ex. "Papa", "Bureau")
+      <input type="text" name="libelle" placeholder="Principal">
+    </label>
+    <button type="submit">Ajouter</button>
+  </form>
+{% endblock %}

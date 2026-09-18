@@ -2,8 +2,6 @@
 {% block title %}Espace développeur{% endblock %}
 {% block content %}
   <h1>Espace développeur</h1>
-  <p>Seul ce rôle peut attribuer ou changer un rôle. Le secrétariat approuve
-     seulement les comptes en attente (statut), il ne choisit pas le rôle.</p>
   {% if current_user.role == "developpeur" %}
     <p class="lien-secondaire"><a href="{{ url_for('dev.permissions') }}">Gérer les permissions par module</a></p>
   {% endif %}

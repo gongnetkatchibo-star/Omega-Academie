@@ -1,9 +1,12 @@
-from flask import render_template
+from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 
+from app.extensions import db
 from app.main import main_bp
 from app.models.user import ROLES_DIRECTION, ROLES_PERSONNEL
 from app.models.eleve import Eleve
+from app.models.telephone import NumeroTelephone, OPERATEURS_TCHAD
+from app.utils import normaliser_numero_tchad
 
 
 def _modules_pour(role):
@@ -103,3 +106,47 @@ def index():
         est_personnel=user.role in ROLES_PERSONNEL,
         est_direction=user.role in ROLES_DIRECTION,
     )
+
+
+@main_bp.route("/profil")
+@login_required
+def profil():
+    numeros = NumeroTelephone.query.filter_by(user_id=current_user.id).all()
+    return render_template("main/profil.html", numeros=numeros, operateurs=OPERATEURS_TCHAD)
+
+
+@main_bp.route("/profil/numero/ajouter", methods=["POST"])
+@login_required
+def ajouter_numero():
+    saisie = request.form.get("numero", "")
+    operateur = request.form.get("operateur")
+    libelle = request.form.get("libelle", "").strip()
+
+    numero_normalise = normaliser_numero_tchad(saisie)
+    if not numero_normalise:
+        flash("Numéro invalide — un mobile tchadien a 8 chiffres et commence par 6 ou 9 (ex. 66 12 34 56).", "error")
+        return redirect(url_for("main.profil"))
+
+    if operateur not in dict(OPERATEURS_TCHAD):
+        flash("Merci de choisir l'opérateur.", "error")
+        return redirect(url_for("main.profil"))
+
+    db.session.add(NumeroTelephone(
+        user_id=current_user.id, numero=numero_normalise, operateur=operateur, libelle=libelle or None,
+    ))
+    db.session.commit()
+    flash("Numéro ajouté.", "info")
+    return redirect(url_for("main.profil"))
+
+
+@main_bp.route("/profil/numero/<int:numero_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer_numero(numero_id):
+    numero = NumeroTelephone.query.get_or_404(numero_id)
+    if numero.user_id != current_user.id:
+        from flask import abort
+        abort(403)
+    db.session.delete(numero)
+    db.session.commit()
+    flash("Numéro supprimé.", "info")
+    return redirect(url_for("main.profil"))

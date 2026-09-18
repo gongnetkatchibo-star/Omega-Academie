@@ -9,6 +9,8 @@
 
 body {
   font-family: -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   background-color: var(--cream);
   color: #2c2c2c;
   margin: 0;
@@ -52,7 +54,7 @@ h1, h2, h3 {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .navbar-avatar {
@@ -65,7 +67,7 @@ h1, h2, h3 {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .navbar-onglets {
@@ -83,7 +85,7 @@ h1, h2, h3 {
 .navbar-liens a {
   color: #2c2c2c;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   padding: 12px 14px;
   border-bottom: 3px solid transparent;
   white-space: nowrap;
@@ -117,7 +119,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
+  font-size: 16px;
   color: #333;
 }
 
@@ -125,7 +127,7 @@ input, select {
   padding: 9px 11px;
   border: 1px solid #d6d2c4;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   background: #fff;
   max-width: 380px;
 }
@@ -142,7 +144,7 @@ button {
   border: none;
   padding: 9px 18px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   align-self: flex-start;
@@ -155,7 +157,7 @@ button:hover {
 
 .lien-secondaire {
   margin-top: 16px;
-  font-size: 13px;
+  font-size: 15px;
   color: #333;
 }
 
@@ -203,7 +205,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 13px;
+  font-size: 15px;
   color: #555;
   min-width: 240px;
   flex: 1 1 auto;
@@ -274,7 +276,7 @@ textarea {
   padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   resize: vertical;
 }
@@ -291,7 +293,7 @@ textarea {
   color: #a32d2d;
   border-radius: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: normal;
 }
 
@@ -299,7 +301,7 @@ textarea {
   width: 100%;
   border-collapse: collapse;
   margin-top: 16px;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .table th, .table td {
@@ -312,7 +314,7 @@ textarea {
   color: #fff;
   background: var(--navy);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: 0.2px;
 }
 
@@ -342,7 +344,7 @@ textarea {
   padding-left: 0 !important;
   border-radius: 6px;
   padding: 2px 10px;
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: 16px;
 }
 
@@ -384,7 +386,7 @@ textarea {
 
 .carte-module p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: #555;
 }
 
@@ -398,7 +400,7 @@ textarea {
 .table-dev {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 15px;
   margin-top: 10px;
 }
 
@@ -493,7 +495,7 @@ textarea {
   border-radius: 6px;
   color: var(--navy);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .stats-lien:hover {
@@ -599,7 +601,7 @@ textarea {
 
 .fonctionnalite p {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: #555;
 }
 
@@ -607,7 +609,7 @@ textarea {
   text-align: center;
   padding: 24px 0;
   color: #cfd3d9;
-  font-size: 13px;
+  font-size: 15px;
   background: var(--sombre);
   margin: 40px -20px -40px;
 }
@@ -720,7 +722,7 @@ textarea {
 }
 
 .ligne-frais label {
-  font-size: 12px;
+  font-size: 16px;
   color: #666;
   gap: 4px;
 }
@@ -728,7 +730,7 @@ textarea {
 .ligne-frais select,
 .ligne-frais input {
   max-width: 130px;
-  font-size: 13px;
+  font-size: 15px;
   padding: 6px 8px;
 }
 
@@ -752,7 +754,7 @@ textarea {
 .flashes li {
   padding: 11px 14px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 8px;
   border-left: 4px solid var(--gold);
   background: var(--carte);
@@ -772,7 +774,7 @@ textarea {
 }
 
 .carte-stat h3 {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   color: #5d6b70;
   margin: 0 0 6px 0;
@@ -813,4 +815,93 @@ textarea {
 .grille-stats .carte-module {
   max-width: none;
   flex: none;
+}
+
+/* Page de connexion — carte à deux colonnes (formulaire + info) */
+.carte-connexion {
+  display: flex;
+  max-width: 760px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(15, 95, 166, 0.12);
+  border: 1px solid #e6e2d3;
+}
+
+.connexion-formulaire {
+  flex: 1 1 55%;
+  padding: 36px 32px;
+}
+
+.connexion-formulaire form,
+.connexion-formulaire input {
+  max-width: none;
+}
+
+.connexion-info {
+  flex: 1 1 45%;
+  background: var(--carte);
+  padding: 36px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid #d5e9ee;
+}
+
+.connexion-info h2 {
+  margin-top: 0;
+  font-size: 19px;
+}
+
+.connexion-info hr {
+  border: none;
+  border-top: 1px solid #cfe6ea;
+  margin: 20px 0;
+}
+
+.bouton-secondaire-large {
+  display: inline-block;
+  text-align: center;
+  background: var(--gold);
+  color: #fff;
+  padding: 11px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.bouton-secondaire-large:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+  .carte-connexion {
+    flex-direction: column;
+    margin: 16px;
+  }
+  .connexion-info {
+    border-left: none;
+    border-top: 1px solid #d5e9ee;
+  }
+}
+
+/* Formulaires de filtre (recherche par date, etc.) — en ligne, jamais
+   empilés comme un formulaire de saisie classique. */
+.formulaire-filtre {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin: 16px 0;
+}
+
+.formulaire-filtre label {
+  min-width: 140px;
+}
+
+.formulaire-filtre select,
+.formulaire-filtre input {
+  max-width: 180px;
 }
