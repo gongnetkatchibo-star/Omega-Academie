@@ -55,7 +55,8 @@
           </div>
           {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire") or (current_user.role == "enseignant" and a.auteur_id == current_user.id) %}
             <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm('Supprimer cette annonce ?');">
-              <button type="submit">Supprimer</button>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="bouton-danger">Supprimer</button>
             </form>
           {% endif %}
         </li>

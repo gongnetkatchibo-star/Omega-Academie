@@ -27,7 +27,7 @@
       <h2>{{ titre_vue }}</h2>
 
       {% if vue != 'finances' %}
-        <div class="grille-cartes">
+        <div class="grille-cartes grille-stats">
           <div class="carte-module carte-stat"><h3>Effectif</h3><p>{{ effectif_total }}</p></div>
           <div class="carte-module carte-stat"><h3>Garçons</h3><p>{{ garcons }}</p></div>
           <div class="carte-module carte-stat"><h3>Filles</h3><p>{{ filles }}</p></div>
@@ -62,7 +62,7 @@
         {% endif %}
 
       {% else %}
-        <div class="grille-cartes">
+        <div class="grille-cartes grille-stats">
           <div class="carte-module carte-stat"><h3>Total à recouvrer</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
           <div class="carte-module carte-stat"><h3>Total encaissé</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
           <div class="carte-module carte-stat">

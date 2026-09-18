@@ -16,6 +16,7 @@
 
   {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general") %}
     <form method="post" action="{{ url_for('finances.relancer', eleve_id=eleve.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit">Envoyer une relance de paiement au(x) parent(s)</button>
     </form>
   {% endif %}

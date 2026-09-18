@@ -216,23 +216,44 @@ button:hover {
 
 .carte-demande .actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
 }
 
+.carte-demande .actions form {
+  margin: 0;
+}
+
 .carte-demande .actions a {
-  font-size: 13px;
-  padding: 6px 10px;
+  font-size: 15px;
+  padding: 8px 14px;
   border: 1px solid #cfd8dc;
   border-radius: 6px;
   text-decoration: none;
   background: #fff;
+  font-weight: 500;
+}
+
+.carte-demande .actions button {
+  font-size: 15px;
+  padding: 8px 14px;
 }
 
 .carte-demande .actions a:hover {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.bouton-danger {
+  background-color: #fff !important;
+  color: #a32d2d !important;
+  border: 1px solid #a32d2d !important;
+}
+
+.bouton-danger:hover {
+  background-color: #a32d2d !important;
+  color: #fff !important;
 }
 
 .carte-demande form {
@@ -768,4 +789,28 @@ textarea {
 .carte-stat p.solde-du,
 .carte-stat p.solde-ok {
   font-size: 26px;
+}
+
+/* Boutons côte à côte dans un tableau (ex: Enregistrer / Supprimer) */
+.actions-tableau {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actions-tableau form {
+  margin: 0;
+}
+
+/* Cartes de statistiques : colonnes régulières, même largeur partout,
+   pas de "trou" en fin de ligne comme avec un flex simple. */
+.grille-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: stretch;
+}
+
+.grille-stats .carte-module {
+  max-width: none;
+  flex: none;
 }
