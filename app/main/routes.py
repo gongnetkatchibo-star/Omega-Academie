@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from datetime import datetime
 
 from app.extensions import db
 from app.main import main_bp
@@ -97,6 +98,25 @@ def index():
     # en a, en plus de l'espace propre au rôle.
     enfants = sorted((e for e in user.enfants if e.actif), key=lambda e: e.nom_complet)
 
+    # Rappel de sauvegarde — seulement visible pour ceux qui ont
+    # réellement le droit d'en déclencher une (respecte la matrice de
+    # permissions, pas une liste de rôles fixe — sept. 2026).
+    alerte_sauvegarde = None
+    from app.services.permissions import role_a_acces
+    if role_a_acces(user.role, "sauvegarde", []):
+        from app.models.journal import JournalAction
+        derniere = (
+            JournalAction.query.filter_by(action="sauvegarde_exportee")
+            .order_by(JournalAction.date_action.desc()).first()
+        )
+        jours_limite = 14
+        if derniere is None:
+            alerte_sauvegarde = "Aucune sauvegarde n'a encore été téléchargée."
+        else:
+            jours_ecoules = (datetime.utcnow() - derniere.date_action).days
+            if jours_ecoules >= jours_limite:
+                alerte_sauvegarde = f"Dernière sauvegarde téléchargée il y a {jours_ecoules} jours."
+
     return render_template(
         "main/index.html",
         user=user,
@@ -105,6 +125,7 @@ def index():
         mon_dossier_eleve=mon_dossier_eleve,
         est_personnel=user.role in ROLES_PERSONNEL,
         est_direction=user.role in ROLES_DIRECTION,
+        alerte_sauvegarde=alerte_sauvegarde,
     )
 
 

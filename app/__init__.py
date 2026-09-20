@@ -198,6 +198,9 @@ def create_app(config_name=None):
     from app.documents_officiels import documents_officiels_bp
     app.register_blueprint(documents_officiels_bp)
 
+    from app.messagerie import messagerie_bp
+    app.register_blueprint(messagerie_bp)
+
     from app.notes import notes_bp
     app.register_blueprint(notes_bp)
 

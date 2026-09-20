@@ -60,6 +60,9 @@
         {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire", module="alertes") %}
           <a href="{{ url_for('alertes.tableau') }}">Alertes</a>
         {% endif %}
+        {% if current_user.role == "parent" or acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="messagerie") %}
+          <a href="{{ url_for('messagerie.index') }}">Messages</a>
+        {% endif %}
         <a href="{{ url_for('bibliotheque.liste') }}">Bibliothèque</a>
         <a href="{{ url_for('communication.liste') }}">Annonces</a>
         <a href="{{ url_for('assistant.index') }}">Assistant</a>

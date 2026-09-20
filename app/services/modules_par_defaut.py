@@ -24,6 +24,7 @@ ROLES_PAR_DEFAUT = {
     "secretariat": ["secretaire", "fondateur", "administrateur_general"],
     "absences": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"],
     "alertes": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"],
+    "messagerie": ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"],
     # Aucun rôle par défaut : seul le développeur y accède (il est
     # toujours autorisé, quelle que soit la matrice). Le fondateur ou un
     # autre rôle doit se voir accorder l'accès explicitement.

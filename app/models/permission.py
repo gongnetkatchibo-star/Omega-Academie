@@ -21,6 +21,7 @@ MODULES = [
     ("secretariat", "Validation des comptes"),
     ("absences", "Absences"),
     ("alertes", "Alertes (absences/moyennes)"),
+    ("messagerie", "Messagerie parent-école"),
     # Zones d'administration technique — réservées au développeur par
     # défaut, à accorder explicitement s'il le décide (sept. 2026).
     ("gestion_roles", "Attribution des rôles"),

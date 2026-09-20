@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Messagerie{% endblock %}
+{% block content %}
+  <h1>Messagerie — fils de discussion</h1>
+  {% if parents %}
+    <ul class="liste-demandes">
+      {% for p in parents %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ p.nom_complet }}</strong>
+            {% if non_lus.get(p.id) %}<span class="badge-retard">{{ non_lus[p.id] }} non lu(s)</span>{% endif %}
+          </div>
+          <div class="actions"><a href="{{ url_for('messagerie.fil', parent_id=p.id) }}">Ouvrir le fil</a></div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucun message reçu pour l'instant.</p>
+  {% endif %}
+{% endblock %}

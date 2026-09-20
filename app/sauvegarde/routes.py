@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import send_file
 from flask_login import login_required
 
+from app.extensions import db
 from app.sauvegarde import sauvegarde_bp
 from app.utils import roles_required
 
@@ -60,4 +61,9 @@ def exporter():
 
     tampon.seek(0)
     nom_fichier = f"sauvegarde_omega_academie_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.zip"
+
+    from app.services.journal import journaliser
+    journaliser("sauvegarde_exportee", details=nom_fichier)
+    db.session.commit()
+
     return send_file(tampon, as_attachment=True, download_name=nom_fichier, mimetype="application/zip")

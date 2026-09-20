@@ -9,6 +9,13 @@
     </div>
   </div>
 
+  {% if alerte_sauvegarde %}
+    <div class="carte-attente" style="border-left: 4px solid #a32d2d;">
+      <p><strong>⚠ Sauvegarde recommandée.</strong> {{ alerte_sauvegarde }}
+        <a href="{{ url_for('sauvegarde.exporter') }}">Télécharger une sauvegarde maintenant</a>.</p>
+    </div>
+  {% endif %}
+
   {% if enfants %}
     <h2>Mes enfants</h2>
     <div class="grille-cartes">

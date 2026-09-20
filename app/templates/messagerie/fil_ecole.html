@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Fil — {{ parent.nom_complet }}{% endblock %}
+{% block content %}
+  <h1>Discussion avec {{ parent.nom_complet }}</h1>
+  <p class="lien-secondaire"><a href="{{ url_for('messagerie.index') }}">← Tous les fils</a></p>
+  {% with messages_flash = get_flashed_messages(with_categories=true) %}
+    {% if messages_flash %}<ul class="flashes">{% for category, message in messages_flash %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <div class="carte-attente" style="max-height:400px; overflow-y:auto;">
+    {% if messages %}
+      {% for m in messages %}
+        <p>
+          <strong>{{ "École" if m.auteur_id != parent.id else parent.nom_complet }}</strong>
+          <span class="lien-secondaire">— {{ m.date_envoi.strftime("%d/%m/%Y %H:%M") }}</span><br>
+          {{ m.contenu }}
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>Aucun message dans ce fil.</p>
+    {% endif %}
+  </div>
+
+  <form method="post" action="{{ url_for('messagerie.repondre', parent_id=parent.id) }}" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Réponse
+      <textarea name="contenu" rows="4" required></textarea>
+    </label>
+    <button type="submit">Envoyer</button>
+  </form>
+{% endblock %}
