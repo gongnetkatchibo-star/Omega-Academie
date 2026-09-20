@@ -36,7 +36,7 @@ ROLES_DIRECTEUR_CYCLE = ["directeur_primaire", "directeur_college"]
 # Rôles de personnel administratif / support (accès plus ciblé, un module chacun).
 ROLES_PERSONNEL = ["secretaire", "comptable", "responsable_pedagogique", "bibliothecaire", "personnel"]
 
-STATUTS = ["en_attente", "actif", "refuse"]
+STATUTS = ["en_attente", "actif", "refuse", "verrouille"]
 
 
 class User(UserMixin, db.Model):

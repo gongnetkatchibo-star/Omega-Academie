@@ -1,13 +1,16 @@
 import os
 import click
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import current_user
 from flask_wtf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from config import config
 from app.extensions import db, migrate, login_manager, mail
 
 csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
 def create_app(config_name=None):
@@ -18,11 +21,27 @@ def create_app(config_name=None):
 
     os.makedirs(app.instance_path, exist_ok=True)
 
+    # Suivi d'erreurs Sentry — actif uniquement si un DSN est configuré
+    # (variable d'environnement SENTRY_DSN). Sans lui, l'application
+    # fonctionne exactement comme avant, silencieusement (sept. 2026).
+    if app.config.get("SENTRY_DSN"):
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+
+        sentry_sdk.init(
+            dsn=app.config["SENTRY_DSN"],
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=0.2,
+            environment=config_name,
+            send_default_pii=False,  # jamais de données personnelles des utilisateurs envoyées à Sentry
+        )
+
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     @app.errorhandler(403)
     def erreur_403(e):
@@ -38,6 +57,37 @@ def create_app(config_name=None):
     def erreur_413(e):
         db.session.rollback()
         return render_template("errors/413.html"), 413
+
+    @app.errorhandler(429)
+    def erreur_429(e):
+        db.session.rollback()
+        return render_template("errors/429.html"), 429
+
+    @app.after_request
+    def ajouter_en_tetes_securite(reponse):
+        """En-têtes de sécurité HTTP de base (sept. 2026). Le CSP autorise
+        le JS/CSS en ligne ('unsafe-inline') car l'application en utilise
+        largement (boutons afficher/masquer, calculs de billets...) —
+        un CSP strict casserait ces fonctionnalités. Il bloque quand même
+        l'exécution de scripts venant d'ailleurs que le site lui-même,
+        et interdit tout affichage du site dans une frame externe
+        (protection anti-clickjacking, plus stricte qu'un simple
+        en-tête X-Frame-Options)."""
+        reponse.headers["X-Content-Type-Options"] = "nosniff"
+        reponse.headers["X-Frame-Options"] = "DENY"
+        reponse.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        reponse.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "frame-ancestors 'none';"
+        )
+        if request.is_secure:
+            reponse.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return reponse
 
     @app.errorhandler(500)
     def erreur_500(e):
@@ -96,6 +146,19 @@ def create_app(config_name=None):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    @app.before_request
+    def verifier_compte_toujours_actif():
+        """Un compte verrouillé (ou refusé après coup) perd l'accès
+        immédiatement, même en pleine session déjà ouverte — pas
+        seulement à la prochaine connexion (sept. 2026)."""
+        from flask import request as req
+        if current_user.is_authenticated and current_user.statut not in ("actif",):
+            if req.endpoint not in ("auth.connexion", "auth.deconnexion", "static"):
+                from flask_login import logout_user
+                logout_user()
+                flash("Ce compte n'est plus actif. Contacte l'école si besoin.", "error")
+                return redirect(url_for("auth.connexion"))
+
     from app.main import main_bp
     app.register_blueprint(main_bp)
 
@@ -131,6 +194,9 @@ def create_app(config_name=None):
 
     from app.alertes import alertes_bp
     app.register_blueprint(alertes_bp)
+
+    from app.documents_officiels import documents_officiels_bp
+    app.register_blueprint(documents_officiels_bp)
 
     from app.notes import notes_bp
     app.register_blueprint(notes_bp)

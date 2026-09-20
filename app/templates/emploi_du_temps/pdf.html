@@ -16,8 +16,9 @@
 </style>
 </head>
 <body>
+  {% include "documents_officiels/_entete.html" %}
   <div class="entete">
-    <h1>{{ etablissement }} — Emploi du temps</h1>
+    <h1>Emploi du temps</h1>
     <h2>Année scolaire {{ annee_scolaire }} — Classe {{ classe.nom }}{% if enseignant %} — Enseignant : {{ enseignant.nom_complet }}{% endif %}</h2>
   </div>
 

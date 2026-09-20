@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from app.extensions import db, envoyer_email
+from app import limiter
 from app.models.user import User
 from app.auth import auth_bp
 
@@ -142,6 +143,7 @@ def inscription():
 
 
 @auth_bp.route("/connexion", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def connexion():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
@@ -161,6 +163,10 @@ def connexion():
 
         if user.statut == "refuse":
             flash("Votre demande de compte a été refusée. Contactez l'école.", "error")
+            return render_template("auth/connexion.html")
+
+        if user.statut == "verrouille":
+            flash("Ce compte a été verrouillé. Contacte le développeur ou la direction pour le débloquer.", "error")
             return render_template("auth/connexion.html")
 
         login_user(user)

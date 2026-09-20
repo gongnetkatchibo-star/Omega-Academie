@@ -3,6 +3,13 @@
 {% block content %}
   <h1>{{ eleve.nom_complet }}</h1>
 
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+    <p class="lien-secondaire">
+      <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=eleve.id) }}">Certificat de scolarité (PDF)</a> ·
+      <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">Attestation de fréquentation (PDF)</a>
+    </p>
+  {% endif %}
+
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <ul class="flashes">

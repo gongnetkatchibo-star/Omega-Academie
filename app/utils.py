@@ -34,6 +34,19 @@ def roles_required(*roles, module=None):
     return decorateur
 
 
+def logo_officiel_data_uri():
+    """Encode le logo officiel en data-URI — xhtml2pdf gère mal les
+    chemins de fichiers relatifs, l'encodage direct est fiable partout
+    (sept. 2026)."""
+    import base64
+    import os
+
+    chemin = os.path.join(os.path.dirname(__file__), "static", "images", "logo-csoa-officiel.png")
+    with open(chemin, "rb") as f:
+        contenu = base64.b64encode(f.read()).decode("ascii")
+    return f"data:image/png;base64,{contenu}"
+
+
 def html_vers_pdf(html):
     """Convertit un fragment HTML (déjà rendu par un template) en PDF.
     Utilisé pour tous les exports imprimables (emplois du temps, listes
@@ -100,12 +113,16 @@ def export_xlsx(entetes, lignes, nom_fichier, titre_feuille="Export"):
 
 def export_pdf_liste(titre, sous_titre, entetes, lignes, nom_fichier):
     """Génère un PDF imprimable listant des lignes sous forme de tableau
-    simple — utilisé pour les exports de listes (enseignants, élèves…)."""
+    simple — utilisé pour les exports de listes (enseignants, élèves…).
+    Porte désormais l'en-tête officiel CSOA, comme tout document imprimé
+    de l'établissement (sept. 2026)."""
     from flask import make_response, render_template
+    from app.services.documents_officiels import contexte_entete_officiel
 
     html = render_template(
         "exports/liste_pdf.html", titre=titre, sous_titre=sous_titre,
         entetes=entetes, lignes=lignes, etablissement="Omega Académie",
+        **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"

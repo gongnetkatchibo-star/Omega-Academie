@@ -58,9 +58,9 @@ def _lignes_export(salaires):
     entetes = ["Bénéficiaire", "Fonction", "Email", "Téléphone", "Période", "Montant", "Statut", "Date de paiement"]
     lignes = [
         (
-            s.personnel.nom_complet, s.fonction or "", s.email_contact or "", s.telephone_contact or "",
+            s.personnel.nom_complet, s.fonction or "—", s.email_contact or "—", s.telephone_contact or "—",
             s.libelle_periode, s.montant, LIBELLES_STATUT_SALAIRE.get(s.statut, s.statut),
-            s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "",
+            s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "—",
         )
         for s in salaires
     ]

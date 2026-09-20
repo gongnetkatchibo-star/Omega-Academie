@@ -31,6 +31,35 @@ def utilisateurs():
     )
 
 
+@dev_bp.route("/utilisateur/<int:user_id>/verrouiller", methods=["POST"])
+@login_required
+@roles_required("developpeur", "fondateur", "administrateur_general", module="gestion_roles")
+def basculer_verrouillage_utilisateur(user_id):
+    """Bloque ou débloque l'accès d'un compte instantanément, sans le
+    supprimer ni perdre son historique — distinct de la suppression, qui
+    reste réservée au développeur seul (sept. 2026)."""
+    utilisateur = User.query.get_or_404(user_id)
+
+    if utilisateur.id == current_user.id:
+        flash("Tu ne peux pas verrouiller ton propre compte.", "error")
+        return redirect(url_for("dev.utilisateurs"))
+
+    if utilisateur.statut == "verrouille":
+        utilisateur.statut = "actif"
+        message = f"{utilisateur.nom_complet} : compte déverrouillé."
+    else:
+        utilisateur.statut = "verrouille"
+        message = f"{utilisateur.nom_complet} : compte verrouillé."
+
+    journaliser(
+        "verrouillage_utilisateur", details=f"{utilisateur.nom_complet} → {utilisateur.statut}",
+        cible_type="User", cible_id=utilisateur.id,
+    )
+    db.session.commit()
+    flash(message, "info")
+    return redirect(url_for("dev.utilisateurs"))
+
+
 @dev_bp.route("/utilisateur/<int:user_id>", methods=["POST"])
 @login_required
 @roles_required("developpeur", module="gestion_roles")

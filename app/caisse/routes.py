@@ -210,7 +210,8 @@ def recu_pdf(mouvement_id):
     direction pour les paiements de scolarité, utile aussi pour toute
     autre ligne officielle."""
     m = MouvementCaisse.query.get_or_404(mouvement_id)
-    html = render_template("caisse/recu_pdf.html", etablissement=NOM_ETABLISSEMENT, m=m)
+    from app.services.documents_officiels import contexte_entete_officiel
+    html = render_template("caisse/recu_pdf.html", etablissement=NOM_ETABLISSEMENT, m=m, **contexte_entete_officiel())
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename=recu_{m.reference or m.id}.pdf"

@@ -67,6 +67,12 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               </form>
               <button type="submit" form="form-{{ u.id }}">Enregistrer</button>
+              {% if u.id != current_user.id %}
+                <form method="post" action="{{ url_for('dev.basculer_verrouillage_utilisateur', user_id=u.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit">{{ "Déverrouiller" if u.statut == "verrouille" else "Verrouiller" }}</button>
+                </form>
+              {% endif %}
               {% if u.id != current_user.id and current_user.role == "developpeur" %}
                 <form method="post" action="{{ url_for('dev.supprimer_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement le compte de {{ u.nom_complet }} ? Cette action est irréversible.');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

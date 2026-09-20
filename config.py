@@ -16,6 +16,7 @@ def _url_base_de_donnees():
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-in-production")
+    SENTRY_DSN = os.environ.get("SENTRY_DSN")
     SQLALCHEMY_DATABASE_URI = _url_base_de_donnees()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

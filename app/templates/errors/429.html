@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Trop de tentatives{% endblock %}
+{% block content %}
+  <h1>Trop de tentatives</h1>
+  <p>Trop d'essais en peu de temps. Attends quelques minutes avant de réessayer — c'est une protection contre les tentatives de connexion répétées.</p>
+  <p class="lien-secondaire"><a href="{{ url_for('main.index') }}">Retour au tableau de bord</a></p>
+{% endblock %}

@@ -111,10 +111,12 @@ def classe_pdf(classe_id):
     classe_obj = Classe.query.get_or_404(classe_id)
     _verifier_cycle(classe_obj)
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()
+    from app.services.documents_officiels import contexte_entete_officiel
     html = render_template(
         "emploi_du_temps/pdf.html",
         etablissement=NOM_ETABLISSEMENT, annee_scolaire=classe_obj.annee_scolaire,
         classe=classe_obj, jours=JOURS, grille=_construire_grille(creneaux), enseignant=None,
+        **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
@@ -162,10 +164,12 @@ def moi_classe_pdf(classe_id):
     if not Creneau.query.filter_by(classe_id=classe_id, enseignant_id=profil.id).first():
         abort(403)
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()
+    from app.services.documents_officiels import contexte_entete_officiel
     html = render_template(
         "emploi_du_temps/pdf.html",
         etablissement=NOM_ETABLISSEMENT, annee_scolaire=classe_obj.annee_scolaire,
         classe=classe_obj, jours=JOURS, grille=_construire_grille(creneaux), enseignant=profil,
+        **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
