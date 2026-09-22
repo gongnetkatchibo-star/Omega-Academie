@@ -38,7 +38,7 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun créneau enregistré pour cette classe.</p>
+    {{ etat_vide("Aucun créneau enregistré pour cette classe.") }}
   {% endif %}
 
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") and not vue_enseignant %}

@@ -29,6 +29,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun profil enseignant pour l'instant.</p>
+    {{ etat_vide("Aucun profil enseignant pour l'instant.") }}
   {% endif %}
 {% endblock %}

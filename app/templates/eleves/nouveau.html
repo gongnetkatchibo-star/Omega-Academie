@@ -41,6 +41,6 @@
     </form>
     <p class="lien-secondaire">Le téléphone et les autres informations du parent se rempliront automatiquement dès qu'un parent sera lié à ce dossier (depuis la fiche de l'élève, une fois créée).</p>
   {% else %}
-    <p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p>
+    <div class="etat-vide"><span class="etat-vide-icone">🗂️</span><p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p></div>
   {% endif %}
 {% endblock %}

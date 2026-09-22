@@ -71,6 +71,6 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun salaire ne correspond à ces critères.</p>
+    {{ etat_vide("Aucun salaire ne correspond à ces critères.") }}
   {% endif %}
 {% endblock %}

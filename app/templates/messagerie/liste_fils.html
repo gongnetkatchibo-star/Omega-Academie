@@ -15,6 +15,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun message reçu pour l'instant.</p>
+    {{ etat_vide("Aucun message reçu pour l'instant.") }}
   {% endif %}
 {% endblock %}

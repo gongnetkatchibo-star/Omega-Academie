@@ -63,6 +63,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucune annonce pour l'instant.</p>
+    {{ etat_vide("Aucune annonce pour l'instant.") }}
   {% endif %}
 {% endblock %}

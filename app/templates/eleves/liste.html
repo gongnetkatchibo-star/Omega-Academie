@@ -54,6 +54,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun élève pour l'instant.</p>
+    {{ etat_vide("Aucun élève pour l'instant.") }}
   {% endif %}
 {% endblock %}

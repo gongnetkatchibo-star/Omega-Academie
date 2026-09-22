@@ -24,7 +24,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucune classe affectée pour l'instant.</p>
+    {{ etat_vide("Aucune classe affectée pour l'instant.") }}
   {% endif %}
 
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}

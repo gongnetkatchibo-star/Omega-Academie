@@ -938,3 +938,48 @@ textarea {
 .recherche-nom-resultats div.actif {
   background: var(--carte);
 }
+
+/* Graphiques en barres (statistiques) */
+.graphique-conteneur {
+  background: #fff;
+  border: 1px solid #e6e2d3;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  max-width: 500px;
+}
+
+.graphique-titre {
+  font-weight: 600;
+  color: var(--navy);
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+/* État vide (listes sans résultat) — remplace un simple texte gris par
+   quelque chose d'intentionnel, cohérent partout dans l'application. */
+.etat-vide {
+  text-align: center;
+  padding: 36px 20px;
+  color: #7a7a7a;
+  background: #fbfaf6;
+  border: 1px dashed #d9d4c3;
+  border-radius: 10px;
+  margin: 16px 0;
+}
+
+.etat-vide-icone {
+  display: block;
+  font-size: 34px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.etat-vide p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.etat-vide a {
+  font-weight: 600;
+}

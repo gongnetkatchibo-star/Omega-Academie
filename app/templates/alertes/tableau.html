@@ -20,7 +20,7 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun élève au-delà du seuil pour l'instant.</p>
+    {{ etat_vide("Aucun élève au-delà du seuil pour l'instant.") }}
   {% endif %}
 
   <h2>Moyenne sous le seuil de réussite</h2>
@@ -40,6 +40,6 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun élève sous le seuil pour l'instant.</p>
+    {{ etat_vide("Aucun élève sous le seuil pour l'instant.") }}
   {% endif %}
 {% endblock %}

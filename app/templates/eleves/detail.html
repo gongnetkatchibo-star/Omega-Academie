@@ -127,6 +127,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun historique.</p>
+    {{ etat_vide("Aucun historique.") }}
   {% endif %}
 {% endblock %}

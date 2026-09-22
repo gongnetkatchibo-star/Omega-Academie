@@ -18,6 +18,6 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucune absence enregistrée.</p>
+    {{ etat_vide("Aucune absence enregistrée.") }}
   {% endif %}
 {% endblock %}

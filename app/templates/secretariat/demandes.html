@@ -35,6 +35,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucune demande en attente.</p>
+    {{ etat_vide("Aucune demande en attente.") }}
   {% endif %}
 {% endblock %}

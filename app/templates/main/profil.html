@@ -27,7 +27,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun numéro enregistré pour l'instant.</p>
+    {{ etat_vide("Aucun numéro enregistré pour l'instant.") }}
   {% endif %}
 
   <h2>Ajouter un numéro</h2>

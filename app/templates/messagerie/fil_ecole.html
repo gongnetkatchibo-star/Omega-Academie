@@ -17,7 +17,7 @@
         </p>
       {% endfor %}
     {% else %}
-      <p>Aucun message dans ce fil.</p>
+      {{ etat_vide("Aucun message dans ce fil.") }}
     {% endif %}
   </div>
 

@@ -16,7 +16,7 @@
         </p>
       {% endfor %}
     {% else %}
-      <p>Aucun message pour l'instant — écris ci-dessous pour contacter l'école.</p>
+      {{ etat_vide("Aucun message pour l'instant — écris ci-dessous pour contacter l'école.") }}
     {% endif %}
   </div>
 

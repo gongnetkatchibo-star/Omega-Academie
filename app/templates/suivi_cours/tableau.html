@@ -14,6 +14,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun suivi enregistré pour l'instant.</p>
+    {{ etat_vide("Aucun suivi enregistré pour l'instant.") }}
   {% endif %}
 {% endblock %}

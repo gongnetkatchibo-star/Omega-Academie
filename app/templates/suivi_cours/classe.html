@@ -43,6 +43,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucun suivi pour cette classe pour l'instant.</p>
+    {{ etat_vide("Aucun suivi pour cette classe pour l'instant.") }}
   {% endif %}
 {% endblock %}

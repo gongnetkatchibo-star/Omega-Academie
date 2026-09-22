@@ -3,9 +3,9 @@
 {% block content %}
   <h1>Mon emploi du temps</h1>
   {% if not profil %}
-    <p>Aucun profil enseignant associé à votre compte pour l'instant — contactez la direction.</p>
+    {{ etat_vide("Aucun profil enseignant associé à votre compte pour l'instant — contactez la direction.") }}
   {% elif not classes %}
-    <p>Aucune classe ne t'est encore attribuée.</p>
+    {{ etat_vide("Aucune classe ne t'est encore attribuée.") }}
   {% else %}
     <p class="lien-secondaire">Sélectionne une classe pour voir son emploi du temps complet et le télécharger en PDF.</p>
     <div class="grille-cartes">

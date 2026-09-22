@@ -36,7 +36,7 @@
     </div>
   {% elif user.role == "parent" %}
     <h2>Mes enfants</h2>
-    <p>Aucun enfant n'est encore rattaché à ton compte. Contacte le secrétariat pour le lier à ton dossier.</p>
+    {{ etat_vide("Aucun enfant n'est encore rattaché à ton compte. Contacte le secrétariat pour le lier à ton dossier.") }}
   {% endif %}
 
   {% if est_personnel or est_direction or user.role in ["enseignant", "developpeur"] %}
@@ -44,7 +44,7 @@
     <div class="grille-cartes">
       {% for m in modules %}
         <a class="carte-module" href="{{ url_for(m.endpoint) }}">
-          <h3>{{ m.label }}</h3>
+          <h3>{{ icone(m.endpoint.split('.')[0]) }} {{ m.label }}</h3>
           <p>{{ m.description }}</p>
         </a>
       {% endfor %}
@@ -79,7 +79,7 @@
         </a>
       </div>
     {% else %}
-      <p>Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.</p>
+      {{ etat_vide("Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
     {% endif %}
   {% endif %}
 {% endblock %}

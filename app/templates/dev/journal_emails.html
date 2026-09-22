@@ -31,6 +31,6 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun email envoyé pour l'instant.</p>
+    {{ etat_vide("Aucun email envoyé pour l'instant.") }}
   {% endif %}
 {% endblock %}

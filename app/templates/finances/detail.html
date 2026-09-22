@@ -91,6 +91,6 @@
       </tbody>
     </table>
   {% else %}
-    <p>Aucun paiement enregistré.</p>
+    {{ etat_vide("Aucun paiement enregistré.") }}
   {% endif %}
 {% endblock %}

@@ -1,6 +1,7 @@
 import os
 import click
 from flask import Flask, render_template, redirect, url_for, flash, request
+from markupsafe import Markup, escape
 from flask_login import current_user
 from flask_wtf import CSRFProtect
 from flask_limiter import Limiter
@@ -111,6 +112,33 @@ def create_app(config_name=None):
             return int(os.path.getmtime(chemin_complet))
         except OSError:
             return 0
+
+    ICONES_MODULES = {
+        "classes": "🏫", "eleves": "🎓", "tests_niveau": "📝", "enseignants": "👩‍🏫",
+        "suivi_cours": "📖", "finances": "💰", "caisse": "🧾", "salaires": "💵",
+        "statistiques": "📊", "alertes": "⚠️", "messagerie": "💬", "bibliotheque": "📚",
+        "annonces": "📣", "communication": "📣", "assistant": "🤖", "demandes": "📥",
+        "secretariat": "📥", "tableau_de_bord": "🏠", "profil": "👤", "deconnexion": "🚪",
+        "dev": "🛠️", "emploi_du_temps": "🗓️",
+    }
+
+    @app.template_global()
+    def icone(cle):
+        """Icône (emoji) associée à un module — pas de police d'icônes
+        externe à charger, ce qui respecterait mal notre CSP (sept. 2026)."""
+        return ICONES_MODULES.get(cle, "")
+
+    @app.template_global()
+    def etat_vide(texte, icone="🗂️"):
+        """Écran vide (liste sans résultat) — un composant cohérent
+        partout, plutôt qu'un simple texte gris différent d'une page à
+        l'autre (sept. 2026). `texte` est échappé (pas de HTML actif) :
+        pour un texte contenant un lien, garder le <p> manuel dans le
+        template plutôt que ce raccourci."""
+        return Markup(
+            f'<div class="etat-vide"><span class="etat-vide-icone">{escape(icone)}</span>'
+            f'<p>{escape(texte)}</p></div>'
+        )
 
     @app.template_global()
     def acces(*roles, module=None):

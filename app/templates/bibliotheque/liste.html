@@ -55,6 +55,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucune ressource pour l'instant.</p>
+    {{ etat_vide("Aucune ressource pour l'instant.") }}
   {% endif %}
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import graphique_barres %}
 {% block title %}Statistiques{% endblock %}
 {% block content %}
   <h1>Statistiques — {{ annee }}</h1>
@@ -33,6 +34,8 @@
           <div class="carte-module carte-stat"><h3>Filles</h3><p>{{ filles }}</p></div>
         </div>
 
+        {{ graphique_barres("Effectif par sexe", [("Garçons", garcons, "#0F5FA6"), ("Filles", filles, "#00A99D")]) }}
+
         <h3>Réussite par sexe</h3>
         <table class="table">
           <thead><tr><th>Indicateur</th><th>Garçons</th><th>Filles</th><th>Total</th></tr></thead>
@@ -59,6 +62,12 @@
         </table>
         {% if stats_globales.nb_avec_notes == 0 %}
           <p class="lien-secondaire">Aucun élève n'a encore de notes saisies pour cette sélection.</p>
+        {% else %}
+          {{ graphique_barres("Taux de réussite par sexe", [
+            ("Garçons", tableau_sexe['Garçons'].taux_reussite or 0, "#0F5FA6"),
+            ("Filles", tableau_sexe['Filles'].taux_reussite or 0, "#00A99D"),
+            ("Total", tableau_sexe['Total'].taux_reussite or 0, "#DEA230"),
+          ], max_valeur=100, unite=" %") }}
         {% endif %}
 
       {% else %}

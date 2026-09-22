@@ -27,3 +27,27 @@
       " aria-label="Afficher ou masquer le mot de passe">👁</button>
   </div>
 {% endmacro %}
+
+{% macro graphique_barres(titre, barres, max_valeur=None, unite="") %}
+  {# barres : liste de (etiquette, valeur, couleur) — pas de JS, pas de
+     dependance externe, un simple SVG genere cote serveur (sept. 2026). #}
+  {% set largeur = 460 %}
+  {% set hauteur_ligne = 34 %}
+  {% set marge_gauche = 90 %}
+  {% set marge_droite = 60 %}
+  {% set hauteur = (barres|length * hauteur_ligne) + 20 %}
+  {% set valeur_max = max_valeur or (barres|map(attribute=1)|max) or 1 %}
+  <div class="graphique-conteneur">
+    {% if titre %}<p class="graphique-titre">{{ titre }}</p>{% endif %}
+    <svg viewBox="0 0 {{ largeur }} {{ hauteur }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ titre }}">
+      {% for etiquette, valeur, couleur in barres %}
+        {% set y = loop.index0 * hauteur_ligne + 8 %}
+        {% set largeur_barre = ((largeur - marge_gauche - marge_droite) * (valeur / valeur_max)) if valeur_max else 0 %}
+        <text x="0" y="{{ y + 15 }}" font-size="13" fill="#333">{{ etiquette }}</text>
+        <rect x="{{ marge_gauche }}" y="{{ y }}" width="{{ largeur - marge_gauche - marge_droite }}" height="20" fill="#eee" rx="3"></rect>
+        <rect x="{{ marge_gauche }}" y="{{ y }}" width="{{ largeur_barre }}" height="20" fill="{{ couleur }}" rx="3"></rect>
+        <text x="{{ largeur - marge_droite + 8 }}" y="{{ y + 15 }}" font-size="13" fill="#333" font-weight="bold">{{ valeur }}{{ unite }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+{% endmacro %}

@@ -20,6 +20,6 @@
       <button type="submit">Créer le profil</button>
     </form>
   {% else %}
-    <p>Aucun compte enseignant approuvé sans profil pour l'instant. Un enseignant doit d'abord s'inscrire et être validé par le secrétariat.</p>
+    {{ etat_vide("Aucun compte enseignant approuvé sans profil pour l'instant. Un enseignant doit d'abord s'inscrire et être validé par le secrétariat.") }}
   {% endif %}
 {% endblock %}
