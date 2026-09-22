@@ -8,28 +8,25 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
 </head>
 <body>
-  <div class="navbar">
-    <div class="navbar-marque">
-      <img class="logo-mark" src="{{ url_for('static', filename='images/logo-omega-icone.png') }}" alt="Omega Académie">
-      <span>Omega Académie</span>
-    </div>
-    <div class="navbar-utilisateur">
-      {% if current_user.is_authenticated %}
+{% if current_user.is_authenticated %}
+  <button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('sidebar-ouverte'); document.getElementById('sidebar-overlay').classList.toggle('actif');" aria-label="Ouvrir le menu">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('sidebar-ouverte'); this.classList.remove('actif');"></div>
+
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-marque">
+        <img class="logo-mark" src="{{ url_for('static', filename='images/logo-omega-icone.png') }}" alt="Omega Académie">
+        <span>Omega Académie</span>
+      </div>
+      <div class="sidebar-utilisateur">
         <span class="navbar-avatar">{{ current_user.nom_complet|initiales }}</span>
         <span>{{ current_user.nom_complet }}</span>
-        <button class="navbar-toggle" onclick="document.querySelector('.navbar-liens').classList.toggle('navbar-liens-ouvert')" aria-label="Ouvrir le menu">☰</button>
-      {% else %}
-        <a href="{{ url_for('auth.connexion') }}" style="color:white; text-decoration:none;">Connexion</a>
-      {% endif %}
-    </div>
-  </div>
-  {% if current_user.is_authenticated %}
-  <div class="navbar-onglets">
-    <nav class="navbar-liens">
-      {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") or current_user.role == "enseignant" %}
-        <a href="{{ url_for('classes.liste') }}">{{ icone("classes") }} Classes</a>
-        <a href="{{ url_for('eleves.liste') }}">{{ icone("eleves") }} Élèves</a>
-      {% endif %}
+      </div>
+      <nav class="sidebar-liens">
+        {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") or current_user.role == "enseignant" %}
+          <a href="{{ url_for('classes.liste') }}">{{ icone("classes") }} Classes</a>
+          <a href="{{ url_for('eleves.liste') }}">{{ icone("eleves") }} Élèves</a>
+        {% endif %}
         {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="tests_niveau") %}
           <a href="{{ url_for('tests_niveau.liste') }}">{{ icone("tests_niveau") }} Tests de niveau</a>
         {% endif %}
@@ -40,9 +37,9 @@
           <a href="{{ url_for('suivi_cours.tableau') }}">{{ icone("suivi_cours") }} Suivi cours</a>
         {% endif %}
         {% if current_user.role == "enseignant" %}
-          <a href="{{ url_for('emploi_du_temps.moi') }}">Mon EDT</a>
+          <a href="{{ url_for('emploi_du_temps.moi') }}">🗓️ Mon EDT</a>
           {% if current_user.profil_enseignant %}
-            <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">Mes classes</a>
+            <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">👥 Mes classes</a>
           {% endif %}
         {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", module="finances") %}
@@ -70,17 +67,35 @@
           <a href="{{ url_for('secretariat.demandes') }}">{{ icone("demandes") }} Demandes</a>
         {% endif %}
         {% if acces("developpeur", module="gestion_roles") %}
-          <a href="{{ url_for('dev.utilisateurs') }}">{{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
+          <a href="{{ url_for('dev.utilisateurs') }}">{{ icone("dev") }} {{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
         {% endif %}
         <a href="{{ url_for('main.index') }}">{{ icone("tableau_de_bord") }} Tableau de bord</a>
         <a href="{{ url_for('main.profil') }}">{{ icone("profil") }} Mon profil</a>
         <a href="{{ url_for('auth.deconnexion') }}">{{ icone("deconnexion") }} Déconnexion</a>
-    </nav>
+      </nav>
+    </aside>
+    <div class="contenu-principal">
+      <div class="container">
+{% else %}
+  <div class="navbar">
+    <div class="navbar-marque">
+      <img class="logo-mark" src="{{ url_for('static', filename='images/logo-omega-icone.png') }}" alt="Omega Académie">
+      <span>Omega Académie</span>
+    </div>
+    <div class="navbar-utilisateur">
+      <a href="{{ url_for('auth.connexion') }}" style="color:white; text-decoration:none;">Connexion</a>
+    </div>
   </div>
-  {% endif %}
   <div class="container">
-    {% block content %}{% endblock %}
+{% endif %}
+        {% block content %}{% endblock %}
+{% if current_user.is_authenticated %}
+      </div>
+    </div>
   </div>
+{% else %}
+  </div>
+{% endif %}
   <script src="{{ url_for('static', filename='js/recherche-nom.js') }}?v={{ version_fichier_statique('js/recherche-nom.js') }}"></script>
 </body>
 </html>
