@@ -2,6 +2,7 @@
 {% from "_macros.html" import champ_montant %}
 {% block title %}Nouveau salaire{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Salaires", url_for('salaires.liste')), ("Nouveau salaire", None)) }}
   <h1>Nouveau salaire</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

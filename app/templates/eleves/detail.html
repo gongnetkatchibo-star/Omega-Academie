@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ eleve.nom_complet }}{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), (eleve.nom_complet, None)) }}
   <h1>{{ eleve.nom_complet }}</h1>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}

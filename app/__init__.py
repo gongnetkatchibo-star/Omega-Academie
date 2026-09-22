@@ -141,6 +141,21 @@ def create_app(config_name=None):
         )
 
     @app.template_global()
+    def fil_ariane(*items):
+        """Fil de navigation ("Accueil › Élèves › Fatima Abakar").
+        Usage : {{ fil_ariane(("Élèves", url_for('eleves.liste')), (eleve.nom_complet, None)) }}
+        Le dernier élément (page actuelle) n'a généralement pas de lien
+        (sept. 2026)."""
+        morceaux = [f'<a href="{escape(url_for("main.index"))}">Accueil</a>']
+        for label, url in items:
+            morceaux.append('<span class="fil-ariane-sep">›</span>')
+            if url:
+                morceaux.append(f'<a href="{escape(url)}">{escape(label)}</a>')
+            else:
+                morceaux.append(f'<span class="fil-ariane-actuel">{escape(label)}</span>')
+        return Markup(f'<nav class="fil-ariane" aria-label="Fil d\'Ariane">{"".join(morceaux)}</nav>')
+
+    @app.template_global()
     def acces(*roles, module=None):
         """À utiliser dans les templates à la place de
         `current_user.role in [...]`. Inclut toujours le rôle

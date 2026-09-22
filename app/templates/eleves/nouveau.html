@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Inscrire un élève{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Inscrire un élève", None)) }}
   <h1>Inscrire un élève</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}

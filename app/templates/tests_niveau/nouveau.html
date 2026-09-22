@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Nouveau test de niveau{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Tests de niveau", url_for('tests_niveau.liste')), ("Nouveau test", None)) }}
   <h1>Nouveau test de niveau</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

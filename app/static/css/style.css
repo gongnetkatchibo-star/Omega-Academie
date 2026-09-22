@@ -983,3 +983,44 @@ textarea {
 .etat-vide a {
   font-weight: 600;
 }
+
+/* Variantes colorées des cartes de chiffres — pour repérer un total au
+   premier coup d'œil, sans avoir à lire l'étiquette. */
+.carte-stat-vert { background: #e8f6ee; border-top-color: #1a7a3c; }
+.carte-stat-vert p { color: #1a7a3c; }
+
+.carte-stat-rouge { background: #fbeceb; border-top-color: #a32d2d; }
+.carte-stat-rouge p { color: #a32d2d; }
+
+.carte-stat-or { background: #fdf3e2; border-top-color: #b8860b; }
+.carte-stat-or p { color: #a3720a; }
+
+.carte-stat-bleu { background: #e8f0fb; border-top-color: var(--navy); }
+.carte-stat-bleu p { color: var(--navy); }
+
+/* Fil d'Ariane */
+.fil-ariane {
+  font-size: 13px;
+  color: #7a7a7a;
+  margin-bottom: 14px;
+}
+
+.fil-ariane a {
+  color: #5d6b70;
+  text-decoration: none;
+}
+
+.fil-ariane a:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.fil-ariane-sep {
+  margin: 0 6px;
+  color: #c4c0b0;
+}
+
+.fil-ariane-actuel {
+  color: var(--navy);
+  font-weight: 600;
+}

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Caisse{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Caisse", None)) }}
   <h1>Caisse générale</h1>
   <p class="lien-secondaire">
     <a href="{{ url_for('caisse.nouveau_paiement') }}">+ Nouveau paiement officiel (scolarité)</a>
@@ -19,17 +20,17 @@
   {% endwith %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module carte-stat">
+    <div class="carte-module carte-stat carte-stat-vert">
       <h3>Total recettes</h3>
       <p>{{ "%.0f"|format(total_recettes) }} FCFA</p>
     </div>
-    <div class="carte-module carte-stat">
+    <div class="carte-module carte-stat carte-stat-rouge">
       <h3>Total dépenses</h3>
       <p>{{ "%.0f"|format(total_depenses) }} FCFA</p>
     </div>
-    <div class="carte-module carte-stat">
+    <div class="carte-module carte-stat {% if solde_actuel < 0 %}carte-stat-rouge{% else %}carte-stat-bleu{% endif %}">
       <h3>Solde actuel</h3>
-      <p class="{% if solde_actuel < 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(solde_actuel) }} FCFA</p>
+      <p>{{ "%.0f"|format(solde_actuel) }} FCFA</p>
     </div>
   </div>
 

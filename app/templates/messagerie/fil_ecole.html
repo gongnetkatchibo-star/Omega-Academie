@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Fil — {{ parent.nom_complet }}{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Messages", url_for('messagerie.index')), (parent.nom_complet, None)) }}
   <h1>Discussion avec {{ parent.nom_complet }}</h1>
   <p class="lien-secondaire"><a href="{{ url_for('messagerie.index') }}">← Tous les fils</a></p>
   {% with messages_flash = get_flashed_messages(with_categories=true) %}

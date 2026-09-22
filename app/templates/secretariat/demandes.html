@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Demandes de compte{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Demandes", None)) }}
   <h1>Demandes de compte en attente</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Tests de niveau{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Tests de niveau", None)) }}
   <h1>Tests de niveau</h1>
   <p class="lien-secondaire"><a href="{{ url_for('tests_niveau.nouveau') }}">+ Nouveau test</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}

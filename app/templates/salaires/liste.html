@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Salaires{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Salaires", None)) }}
   <h1>Salaires du personnel</h1>
   <p class="lien-secondaire"><a href="{{ url_for('salaires.nouveau') }}">+ Nouveau salaire</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -8,8 +9,8 @@
   {% endwith %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module carte-stat"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
-    <div class="carte-module carte-stat"><h3>Total impayé</h3><p class="solde-du">{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
+    <div class="carte-module carte-stat carte-stat-vert"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
+    <div class="carte-module carte-stat carte-stat-rouge"><h3>Total impayé</h3><p>{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
   </div>
 
   <form method="get" class="formulaire-filtre">

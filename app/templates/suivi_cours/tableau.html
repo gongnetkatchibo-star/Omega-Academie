@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Suivi des cours{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Suivi des cours", None)) }}
   <h1>Suivi des cours</h1>
   {% if suivis %}
     <ul class="liste-demandes">
