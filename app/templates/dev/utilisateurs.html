@@ -38,6 +38,7 @@
       <tr>
         <th>Nom</th>
         <th>Email</th>
+        <th>Genre</th>
         <th>Rôle</th>
         <th>Statut</th>
         <th>Créé le</th>
@@ -49,6 +50,13 @@
         <tr>
           <td>{{ u.nom_complet }}</td>
           <td>{{ u.email }}</td>
+          <td>
+            <select name="genre" form="form-{{ u.id }}">
+              <option value="">—</option>
+              <option value="M" {% if u.genre == "M" %}selected{% endif %}>M</option>
+              <option value="F" {% if u.genre == "F" %}selected{% endif %}>F</option>
+            </select>
+          </td>
           <td>
             <select name="role" form="form-{{ u.id }}">
               {% for r in roles %}

@@ -12,6 +12,7 @@ class TestNiveau(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nom_candidat = db.Column(db.String(120), nullable=False)
     date_naissance_candidat = db.Column(db.Date)
+    sexe_candidat = db.Column(db.String(1))
     classe_demandee_id = db.Column(db.Integer, db.ForeignKey("classes.id"), nullable=False)
     date_test = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     note_obtenue = db.Column(db.Float)

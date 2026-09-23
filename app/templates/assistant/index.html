@@ -4,13 +4,12 @@
   <h1>Assistant</h1>
 
   {% if not ia_configuree %}
-    <p class="lien-secondaire">Mode sans IA générative — l'assistant répond à partir des données réelles auxquelles tu as accès, sans modèle d'IA connecté pour l'instant.</p>
   {% endif %}
 
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Ta question
-      <input type="text" name="question" value="{{ question or '' }}" placeholder="ex : quel est le solde de mon enfant ?" required>
+      <input type="text" name="question" value="{{ question or '' }}" required>
     </label>
     <button type="submit">Demander</button>
   </form>

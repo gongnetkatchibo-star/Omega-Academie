@@ -7,7 +7,6 @@
   {% elif not classes %}
     {{ etat_vide("Aucune classe ne t'est encore attribuée.") }}
   {% else %}
-    <p class="lien-secondaire">Sélectionne une classe pour voir son emploi du temps complet et le télécharger en PDF.</p>
     <div class="grille-cartes">
       {% for c in classes %}
         <a class="carte-module" href="{{ url_for('emploi_du_temps.moi_classe', classe_id=c.id) }}">

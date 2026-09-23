@@ -28,6 +28,8 @@ def test_certificat_scolarite_genere_un_pdf(client, creer_utilisateur, creer_cla
 
     connecter(client, "secr@test.com")
     r = client.get(f"/documents/eleve/{eleve.id}/certificat")
+    assert r.status_code == 200 and b"signataire_nom" in r.data
+    r = client.post(f"/documents/eleve/{eleve.id}/certificat", data={"signataire_nom": "M. X", "signataire_qualite": "Directeur", "signataire_genre": "M"})
     assert r.status_code == 200
     assert r.headers["Content-Type"] == "application/pdf"
 
@@ -38,7 +40,7 @@ def test_attestation_frequentation_genere_un_pdf(client, creer_utilisateur, cree
     eleve = creer_eleve("Moussa Idriss", classe)
 
     connecter(client, "secr@test.com")
-    r = client.get(f"/documents/eleve/{eleve.id}/attestation")
+    r = client.post(f"/documents/eleve/{eleve.id}/attestation", data={"signataire_nom": "Mme Y", "signataire_qualite": "Directrice", "signataire_genre": "F"})
     assert r.status_code == 200
     assert r.headers["Content-Type"] == "application/pdf"
 

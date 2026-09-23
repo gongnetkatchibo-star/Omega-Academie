@@ -24,7 +24,6 @@
     </form>
 
     {% if matiere_choisie and trimestre_choisi %}
-      <p class="lien-secondaire">Les notes déjà saisies sont pré-remplies ci-dessous — modifie une valeur pour la corriger, laisse un champ vide pour ne pas y toucher.</p>
       <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="matiere" value="{{ matiere_choisie }}">

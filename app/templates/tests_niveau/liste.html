@@ -2,7 +2,7 @@
 {% block title %}Tests de niveau{% endblock %}
 {% block content %}
   {{ fil_ariane(("Tests de niveau", None)) }}
-  {{ banniere("tests_niveau", "Tests de niveau", "Suivi des candidatures et décisions d'admission.") }}
+  {{ banniere("tests_niveau", "Tests de niveau") }}
   <p class="lien-secondaire"><a href="{{ url_for('tests_niveau.nouveau') }}">+ Nouveau test</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
@@ -14,7 +14,7 @@
       <tbody>
         {% for t in tests %}
           <tr>
-            <td>{{ t.nom_candidat }}</td>
+            <td>{{ t.nom_candidat }} ({{ t.sexe_candidat or "—" }})</td>
             <td>{{ t.classe_demandee.nom }}</td>
             <td>{{ t.date_test.strftime("%d/%m/%Y") }}</td>
             <td>{{ t.note_obtenue if t.note_obtenue is not none else "—" }}</td>

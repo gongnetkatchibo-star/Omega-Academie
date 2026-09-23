@@ -2,7 +2,6 @@
 {% block title %}Permissions{% endblock %}
 {% block content %}
   <h1>Permissions par rôle</h1>
-  <p class="lien-secondaire">Coche pour autoriser, décoche pour retirer — l'accès de chaque rôle à chaque module se recalcule immédiatement. Le rôle développeur garde toujours un accès complet et n'apparaît pas ici.</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

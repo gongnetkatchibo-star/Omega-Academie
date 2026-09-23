@@ -2,7 +2,7 @@
 {% block title %}Caisse{% endblock %}
 {% block content %}
   {{ fil_ariane(("Caisse", None)) }}
-  {{ banniere("caisse", "Caisse générale", "Recettes et dépenses de l'école.") }}
+  {{ banniere("caisse", "Caisse générale") }}
   <p class="lien-secondaire">
     <a href="{{ url_for('caisse.nouveau_paiement') }}">+ Nouveau paiement officiel (scolarité)</a>
     ·

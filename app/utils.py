@@ -47,43 +47,52 @@ def logo_officiel_data_uri():
     return f"data:image/png;base64,{contenu}"
 
 
-def html_vers_pdf(html):
-    """Convertit un fragment HTML (déjà rendu par un template) en PDF.
-    Utilisé pour tous les exports imprimables (emplois du temps, listes
-    enseignants/élèves…), afin d'avoir un seul point de maintenance pour
-    la génération de PDF dans l'application.
+def filigrane_data_uri():
+    """Filigrane officiel (Ω + livre, sans texte), extrait du document de
+    référence de l'école — déjà pâli, utilisé tel quel (sept. 2026)."""
+    import base64
+    import os
 
-    Insère aussi automatiquement le logo en filigrane sur chaque page,
-    via les propriétés CSS propres à xhtml2pdf (background-opacity,
-    background-width/height, background-object-position) — la propriété
-    CSS standard "opacity" et les positions en % ne sont pas fiables
-    avec ce moteur (constaté sept. 2026)."""
+    chemin = os.path.join(os.path.dirname(__file__), "static", "images", "filigrane-csoa.png")
+    with open(chemin, "rb") as f:
+        contenu = base64.b64encode(f.read()).decode("ascii")
+    return f"data:image/png;base64,{contenu}"
+
+
+def html_vers_pdf(html):
+    """Convertit un fragment HTML (déjà rendu par un template) en PDF,
+    avec le filigrane officiel placé exactement comme sur le document de
+    référence de l'école : sur une page A4 (595 x 842 pt), l'image occupe
+    x 71 → 524 pt et y 260 → 631 pt depuis le haut (453 x 371 pt).
+    Pour un autre format de page, la même proportion est conservée."""
     import re
     from io import BytesIO
     from xhtml2pdf import pisa
 
-    # Page par défaut de xhtml2pdf (aucun @page défini par le modèle) :
-    # environ 612x792pt (Letter). Filigrane de 220x160pt, centré dessus.
-    proprietes_filigrane = (
-        f'background-image: url("{logo_officiel_data_uri()}"); '
-        'background-object-position: 196pt 316pt; '
-        'background-width: 220pt; background-height: 160pt; '
-        'background-opacity: 0.12;'
+    largeur_page, hauteur_page = 595.0, 842.0
+    taille = re.search(r"@page\s*\{[^}]*?size:\s*([\d.]+)pt\s+([\d.]+)pt", html)
+    if taille:
+        largeur_page, hauteur_page = float(taille.group(1)), float(taille.group(2))
+
+    echelle = min(largeur_page / 595.0, hauteur_page / 842.0)
+    largeur_img, hauteur_img = 453.0 * echelle, 371.0 * echelle
+    x = (largeur_page - largeur_img) / 2
+    haut_depuis_le_haut = 260.0 / 842.0 * hauteur_page
+    y_depuis_le_bas = hauteur_page - haut_depuis_le_haut - hauteur_img
+
+    proprietes = (
+        f'background-image: url("{filigrane_data_uri()}"); '
+        f"background-object-position: {x:.0f}pt {y_depuis_le_bas:.0f}pt; "
+        f"background-width: {largeur_img:.0f}pt; background-height: {hauteur_img:.0f}pt;"
     )
 
-    # xhtml2pdf ne fusionne pas deux règles @page séparées (la seconde
-    # écrase la première au lieu de s'y ajouter, contrairement au CSS
-    # standard) — si le modèle définit déjà un @page (ex. les exports de
-    # listes en format large), on ajoute le filigrane DANS cette règle
-    # plutôt que d'en créer une seconde (constaté sept. 2026).
-    motif_page_existante = re.search(r'@page\s*\{', html)
-    if motif_page_existante:
-        position = motif_page_existante.end()
-        html = html[:position] + proprietes_filigrane + html[position:]
+    # xhtml2pdf ne fusionne pas deux règles @page : on complète celle du
+    # modèle s'il en a une, sinon on en crée une.
+    page_existante = re.search(r"@page\s*\{", html)
+    if page_existante:
+        html = html[:page_existante.end()] + proprietes + html[page_existante.end():]
     else:
-        html = re.sub(
-            r'(<head[^>]*>)', r'\1<style>@page {' + proprietes_filigrane + '}</style>', html, count=1,
-        )
+        html = re.sub(r"(<head[^>]*>)", r"\1<style>@page {" + proprietes + "}</style>", html, count=1)
 
     tampon = BytesIO()
     pisa.CreatePDF(src=html, dest=tampon, encoding="utf-8")

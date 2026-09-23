@@ -15,7 +15,7 @@
         {% for t in types %}<option value="{{ t }}" {% if t == mouvement.type %}selected{% endif %}>{{ t }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence (optionnel)
+    <label>Référence
       <input type="text" name="reference" value="{{ mouvement.reference or '' }}">
     </label>
     <label>Libellé
@@ -27,7 +27,7 @@
     <label>Dépense (si sortie d'argent)
       <input type="number" step="1" min="0" name="depense" value="{{ mouvement.depense|int if mouvement.depense else '' }}">
     </label>
-    <label>Observation (optionnel)
+    <label>Observation
       <input type="text" name="observation" value="{{ mouvement.observation or '' }}">
     </label>
     <button type="submit">Enregistrer la correction</button>

@@ -79,6 +79,7 @@ def inscription():
         role = request.form.get("role")
         email = request.form.get("email", "").strip().lower()
         telephone = request.form.get("telephone", "").strip()
+        genre = request.form.get("genre")
         mot_de_passe = request.form.get("mot_de_passe", "")
         confirmation = request.form.get("confirmation", "")
 
@@ -110,12 +111,16 @@ def inscription():
         if telephone and User.query.filter_by(telephone=telephone).first():
             erreurs.append("Un compte existe déjà avec ce numéro de téléphone.")
 
+        if genre not in ("M", "F"):
+            erreurs.append("Merci d'indiquer le genre.")
+
         if erreurs:
             for e in erreurs:
                 flash(e, "error")
             return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION)
 
         user = User(
+            genre=genre,
             nom_complet=nom_complet,
             prenom=prenom,
             nom=nom,

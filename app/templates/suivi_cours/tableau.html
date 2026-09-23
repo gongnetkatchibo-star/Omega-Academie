@@ -2,7 +2,7 @@
 {% block title %}Suivi des cours{% endblock %}
 {% block content %}
   {{ fil_ariane(("Suivi des cours", None)) }}
-  {{ banniere("suivi_cours", "Suivi des cours", "Avancement des programmes, classe par classe.") }}
+  {{ banniere("suivi_cours", "Suivi des cours") }}
   {% if suivis %}
     <ul class="liste-demandes">
       {% for s in suivis %}

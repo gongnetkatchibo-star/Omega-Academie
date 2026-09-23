@@ -3,43 +3,38 @@
 <head>
 <meta charset="utf-8">
 <style>
+  @page { size: 595pt 842pt; margin: 50pt 60pt 50pt 60pt; }
   body { font-family: Helvetica, Arial, sans-serif; font-size: 12pt; color: #000; }
   .numero { text-align:center; color:#c0392b; font-weight:bold; margin-bottom:2px; }
-  .titre { text-align:center; font-weight:bold; font-size:16pt; margin-bottom:30px; text-decoration: underline; }
-  .corps { line-height: 1.8; text-align: justify; margin: 0 20px; }
-  .fait-a { text-align:right; margin-top:60px; margin-right:30px; }
-  .signature { text-align:right; margin-right:30px; margin-top:6px; font-weight:bold; }
-  .espace-signature { height: 90px; }
+  .titre { text-align:center; font-weight:bold; font-size:16pt; margin-bottom:26px; text-decoration: underline; }
+  .corps { line-height: 1.8; text-align: justify; }
 </style>
 </head>
 <body>
   {% include "documents_officiels/_entete.html" %}
-
+  {% set f = eleve.sexe == "F" %}
   <p class="numero">N° {{ numero }}</p>
   <p class="titre">CERTIFICAT DE SCOLARITÉ</p>
 
   <div class="corps">
     <p>
-      Je soussigné(e), Directeur/Directrice du {{ nom_etablissement }}, certifie que :
+      {{ "La" if signataire.genre == "F" else "Le" }} {{ "soussignée" if signataire.genre == "F" else "soussigné" }}{% if signataire.nom %}, {{ signataire.nom }},{% endif %}
+      {{ signataire.qualite }} du {{ nom_etablissement }}, certifie que :
     </p>
     <p style="margin-left: 30px;">
       <strong>Nom et prénom(s) :</strong> {{ eleve.nom_complet }}<br>
+      <strong>Genre :</strong> {{ "Féminin" if f else ("Masculin" if eleve.sexe == "M" else "—") }}<br>
       <strong>Matricule :</strong> {{ eleve.matricule }}<br>
-      {% if eleve.date_naissance %}<strong>Né(e) le :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}<br>{% endif %}
+      {% if eleve.date_naissance %}<strong>{{ "Née" if f else "Né" }} le :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}<br>{% endif %}
       <strong>Classe :</strong> {{ eleve.classe.nom }}<br>
       <strong>Année scolaire :</strong> {{ eleve.classe.annee_scolaire }}
     </p>
     <p>
-      est régulièrement inscrit(e) dans notre établissement au titre de l'année scolaire {{ eleve.classe.annee_scolaire }}.
+      est régulièrement {{ "inscrite" if f else "inscrit" }} dans notre établissement au titre de l'année scolaire {{ eleve.classe.annee_scolaire }}.
     </p>
-    <p>
-      En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.
-    </p>
+    <p>En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.</p>
   </div>
 
-  <p class="fait-a">{{ lieu_et_date }}</p>
-  <div class="espace-signature"></div>
-  <p class="signature">{{ parametre.titre_directeur if parametre else "Le Directeur / La Directrice" }}</p>
-  {% if parametre and parametre.nom_directeur %}<p class="signature">{{ parametre.nom_directeur }}</p>{% endif %}
+  {% include "documents_officiels/_signature.html" %}
 </body>
 </html>

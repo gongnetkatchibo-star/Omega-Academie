@@ -6,16 +6,20 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-
   <form method="post" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Nom du directeur / de la directrice actuel(le)
-      <input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}" placeholder="Ex. M. ABAKAR IDRISS">
+    <label>Signataire par défaut
+      <input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}">
     </label>
-    <label>Titre à afficher au-dessus du nom
-      <input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or '' }}" placeholder="Le Directeur / La Directrice">
+    <label>Qualité
+      <input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or 'Directeur' }}">
+    </label>
+    <label>Genre
+      <select name="genre_directeur">
+        <option value="M" {% if parametre.genre_directeur != "F" %}selected{% endif %}>Masculin</option>
+        <option value="F" {% if parametre.genre_directeur == "F" %}selected{% endif %}>Féminin</option>
+      </select>
     </label>
     <button type="submit">Enregistrer</button>
   </form>
-  <p class="lien-secondaire">Ce nom apparaît automatiquement dans le bloc de signature des documents officiels générés (certificat de scolarité, attestation de fréquentation). Laisse le nom vide pour revenir à un texte générique.</p>
 {% endblock %}

@@ -8,9 +8,9 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nouvelle année scolaire
-      <input type="text" name="annee_scolaire" value="{{ annee_suggeree }}" placeholder="ex : 2027-2028" required>
+      <input type="text" name="annee_scolaire" value="{{ annee_suggeree }}" required>
     </label>
-    <label>Reprendre l'échéancier de frais depuis (optionnel)
+    <label>Reprendre l'échéancier de frais depuis
       <select name="annee_source">
         <option value="">— Ne pas reprendre —</option>
         {% for a in annees %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
@@ -18,5 +18,4 @@
     </label>
     <button type="submit">Créer les classes CP1 à 3ème pour cette année</button>
   </form>
-  <p class="lien-secondaire">Les années précédentes restent intactes et consultables — cette action crée uniquement de nouvelles classes pour la nouvelle année, sans toucher aux anciennes.</p>
 {% endblock %}

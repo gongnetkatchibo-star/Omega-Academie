@@ -2,7 +2,7 @@
 {% block title %}Salaires{% endblock %}
 {% block content %}
   {{ fil_ariane(("Salaires", None)) }}
-  {{ banniere("salaires", "Salaires du personnel", "Journal de paie, filtrable et exportable.") }}
+  {{ banniere("salaires", "Salaires du personnel") }}
   <p class="lien-secondaire"><a href="{{ url_for('salaires.nouveau') }}">+ Nouveau salaire</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
@@ -15,7 +15,7 @@
 
   <form method="get" class="formulaire-filtre">
     <label>Nom du bénéficiaire
-      <input type="text" name="nom" value="{{ filtre_nom }}" placeholder="Ex. Mbaye">
+      <input type="text" name="nom" value="{{ filtre_nom }}">
     </label>
     <label>Payé à partir du
       <input type="date" name="date_debut" value="{{ filtre_date_debut }}">

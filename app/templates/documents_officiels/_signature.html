@@ -1,0 +1,10 @@
+<table style="width:100%; margin-top:40pt;">
+  <tr>
+    <td style="width:45%; border:none; background:none;"></td>
+    <td style="width:55%; text-align:center; padding-right:10pt; border:none; background:none; color:#000;">
+      <p style="margin:0 0 14pt 0; font-weight:bold;">{{ lieu_et_date }}.</p>
+      <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}</p>
+      <p style="margin:0; padding-top:75pt; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
+    </td>
+  </tr>
+</table>

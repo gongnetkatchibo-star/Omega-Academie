@@ -17,7 +17,7 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Nom de la classe
-      <input type="text" name="nom" placeholder="ex : CM2 ou 6ème A" required>
+      <input type="text" name="nom" required>
     </label>
     <label>Niveau
       <select name="niveau" required>
@@ -28,7 +28,7 @@
       </select>
     </label>
     <label>Année scolaire
-      <input type="text" name="annee_scolaire" placeholder="ex : 2025-2026" required>
+      <input type="text" name="annee_scolaire" required>
     </label>
     <label>Frais d'inscription
       {{ champ_montant("frais_inscription", 0, 30000) }}
@@ -41,5 +41,4 @@
     </label>
     <button type="submit">Créer la classe</button>
   </form>
-  <p class="lien-secondaire">Si d'autres classes du même groupe (CP1-CE2, CM1-CM2, ou 6ème-4ème) ont déjà un échéancier, il sera repris automatiquement — laisse alors les montants à 0.</p>
 {% endblock %}

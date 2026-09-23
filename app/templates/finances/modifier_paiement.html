@@ -21,10 +21,9 @@
         {% for m in modes %}<option value="{{ m }}" {% if m == paiement.mode %}selected{% endif %}>{{ m.replace('_', ' ') }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence (optionnel)
+    <label>Référence
       <input type="text" name="reference" value="{{ paiement.reference or '' }}">
     </label>
     <button type="submit">Enregistrer la correction</button>
   </form>
-  <p class="lien-secondaire">La référence de reçu ({{ paiement.numero_recu }}) ne change pas. La ligne correspondante dans la Caisse sera mise à jour automatiquement.</p>
 {% endblock %}

@@ -49,6 +49,7 @@ class User(UserMixin, db.Model):
     profession = db.Column(db.String(100))
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     telephone = db.Column(db.String(30), unique=True, index=True)
+    genre = db.Column(db.String(1))
     mot_de_passe_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(40), nullable=False)
     statut = db.Column(db.String(20), nullable=False, default="en_attente")

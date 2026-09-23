@@ -60,10 +60,20 @@ def numero_reference(type_document, annee=None):
     return f"{numero:03d}/{SIGLE_ETABLISSEMENT}/{type_document}/{annee}"
 
 
+def signataire_par_defaut():
+    from app.models.parametre import ParametreEtablissement
+
+    parametre = ParametreEtablissement.get()
+    return {
+        "nom": parametre.nom_directeur or "",
+        "qualite": parametre.titre_directeur or "Directeur",
+        "genre": parametre.genre_directeur or "M",
+    }
+
+
 def contexte_entete_officiel():
-    """Variables communes à injecter dans le rendu de tout document PDF
-    portant l'en-tête officiel — évite de les répéter dans chaque route
-    (sept. 2026)."""
+    """Variables communes à tout PDF portant l'en-tête officiel : logo,
+    nom de l'établissement, lieu et date, signataire par défaut."""
     from app.utils import logo_officiel_data_uri
 
     return {
@@ -71,4 +81,6 @@ def contexte_entete_officiel():
         "nom_etablissement": NOM_ETABLISSEMENT,
         "ville_etablissement": VILLE_ETABLISSEMENT,
         "pays_etablissement": PAYS_ETABLISSEMENT,
+        "lieu_et_date": lieu_et_date_officiels(),
+        "signataire": signataire_par_defaut(),
     }

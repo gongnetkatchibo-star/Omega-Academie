@@ -28,10 +28,9 @@
         {% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence (optionnel)
-      <input type="text" name="reference" placeholder="ex : ID transaction Mobile Money">
+    <label>Référence
+      <input type="text" name="reference">
     </label>
     <button type="submit">Enregistrer le paiement</button>
   </form>
-  <p class="lien-secondaire">Le reçu est généré automatiquement et apparaît immédiatement dans le journal de Caisse et dans la fiche Finances de l'élève.</p>
 {% endblock %}

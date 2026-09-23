@@ -12,7 +12,7 @@
         {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
       </select>
     </label>
-    <label>Matière (optionnel, appliquée à tous les fichiers)
+    <label>Matière
       <input type="text" name="matiere">
     </label>
     <label>Fichiers (plusieurs à la fois)
@@ -21,5 +21,4 @@
     <label><input type="checkbox" name="consultation_sur_place"> Consultation sur place uniquement (non téléchargeable), pour tous les fichiers importés</label>
     <button type="submit">Importer</button>
   </form>
-  <p class="lien-secondaire">Chaque fichier devient une ressource distincte — le titre reprend automatiquement le nom du fichier.</p>
 {% endblock %}

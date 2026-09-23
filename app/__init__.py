@@ -128,6 +128,10 @@ def create_app(config_name=None):
         externe à charger, ce qui respecterait mal notre CSP (sept. 2026)."""
         return ICONES_MODULES.get(cle, "")
 
+    @app.template_filter("genre_libelle")
+    def genre_libelle(valeur):
+        return {"M": "Masculin", "F": "Féminin"}.get(valeur, "—")
+
     @app.template_global()
     def etat_vide(texte, icone="🗂️"):
         """Écran vide (liste sans résultat) — un composant cohérent

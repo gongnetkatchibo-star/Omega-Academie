@@ -24,12 +24,11 @@
             <td>{{ e.nom_complet }}</td>
             <td><input type="checkbox" name="absent_{{ e.id }}" {% if a %}checked{% endif %}></td>
             <td><input type="checkbox" name="justifiee_{{ e.id }}" {% if a and a.justifiee %}checked{% endif %}></td>
-            <td><input type="text" name="motif_{{ e.id }}" value="{{ a.motif if a else '' }}" placeholder="ex : certificat médical"></td>
+            <td><input type="text" name="motif_{{ e.id }}" value="{{ a.motif if a else '' }}"></td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
     <button type="submit">Enregistrer les absences</button>
   </form>
-  <p class="lien-secondaire">Coche uniquement les élèves absents. Un élève non coché est considéré présent — décocher une case déjà enregistrée corrige l'absence (la supprime).</p>
 {% endblock %}

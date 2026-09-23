@@ -139,6 +139,17 @@ def profil():
     return render_template("main/profil.html", numeros=numeros, operateurs=OPERATEURS_TCHAD)
 
 
+@main_bp.route("/profil/genre", methods=["POST"])
+@login_required
+def modifier_genre():
+    genre = request.form.get("genre")
+    if genre in ("M", "F"):
+        current_user.genre = genre
+        db.session.commit()
+        flash("Genre enregistré.", "info")
+    return redirect(url_for("main.profil"))
+
+
 @main_bp.route("/profil/numero/ajouter", methods=["POST"])
 @login_required
 def ajouter_numero():

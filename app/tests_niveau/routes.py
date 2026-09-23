@@ -61,6 +61,7 @@ def nouveau():
 
         test = TestNiveau(
             nom_candidat=nom_candidat, date_naissance_candidat=date_naissance,
+            sexe_candidat=request.form.get("sexe_candidat") if request.form.get("sexe_candidat") in ("M", "F") else None,
             classe_demandee_id=classe_demandee.id, date_test=date_test,
             evaluateur_id=current_user.id,
         )

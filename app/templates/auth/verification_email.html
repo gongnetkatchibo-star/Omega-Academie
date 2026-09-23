@@ -17,7 +17,7 @@
   <form method="post" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Code de vérification
-      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" autocomplete="off" required autofocus>
+      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required autofocus>
     </label>
     <button type="submit">Valider</button>
   </form>
@@ -27,5 +27,4 @@
     <button type="submit">Renvoyer le code</button>
   </form>
 
-  <p class="lien-secondaire">Le code expire au bout de 10 minutes. Une fois vérifié, ta demande de compte sera transmise au secrétariat pour validation — la double vérification ne sera plus redemandée à tes prochaines connexions.</p>
 {% endblock %}

@@ -22,6 +22,7 @@
   {% endwith %}
 
   <p><strong>Matricule :</strong> {{ eleve.matricule }}</p>
+  <p><strong>Genre :</strong> {{ eleve.sexe|genre_libelle }}</p>
   <p><strong>Classe actuelle :</strong> {{ eleve.classe.nom }}</p>
   <p><strong>Date de naissance :</strong> {{ eleve.date_naissance or "—" }}</p>
   <p><strong>Téléphone parent/tuteur :</strong> {{ eleve.telephone_parent or "—" }}</p>
@@ -37,7 +38,7 @@
       <p class="lien-secondaire">
         Il manque :
         {% if not eleve.date_naissance %}date de naissance{% endif %}
-        {% if not eleve.sexe %}· sexe{% endif %}
+        {% if not eleve.sexe %}· genre{% endif %}
         {% if not eleve.parents %}· au moins un parent lié{% endif %}
         {% if not eleve.telephone_parent and not (eleve.parents|selectattr('telephone')|list) %}· téléphone de contact{% endif %}
       </p>
@@ -109,7 +110,6 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit">Évaluer et faire passer en {{ classe_superieure.nom }}</button>
       </form>
-      <p class="lien-secondaire">L'admission est déterminée automatiquement à partir de la moyenne ci-dessus — pas de passage possible sans notes suffisantes.</p>
     {% else %}
       <p class="lien-secondaire">Aucune classe supérieure définie après {{ eleve.classe.nom }}.</p>
     {% endif %}

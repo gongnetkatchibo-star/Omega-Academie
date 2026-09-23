@@ -44,7 +44,7 @@ def _lignes_export_eleves(classe_id=None, cycle=None):
     eleves = requete.order_by(Eleve.nom_complet).all()
     if cycle:
         eleves = [e for e in eleves if classe_dans_le_cycle(e.classe, cycle)]
-    entetes = ["Matricule", "Nom complet", "Sexe", "Classe", "Téléphone parent", "Statut dossier", "Parent(s) lié(s)"]
+    entetes = ["Matricule", "Nom complet", "Genre", "Classe", "Téléphone parent", "Statut dossier", "Parent(s) lié(s)"]
     lignes = [
         (
             e.matricule, e.nom_complet, e.sexe or "—", e.classe.nom,

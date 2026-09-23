@@ -54,13 +54,11 @@
         {% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence (optionnel)
-      <input type="text" name="reference" placeholder="ex : ID transaction Mobile Money">
+    <label>Référence
+      <input type="text" name="reference">
     </label>
     <button type="submit">Enregistrer le paiement</button>
   </form>
-  <p class="lien-secondaire">Le numéro de reçu est généré automatiquement à l'enregistrement — il apparaît ensuite dans l'historique ci-dessous et dans la Caisse.</p>
-  <p class="lien-secondaire">Note : ceci enregistre le paiement manuellement. Une intégration réelle avec Orange Money / MTN Mobile Money nécessitera leurs API et des identifiants marchands (§9 du cahier des charges).</p>
   {% endif %}
 
   <h2>Historique des paiements</h2>

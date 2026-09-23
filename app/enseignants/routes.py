@@ -32,10 +32,10 @@ def liste():
 
 def _lignes_export_enseignants():
     tous = sorted(Enseignant.query.all(), key=lambda e: e.nom_complet)
-    entetes = ["Nom complet", "Email", "Spécialité", "Classes / matières"]
+    entetes = ["Nom complet", "Genre", "Email", "Spécialité", "Classes / matières"]
     lignes = [
         (
-            e.nom_complet, e.user.email, e.specialite or "—",
+            e.nom_complet, {"M": "M", "F": "F"}.get(e.user.genre, "—"), e.user.email, e.specialite or "—",
             ", ".join(f"{a.classe.nom} ({a.matiere})" for a in e.affectations) or "Aucune",
         )
         for e in tous

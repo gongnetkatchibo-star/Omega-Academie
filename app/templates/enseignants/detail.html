@@ -7,6 +7,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
+  <p><strong>Genre :</strong> {{ enseignant.user.genre|genre_libelle }}</p>
   <p><strong>Spécialité :</strong> {{ enseignant.specialite or "—" }}</p>
   <p><strong>Email :</strong> {{ enseignant.user.email }}</p>
 
@@ -39,7 +40,7 @@
         </select>
       </label>
       <label>Matière
-        <input type="text" name="matiere" placeholder="ex : Mathématiques" required>
+        <input type="text" name="matiere" required>
       </label>
       <button type="submit">Affecter</button>
     </form>

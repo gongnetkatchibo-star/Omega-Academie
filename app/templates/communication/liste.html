@@ -2,7 +2,7 @@
 {% block title %}Annonces{% endblock %}
 {% block content %}
   {{ fil_ariane(("Annonces", None)) }}
-  {{ banniere("annonces", "Annonces", "Communications internes de l'école.") }}
+  {{ banniere("annonces", "Annonces") }}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <ul class="flashes">

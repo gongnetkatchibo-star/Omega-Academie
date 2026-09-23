@@ -29,5 +29,6 @@
   </table>
 
   <p class="montant">Montant : {{ "%.0f"|format(m.recette) if m.recette else "%.0f"|format(m.depense) }} FCFA</p>
+  {% include "documents_officiels/_signature.html" %}
 </body>
 </html>

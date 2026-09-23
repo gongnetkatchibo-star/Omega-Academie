@@ -26,8 +26,8 @@
         {% endfor %}
       </select>
     </label>
-    <label>Référence (optionnel)
-      <input type="text" name="reference" value="{{ form.get('reference', '') }}" placeholder="ex : n° pièce, n° chèque">
+    <label>Référence
+      <input type="text" name="reference" value="{{ form.get('reference', '') }}">
     </label>
     <label>Libellé
       <input type="text" name="libelle" value="{{ form.get('libelle', '') }}" required>
@@ -38,10 +38,9 @@
     <label>Dépense (si sortie d'argent)
       <input type="number" step="1" min="0" name="depense" value="{{ form.get('depense', '') }}">
     </label>
-    <label>Observation (optionnel)
+    <label>Observation
       <input type="text" name="observation" value="{{ form.get('observation', '') }}">
     </label>
     <button type="submit">Enregistrer</button>
   </form>
-  <p class="lien-secondaire">Remplis soit « Recette », soit « Dépense » — jamais les deux sur la même ligne.</p>
 {% endblock %}

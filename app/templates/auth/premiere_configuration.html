@@ -3,7 +3,6 @@
 {% block title %}Première configuration{% endblock %}
 {% block content %}
   <h1>Première configuration</h1>
-  <p class="lien-secondaire">Cette page ne fonctionne qu'une seule fois — tant qu'aucun compte n'existe encore dans l'application. Elle crée le tout premier compte, avec accès complet (développeur).</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

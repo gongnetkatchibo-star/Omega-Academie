@@ -84,6 +84,9 @@ def modifier_utilisateur(user_id):
     ancien_role, ancien_statut = utilisateur.role, utilisateur.statut
     utilisateur.role = nouveau_role
     utilisateur.statut = nouveau_statut
+    genre = request.form.get("genre")
+    if genre in ("M", "F"):
+        utilisateur.genre = genre
     journaliser(
         "modification_role_statut",
         details=f"{utilisateur.nom_complet} : {ancien_role}/{ancien_statut} → {nouveau_role}/{nouveau_statut}",
@@ -256,7 +259,9 @@ def parametres():
 
     if request.method == "POST":
         parametre.nom_directeur = request.form.get("nom_directeur", "").strip() or None
-        parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Le Directeur / La Directrice"
+        parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Directeur"
+        genre = request.form.get("genre_directeur", "M")
+        parametre.genre_directeur = genre if genre in ("M", "F") else "M"
         db.session.commit()
         flash("Paramètres enregistrés.", "info")
         return redirect(url_for("dev.parametres"))

@@ -21,7 +21,7 @@
       </select>
     </label>
     <label>Fonction
-      <input type="text" name="fonction" id="champ-fonction" placeholder="Ex. Enseignant, Comptable, Surveillant">
+      <input type="text" name="fonction" id="champ-fonction">
     </label>
     <label>Mois
       <select name="mois" required>
@@ -34,7 +34,6 @@
 
     <div>
       <strong>Somme à percevoir — un billet à la fois</strong>
-      <p class="lien-secondaire">Choisis un montant par billet ; ajoute autant de lignes que nécessaire pour reconstituer la somme totale.</p>
       <div id="liste-billets">
         <div class="ligne-billet">{{ champ_montant("billet_0", 0, 10000, 2000) }}</div>
       </div>
@@ -44,14 +43,13 @@
     </div>
 
     <label>Email de contact (pour l'avis de paiement)
-      <input type="email" name="email_contact" id="champ-email-contact" placeholder="Laisser vide pour utiliser l'email du compte">
+      <input type="email" name="email_contact" id="champ-email-contact">
     </label>
     <label>Téléphone de contact
-      <input type="text" name="telephone_contact" id="champ-telephone-contact" placeholder="Laisser vide pour utiliser celui du compte">
+      <input type="text" name="telephone_contact" id="champ-telephone-contact">
     </label>
     <button type="submit">Enregistrer (impayé)</button>
   </form>
-  <p class="lien-secondaire">Le salaire est créé au statut "impayé". Clique sur "Marquer payé" une fois le versement réellement effectué — ça enregistrera automatiquement la dépense dans la Caisse et enverra un avis de paiement par email.</p>
 
   <script>
     document.getElementById("champ-personnel").addEventListener("change", function () {

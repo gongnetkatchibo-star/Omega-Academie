@@ -2,7 +2,7 @@
 {% block title %}Élèves{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", None)) }}
-  {{ banniere("eleves", "Élèves", "Inscriptions, dossiers, passages de classe.") }}
+  {{ banniere("eleves", "Élèves") }}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -46,7 +46,7 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ e.nom_complet }}</strong>
-            <span>{{ e.matricule }} — {{ e.classe.nom }}</span>
+            <span>{{ e.matricule }} — {{ e.classe.nom }} — {{ e.sexe|genre_libelle }}</span>
           </div>
           <div class="actions">
             <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">Voir le dossier</a>

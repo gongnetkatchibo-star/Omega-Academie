@@ -2,7 +2,7 @@
 {% block title %}Messagerie{% endblock %}
 {% block content %}
   {{ fil_ariane(("Messages", None)) }}
-  {{ banniere("messagerie", "Messagerie", "Fils de discussion avec les parents.") }}
+  {{ banniere("messagerie", "Messagerie") }}
   {% if parents %}
     <ul class="liste-demandes">
       {% for p in parents %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ libelle }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), (eleve.nom_complet, url_for('eleves.detail', eleve_id=eleve.id)), (libelle, None)) }}
+  <h1>{{ libelle }} — {{ eleve.nom_complet }}</h1>
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Nom du signataire
+      <input type="text" name="signataire_nom" value="{{ parametre.nom_directeur or '' }}">
+    </label>
+    <label>Qualité
+      <input type="text" name="signataire_qualite" value="{{ parametre.titre_directeur or 'Directeur' }}" required>
+    </label>
+    <label>Genre du signataire
+      <select name="signataire_genre">
+        <option value="M" {% if parametre.genre_directeur != "F" %}selected{% endif %}>Masculin</option>
+        <option value="F" {% if parametre.genre_directeur == "F" %}selected{% endif %}>Féminin</option>
+      </select>
+    </label>
+    <button type="submit">Générer le PDF</button>
+  </form>
+{% endblock %}

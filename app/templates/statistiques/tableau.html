@@ -3,7 +3,7 @@
 {% block title %}Statistiques{% endblock %}
 {% block content %}
   {{ fil_ariane(("Statistiques", None)) }}
-  {{ banniere("statistiques", "Statistiques", "Effectifs, réussite, recouvrement — année " ~ annee ~ ".") }}
+  {{ banniere("statistiques", "Statistiques — " ~ annee) }}
 
   {% if annees_disponibles %}
     <form method="get" style="margin-bottom:12px;">
