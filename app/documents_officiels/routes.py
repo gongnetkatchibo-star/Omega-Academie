@@ -25,9 +25,12 @@ def certificat_scolarite(eleve_id):
     journaliser("generation_certificat_scolarite", details=f"{eleve.nom_complet} — {numero}", cible_type="Eleve", cible_id=eleve.id)
     db.session.commit()
 
+    from app.models.parametre import ParametreEtablissement
+    parametre = ParametreEtablissement.get()
+
     html = render_template(
         "documents_officiels/certificat_scolarite.html",
-        eleve=eleve, numero=numero, lieu_et_date=lieu_et_date_officiels(),
+        eleve=eleve, numero=numero, lieu_et_date=lieu_et_date_officiels(), parametre=parametre,
         **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))
@@ -47,9 +50,12 @@ def attestation_frequentation(eleve_id):
     journaliser("generation_attestation_frequentation", details=f"{eleve.nom_complet} — {numero}", cible_type="Eleve", cible_id=eleve.id)
     db.session.commit()
 
+    from app.models.parametre import ParametreEtablissement
+    parametre = ParametreEtablissement.get()
+
     html = render_template(
         "documents_officiels/attestation_frequentation.html",
-        eleve=eleve, numero=numero, lieu_et_date=lieu_et_date_officiels(),
+        eleve=eleve, numero=numero, lieu_et_date=lieu_et_date_officiels(), parametre=parametre,
         **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))

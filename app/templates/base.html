@@ -42,14 +42,17 @@
             <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">👥 Mes classes</a>
           {% endif %}
         {% endif %}
+        {% if acces("comptable", "fondateur", "administrateur_general", module="finances") or acces("comptable", "fondateur", "administrateur_general", module="caisse") or acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
+          <div class="sidebar-groupe-titre">💰 Finances</div>
+        {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", module="finances") %}
-          <a href="{{ url_for('finances.liste') }}">{{ icone("finances") }} Finances</a>
+          <a href="{{ url_for('finances.liste') }}" class="sidebar-lien-groupe">Scolarité</a>
         {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
-          <a href="{{ url_for('caisse.liste') }}">{{ icone("caisse") }} Caisse</a>
+          <a href="{{ url_for('caisse.liste') }}" class="sidebar-lien-groupe">Caisse</a>
         {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
-          <a href="{{ url_for('salaires.liste') }}">{{ icone("salaires") }} Salaires</a>
+          <a href="{{ url_for('salaires.liste') }}" class="sidebar-lien-groupe">Salaires</a>
         {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
           <a href="{{ url_for('statistiques.tableau') }}">{{ icone("statistiques") }} Statistiques</a>

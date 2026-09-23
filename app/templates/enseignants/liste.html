@@ -2,7 +2,7 @@
 {% block title %}Enseignants{% endblock %}
 {% block content %}
   {{ fil_ariane(("Enseignants", None)) }}
-  <h1>Enseignants</h1>
+  {{ banniere("enseignants", "Enseignants", "Profils et affectations par classe.") }}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}

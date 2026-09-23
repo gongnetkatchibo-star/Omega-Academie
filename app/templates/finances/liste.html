@@ -2,7 +2,7 @@
 {% block title %}Finances{% endblock %}
 {% block content %}
   {{ fil_ariane(("Finances", None)) }}
-  <h1>Finances — frais de scolarité</h1>
+  {{ banniere("finances", "Finances", "Frais dus, paiements, soldes par élève.") }}
   {% if lignes %}
     <table class="table">
       <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>Statut</th><th></th></tr></thead>

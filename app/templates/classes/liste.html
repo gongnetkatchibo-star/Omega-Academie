@@ -3,7 +3,8 @@
 {% block title %}Classes{% endblock %}
 {% block content %}
   {{ fil_ariane(("Classes", None)) }}
-  <h1>Classes {% if annee_selectionnee != annee_courante %}<span class="badge-retard">année {{ annee_selectionnee }} — archive</span>{% endif %}</h1>
+  {{ banniere("classes", "Classes", "Créer et consulter les classes, gérer les frais par groupe.") }}
+  {% if annee_selectionnee != annee_courante %}<span class="badge-retard">année {{ annee_selectionnee }} — archive</span>{% endif %}
 
   {% if annees_disponibles %}
     <form method="get" style="margin-bottom:12px;">

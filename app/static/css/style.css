@@ -371,6 +371,31 @@ textarea {
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
+.carte-module-icone {
+  display: block;
+  font-size: 30px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.grille-cartes-groupe-titre {
+  flex-basis: 100%;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8a8471;
+  font-weight: 700;
+  margin: 8px 0 -6px;
+}
+
+.grille-cartes-groupe-titre:first-child {
+  margin-top: 0;
+}
+
+.carte-module h3 {
+  margin: 0;
+}
+
 .carte-module:hover {
   box-shadow: 0 3px 10px rgba(15, 95, 166, 0.14);
 }
@@ -1154,6 +1179,19 @@ textarea {
   border-left-color: var(--gold);
   color: #fff;
   font-weight: 600;
+}
+
+.sidebar-groupe-titre {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  padding: 14px 18px 4px;
+}
+
+.sidebar-lien-groupe {
+  padding-left: 34px !important;
 }
 
 .sidebar-toggle-mobile {

@@ -2,7 +2,7 @@
 {% block title %}Élèves{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", None)) }}
-  <h1>Élèves</h1>
+  {{ banniere("eleves", "Élèves", "Inscriptions, dossiers, passages de classe.") }}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}

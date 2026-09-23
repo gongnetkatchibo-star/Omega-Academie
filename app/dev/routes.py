@@ -244,3 +244,21 @@ def journal_emails():
 
     entrees = requete.order_by(JournalEmail.date_envoi.desc()).limit(500).all()
     return render_template("dev/journal_emails.html", entrees=entrees, filtre_statut=statut)
+
+
+@dev_bp.route("/parametres", methods=["GET", "POST"])
+@login_required
+@roles_required("developpeur", "fondateur", module="gestion_roles")
+def parametres():
+    from app.models.parametre import ParametreEtablissement
+
+    parametre = ParametreEtablissement.get()
+
+    if request.method == "POST":
+        parametre.nom_directeur = request.form.get("nom_directeur", "").strip() or None
+        parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Le Directeur / La Directrice"
+        db.session.commit()
+        flash("Paramètres enregistrés.", "info")
+        return redirect(url_for("dev.parametres"))
+
+    return render_template("dev/parametres.html", parametre=parametre)

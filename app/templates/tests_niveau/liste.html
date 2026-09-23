@@ -2,7 +2,7 @@
 {% block title %}Tests de niveau{% endblock %}
 {% block content %}
   {{ fil_ariane(("Tests de niveau", None)) }}
-  <h1>Tests de niveau</h1>
+  {{ banniere("tests_niveau", "Tests de niveau", "Suivi des candidatures et décisions d'admission.") }}
   <p class="lien-secondaire"><a href="{{ url_for('tests_niveau.nouveau') }}">+ Nouveau test</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

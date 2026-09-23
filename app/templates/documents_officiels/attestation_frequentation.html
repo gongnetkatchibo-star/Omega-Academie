@@ -32,6 +32,7 @@
 
   <p class="fait-a">{{ lieu_et_date }}</p>
   <div class="espace-signature"></div>
-  <p class="signature">Le Directeur / La Directrice</p>
+  <p class="signature">{{ parametre.titre_directeur if parametre else "Le Directeur / La Directrice" }}</p>
+  {% if parametre and parametre.nom_directeur %}<p class="signature">{{ parametre.nom_directeur }}</p>{% endif %}
 </body>
 </html>

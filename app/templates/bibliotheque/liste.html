@@ -2,7 +2,7 @@
 {% block title %}Bibliothèque numérique{% endblock %}
 {% block content %}
   {{ fil_ariane(("Bibliothèque", None)) }}
-  <h1>Bibliothèque numérique</h1>
+  {{ banniere("bibliotheque", "Bibliothèque numérique", "Livres, cours et exercices, à consulter ou télécharger.") }}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}

@@ -2,7 +2,7 @@
 {% block title %}Mon profil{% endblock %}
 {% block content %}
   {{ fil_ariane(("Mon profil", None)) }}
-  <h1>Mon profil</h1>
+  {{ banniere("profil", "Mon profil", "Tes numéros de téléphone, pour être joignable hors application.") }}
   <p class="lien-secondaire">Ajoute un ou plusieurs numéros pour être joignable en dehors de l'application (Tchad uniquement pour l'instant).</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}

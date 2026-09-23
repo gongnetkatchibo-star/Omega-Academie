@@ -29,11 +29,12 @@ def _modeles_a_exporter():
     from app.models.emploi_du_temps import Creneau
     from app.models.journal import JournalAction
     from app.models.journal_email import JournalEmail
+    from app.models.parametre import ParametreEtablissement
 
     return [
         User, Classe, Eleve, Enseignant, Affectation, Note, Absence,
         Paiement, MouvementCaisse, Salaire, TestNiveau, Annonce, Ressource,
-        HistoriqueScolaire, Creneau, JournalAction, JournalEmail,
+        HistoriqueScolaire, Creneau, JournalAction, JournalEmail, ParametreEtablissement,
     ]
 
 

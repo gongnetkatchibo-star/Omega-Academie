@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Paramètres{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Développeur", url_for('dev.utilisateurs')), ("Paramètres", None)) }}
+  <h1>Paramètres de l'établissement</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Nom du directeur / de la directrice actuel(le)
+      <input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}" placeholder="Ex. M. ABAKAR IDRISS">
+    </label>
+    <label>Titre à afficher au-dessus du nom
+      <input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or '' }}" placeholder="Le Directeur / La Directrice">
+    </label>
+    <button type="submit">Enregistrer</button>
+  </form>
+  <p class="lien-secondaire">Ce nom apparaît automatiquement dans le bloc de signature des documents officiels générés (certificat de scolarité, attestation de fréquentation). Laisse le nom vide pour revenir à un texte générique.</p>
+{% endblock %}

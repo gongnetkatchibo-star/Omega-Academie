@@ -156,6 +156,20 @@ def create_app(config_name=None):
         return Markup(f'<nav class="fil-ariane" aria-label="Fil d\'Ariane">{"".join(morceaux)}</nav>')
 
     @app.template_global()
+    def banniere(cle_icone, titre, description=None):
+        """Bandeau dégradé en haut d'une page de module — remplace un
+        simple <h1> par quelque chose de plus soigné, sur le modèle des
+        tableaux de bord de référence montrés par l'utilisateur
+        (sept. 2026)."""
+        bloc_description = f'<p>{escape(description)}</p>' if description else ""
+        return Markup(
+            f'<div class="banniere-page">'
+            f'<span class="banniere-page-icone">{escape(ICONES_MODULES.get(cle_icone, ""))}</span>'
+            f'<div><h1>{escape(titre)}</h1>{bloc_description}</div>'
+            f'</div>'
+        )
+
+    @app.template_global()
     def acces(*roles, module=None):
         """À utiliser dans les templates à la place de
         `current_user.role in [...]`. Inclut toujours le rôle
@@ -299,6 +313,7 @@ def create_app(config_name=None):
         # db.create_all() et ne la crée jamais (constaté sept. 2026 avec
         # JournalEmail, jamais importé au niveau module).
         from app.models.journal_email import JournalEmail  # noqa: F401
+        from app.models.parametre import ParametreEtablissement  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes

@@ -8,6 +8,9 @@
   {% if acces("developpeur", module="sauvegarde") %}
     <p class="lien-secondaire"><a href="{{ url_for('sauvegarde.exporter') }}">Télécharger une sauvegarde complète (.zip)</a></p>
   {% endif %}
+  {% if acces("developpeur", "fondateur", module="gestion_roles") %}
+    <p class="lien-secondaire"><a href="{{ url_for('dev.parametres') }}">Paramètres de l'établissement (nom du directeur sur les documents)</a></p>
+  {% endif %}
   {% if acces("developpeur", module="journal_actions") %}
     <p class="lien-secondaire"><a href="{{ url_for('dev.journal') }}">Consulter le journal d'actions</a></p>
   {% endif %}

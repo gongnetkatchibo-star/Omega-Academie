@@ -2,7 +2,7 @@
 {% block title %}Salaires{% endblock %}
 {% block content %}
   {{ fil_ariane(("Salaires", None)) }}
-  <h1>Salaires du personnel</h1>
+  {{ banniere("salaires", "Salaires du personnel", "Journal de paie, filtrable et exportable.") }}
   <p class="lien-secondaire"><a href="{{ url_for('salaires.nouveau') }}">+ Nouveau salaire</a></p>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}

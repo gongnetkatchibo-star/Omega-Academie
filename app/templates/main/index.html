@@ -42,10 +42,17 @@
   {% if est_personnel or est_direction or user.role in ["enseignant", "developpeur"] %}
     <h2>Espace {{ "direction" if est_direction else ("personnel" if est_personnel else "") }}</h2>
     <div class="grille-cartes">
+      {% set ns = namespace(dernier_groupe=None) %}
       {% for m in modules %}
+        {% if m.groupe and m.groupe != ns.dernier_groupe %}
+          <div class="grille-cartes-groupe-titre">{{ m.groupe }}</div>
+          {% set ns.dernier_groupe = m.groupe %}
+        {% elif not m.groupe %}
+          {% set ns.dernier_groupe = None %}
+        {% endif %}
         <a class="carte-module" href="{{ url_for(m.endpoint) }}">
-          <h3>{{ icone(m.endpoint.split('.')[0]) }} {{ m.label }}</h3>
-          <p>{{ m.description }}</p>
+          <span class="carte-module-icone">{{ icone(m.endpoint.split('.')[0]) }}</span>
+          <h3>{{ m.label }}</h3>
         </a>
       {% endfor %}
     </div>

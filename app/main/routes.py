@@ -37,10 +37,12 @@ def _modules_pour(role):
                          "description": "Voir les classes et accéder à la saisie de notes."})
 
     if role in ROLES_DIRECTION or role in ["comptable"]:
-        modules.append({"label": "Finances", "endpoint": "finances.liste",
+        modules.append({"label": "Scolarité", "endpoint": "finances.liste", "groupe": "Finances",
                          "description": "Frais dus, paiements, soldes par élève."})
-        modules.append({"label": "Caisse", "endpoint": "caisse.liste",
+        modules.append({"label": "Caisse", "endpoint": "caisse.liste", "groupe": "Finances",
                          "description": "Recettes et dépenses générales de l'école."})
+        modules.append({"label": "Salaires", "endpoint": "salaires.liste", "groupe": "Finances",
+                         "description": "Journal de paie du personnel."})
 
     if role in ["fondateur", "administrateur_general", "directeur_primaire", "directeur_college", "comptable"]:
         modules.append({"label": "Statistiques", "endpoint": "statistiques.tableau",
@@ -70,8 +72,9 @@ def _modules_pour(role):
         modules.append({"label": "Enseignants", "endpoint": "enseignants.liste", "description": "Profils et affectations."})
         modules.append({"label": "Suivi des cours", "endpoint": "suivi_cours.tableau", "description": "Avancement des programmes par classe."})
         modules.append({"label": "Alertes", "endpoint": "alertes.tableau", "description": "Absences répétées et moyennes faibles."})
-        modules.append({"label": "Finances", "endpoint": "finances.liste", "description": "Frais dus, paiements, soldes par élève."})
-        modules.append({"label": "Caisse", "endpoint": "caisse.liste", "description": "Recettes et dépenses générales de l'école."})
+        modules.append({"label": "Scolarité", "endpoint": "finances.liste", "groupe": "Finances", "description": "Frais dus, paiements, soldes par élève."})
+        modules.append({"label": "Caisse", "endpoint": "caisse.liste", "groupe": "Finances", "description": "Recettes et dépenses générales de l'école."})
+        modules.append({"label": "Salaires", "endpoint": "salaires.liste", "groupe": "Finances", "description": "Journal de paie du personnel."})
         modules.append({"label": "Statistiques", "endpoint": "statistiques.tableau", "description": "Effectifs, recouvrement, indicateurs de l'école."})
         modules.append({"label": "Demandes de comptes", "endpoint": "secretariat.demandes", "description": "Approuver ou refuser les inscriptions en attente."})
         modules.insert(0, {"label": "Espace développeur", "endpoint": "dev.utilisateurs",
