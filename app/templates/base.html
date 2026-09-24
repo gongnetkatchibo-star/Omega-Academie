@@ -23,6 +23,25 @@
         <span>{{ current_user.nom_complet }}</span>
       </div>
       <nav class="sidebar-liens">
+        {% for e in current_user.enfants if e.actif %}
+          <details class="sidebar-deroulant" {% if request.view_args and request.view_args.get('eleve_id') == e.id %}open{% endif %}>
+            <summary>🎓 {{ e.nom_complet }}</summary>
+            <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">Fiche</a>
+            <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">Scolarité</a>
+            <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">Bulletin</a>
+          </details>
+        {% endfor %}
+        {% if current_user.role == "eleve" %}
+          {% set dossier = mon_dossier_eleve() %}
+          {% if dossier %}
+            <details class="sidebar-deroulant" open>
+              <summary>🎓 Mon espace</summary>
+              <a href="{{ url_for('eleves.detail', eleve_id=dossier.id) }}">Ma fiche</a>
+              <a href="{{ url_for('notes.bulletin', eleve_id=dossier.id) }}">Mon bulletin</a>
+              {% if dossier.classe %}<a href="{{ url_for('emploi_du_temps.classe', classe_id=dossier.classe.id) }}">Mon emploi du temps</a>{% endif %}
+            </details>
+          {% endif %}
+        {% endif %}
         {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") or current_user.role == "enseignant" %}
           <a href="{{ url_for('classes.liste') }}">{{ icone("classes") }} Classes</a>
           <a href="{{ url_for('eleves.liste') }}">{{ icone("eleves") }} Élèves</a>
@@ -42,17 +61,16 @@
             <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">👥 Mes classes</a>
           {% endif %}
         {% endif %}
-        {% if acces("comptable", "fondateur", "administrateur_general", module="finances") or acces("comptable", "fondateur", "administrateur_general", module="caisse") or acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
-          <div class="sidebar-groupe-titre">💰 Finances</div>
-        {% endif %}
-        {% if acces("comptable", "fondateur", "administrateur_general", module="finances") %}
-          <a href="{{ url_for('finances.liste') }}" class="sidebar-lien-groupe">Scolarité</a>
-        {% endif %}
-        {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
-          <a href="{{ url_for('caisse.liste') }}" class="sidebar-lien-groupe">Caisse</a>
-        {% endif %}
-        {% if acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
-          <a href="{{ url_for('salaires.liste') }}" class="sidebar-lien-groupe">Salaires</a>
+        {% set peut_scolarite = acces("comptable", "fondateur", "administrateur_general", module="finances") %}
+        {% set peut_caisse = acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
+        {% set peut_salaires = acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
+        {% if peut_scolarite or peut_caisse or peut_salaires %}
+          <details class="sidebar-deroulant" {% if request.endpoint and request.endpoint.split('.')[0] in ["finances", "caisse", "salaires"] %}open{% endif %}>
+            <summary>{{ icone("finances") }} Finances</summary>
+            {% if peut_scolarite %}<a href="{{ url_for('finances.liste') }}">Scolarité</a>{% endif %}
+            {% if peut_caisse %}<a href="{{ url_for('caisse.liste') }}">Caisse</a>{% endif %}
+            {% if peut_salaires %}<a href="{{ url_for('salaires.liste') }}">Salaires</a>{% endif %}
+          </details>
         {% endif %}
         {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
           <a href="{{ url_for('statistiques.tableau') }}">{{ icone("statistiques") }} Statistiques</a>
@@ -78,6 +96,7 @@
       </nav>
     </aside>
     <div class="contenu-principal">
+      <div class="barre-devise">Vers l'excellence et la sagesse</div>
       <div class="container">
 {% else %}
   <div class="navbar">

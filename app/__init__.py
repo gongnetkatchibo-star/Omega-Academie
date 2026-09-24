@@ -128,6 +128,13 @@ def create_app(config_name=None):
         externe à charger, ce qui respecterait mal notre CSP (sept. 2026)."""
         return ICONES_MODULES.get(cle, "")
 
+    @app.template_global()
+    def mon_dossier_eleve():
+        from app.models.eleve import Eleve
+        if not current_user.is_authenticated or current_user.role != "eleve":
+            return None
+        return Eleve.query.filter_by(user_id=current_user.id, actif=True).first()
+
     @app.template_filter("genre_libelle")
     def genre_libelle(valeur):
         return {"M": "Masculin", "F": "Féminin"}.get(valeur, "—")

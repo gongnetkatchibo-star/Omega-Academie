@@ -1247,3 +1247,82 @@ textarea {
     padding-top: 56px;
   }
 }
+
+/* Listes déroulantes de la barre latérale (Finances, enfants, Mon espace) */
+.sidebar-deroulant summary {
+  list-style: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.88);
+  padding: 10px 18px;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+
+.sidebar-deroulant summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-deroulant summary::after {
+  content: "▸";
+  position: absolute;
+  right: 18px;
+  transition: transform 0.15s ease;
+}
+
+.sidebar-deroulant[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.sidebar-deroulant summary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar-deroulant[open] {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.sidebar-deroulant a {
+  display: block;
+  padding-left: 42px !important;
+  font-size: 13.5px;
+}
+
+/* Barre horizontale du haut : la devise de l'école */
+.barre-devise {
+  background: #fff;
+  border-bottom: 3px solid var(--gold);
+  color: var(--navy);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  padding: 14px 20px;
+  letter-spacing: 0.3px;
+}
+
+/* Tableau de bord : uniquement le logo de l'école */
+.accueil-logo-central {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.accueil-logo-central img {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+}
+
+@media (max-width: 800px) {
+  .barre-devise {
+    padding-left: 64px;
+    font-size: 14px;
+  }
+
+  .contenu-principal {
+    padding-top: 0;
+  }
+}
