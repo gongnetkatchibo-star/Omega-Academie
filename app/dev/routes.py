@@ -117,6 +117,11 @@ def supprimer_utilisateur(user_id):
     from app.models.salaire import Salaire
     from app.models.annonce import Annonce
     from app.models.test_niveau import TestNiveau
+    from app.models.telephone import NumeroTelephone
+    from app.models.message import Message
+    from app.models.ressource import Ressource
+    from app.models.journal import JournalAction
+    from sqlalchemy import or_
 
     utilisateur = User.query.get_or_404(user_id)
 
@@ -146,6 +151,14 @@ def supprimer_utilisateur(user_id):
     if profil_enseignant:
         db.session.delete(profil_enseignant)  # supprime aussi ses affectations (cascade)
 
+    # Ses numéros et sa conversation avec l'école n'ont plus de sens sans
+    # lui ; le journal et les fichiers restent, simplement sans auteur.
+    NumeroTelephone.query.filter_by(user_id=utilisateur.id).delete(synchronize_session=False)
+    Message.query.filter(
+        or_(Message.parent_id == utilisateur.id, Message.auteur_id == utilisateur.id)
+    ).delete(synchronize_session=False)
+    JournalAction.query.filter_by(utilisateur_id=utilisateur.id).update({"utilisateur_id": None})
+    Ressource.query.filter_by(ajoute_par_id=utilisateur.id).update({"ajoute_par_id": None})
     Paiement.query.filter_by(enregistre_par_id=utilisateur.id).update({"enregistre_par_id": None})
     MouvementCaisse.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})
     Salaire.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})

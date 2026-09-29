@@ -3,15 +3,28 @@
 Base en mémoire, recréée à zéro pour chaque test — aucun test ne peut
 donc être influencé par un autre, ni toucher la vraie base."""
 
+import sqlite3
+
 import pytest
 from flask import has_request_context
 from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from app import create_app
 from app.extensions import db as _db
 
 ECOLE_PAR_DEFAUT = 1
+
+
+@event.listens_for(Engine, "connect")
+def _cles_etrangeres_sqlite(connexion_dbapi, _):
+    """Comme PostgreSQL en production : une ligne encore référencée ne
+    peut pas être supprimée. SQLite ne le vérifie pas par défaut."""
+    if isinstance(connexion_dbapi, sqlite3.Connection):
+        curseur = connexion_dbapi.cursor()
+        curseur.execute("PRAGMA foreign_keys=ON")
+        curseur.close()
 
 
 @event.listens_for(Session, "before_flush")

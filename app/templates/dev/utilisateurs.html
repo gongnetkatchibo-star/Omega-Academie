@@ -85,7 +85,7 @@
                 </form>
               {% endif %}
               {% if u.id != current_user.id and current_user.role == "developpeur" %}
-                <form method="post" action="{{ url_for('dev.supprimer_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement le compte de {{ u.nom_complet }} ? Cette action est irréversible.');">
+                <form method="post" action="{{ url_for('dev.supprimer_utilisateur', user_id=u.id) }}" style="display:inline;" onsubmit="return confirm({{ ('Supprimer définitivement le compte de ' ~ u.nom_complet ~ ' ? Cette action est irréversible.')|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="bouton-danger">Supprimer</button>
                 </form>
