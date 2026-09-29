@@ -1,19 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Paramètres{% endblock %}
+{% block title %}Établissement{% endblock %}
 {% block content %}
-  {{ fil_ariane(("Développeur", url_for('dev.utilisateurs')), ("Paramètres", None)) }}
+  {{ fil_ariane(("Établissement", None)) }}
   <h1>Paramètres de l'établissement</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-  <form method="post" class="formulaire-etroit">
+  <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Signataire par défaut
-      <input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}">
-    </label>
-    <label>Qualité
-      <input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or 'Directeur' }}">
-    </label>
+    <h2>Identité</h2>
+    <label>Nom officiel<input type="text" name="nom" value="{{ etab.nom or '' }}" required></label>
+    <label>Sigle<input type="text" name="sigle" value="{{ etab.sigle or '' }}" maxlength="20" required></label>
+    <label>Ville<input type="text" name="ville" value="{{ etab.ville or '' }}"></label>
+    <label>Pays<input type="text" name="pays" value="{{ etab.pays or '' }}"></label>
+    <label>Devise<input type="text" name="slogan" value="{{ etab.slogan or '' }}"></label>
+    <label>Préfixe des matricules<input type="text" name="prefixe_matricule" value="{{ etab.prefixe_matricule or '' }}" maxlength="20" required></label>
+    <label>Logo{% if etab.logo %} <img src="{{ url_for('main.image_ecole', image='logo') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
+    <label>Filigrane des documents{% if etab.filigrane %} <img src="{{ url_for('main.image_ecole', image='filigrane') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
+      <input type="file" name="filigrane" accept="image/png,image/jpeg,image/webp"></label>
+
+    <h2>Signataire des documents</h2>
+    <label>Nom<input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}"></label>
+    <label>Qualité<input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or 'Directeur' }}"></label>
     <label>Genre
       <select name="genre_directeur">
         <option value="M" {% if parametre.genre_directeur != "F" %}selected{% endif %}>Masculin</option>

@@ -2,9 +2,7 @@
 {% from "_macros.html" import champ_mot_de_passe %}
 {% block title %}Créer un compte{% endblock %}
 {% block content %}
-  <div class="logo-page">
-    <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie">
-  </div>
+  <p class="nom-plateforme">{{ nom_plateforme() }}</p>
   <h1>Créer un compte</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -25,6 +23,14 @@
   {% else %}
     <form method="post" id="form-inscription" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Établissement
+        <select name="ecole_id" required>
+          {% if ecoles|length != 1 %}<option value="">—</option>{% endif %}
+          {% for e in ecoles %}
+            <option value="{{ e.id }}" {% if request.form.get('ecole_id')|int == e.id or ecoles|length == 1 %}selected{% endif %}>{{ e.nom }}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Je suis…
         <select name="role" id="champ-role" required>
           <option value="">Choisir un profil</option>

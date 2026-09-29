@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class JournalAction(db.Model):
+class JournalAction(AppartientEcole, db.Model):
     """Trace centralisée des actions sensibles — qui, quoi, quand, sur
     quoi. Ne remplace pas les champs métier déjà existants
     (enregistre_par_id, responsable_id...), mais donne UN SEUL endroit où

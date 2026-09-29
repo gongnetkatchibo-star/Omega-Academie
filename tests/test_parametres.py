@@ -17,7 +17,7 @@ def test_configurer_nom_directeur(client, creer_utilisateur):
     connecter(client, "dev@test.com")
 
     client.post("/developpeur/parametres", data={
-        "nom_directeur": "M. ABAKAR IDRISS", "titre_directeur": "Le Directeur Général",
+        "nom": "École Test", "sigle": "ET", "prefixe_matricule": "ET26", "nom_directeur": "M. ABAKAR IDRISS", "titre_directeur": "Le Directeur Général",
     })
 
     from app.models.parametre import ParametreEtablissement
@@ -32,7 +32,7 @@ def test_certificat_utilise_le_nom_du_directeur_configure(client, creer_utilisat
     eleve = creer_eleve("Fatima Abakar", classe)
     connecter(client, "dev@test.com")
 
-    client.post("/developpeur/parametres", data={"nom_directeur": "M. ABAKAR IDRISS", "titre_directeur": "Le Directeur Général"})
+    client.post("/developpeur/parametres", data={"nom": "École Test", "sigle": "ET", "prefixe_matricule": "ET26", "nom_directeur": "M. ABAKAR IDRISS", "titre_directeur": "Le Directeur Général"})
 
     r = client.get(f"/documents/eleve/{eleve.id}/certificat")
     assert "M. ABAKAR IDRISS" in r.data.decode()
@@ -65,7 +65,7 @@ def test_genre_affiche_sur_la_fiche_eleve(client, creer_utilisateur, creer_class
     assert "Féminin" in client.get(f"/eleves/{eleve.id}").data.decode()
 
 
-def test_filigrane_a_la_position_du_document_de_reference():
+def test_filigrane_a_la_position_du_document_de_reference(app):
     from app.utils import html_vers_pdf
     import re
 
@@ -76,6 +76,17 @@ def test_filigrane_a_la_position_du_document_de_reference():
     def espion(src, dest, encoding):
         capture["html"] = src
         return original(src=src, dest=dest, encoding=encoding)
+
+    import os
+    from flask import g, current_app
+    from app.extensions import db as _db
+    from app.models.ecole import Ecole
+
+    ecole = _db.session.get(Ecole, 1)
+    with open(os.path.join(current_app.static_folder, "images", "filigrane-csoa.png"), "rb") as f:
+        ecole.filigrane, ecole.filigrane_mime = f.read(), "image/png"
+    _db.session.commit()
+    g.ecole_id = 1
 
     pisa.CreatePDF = espion
     try:

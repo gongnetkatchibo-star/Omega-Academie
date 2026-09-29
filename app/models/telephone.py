@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 OPERATEURS_TCHAD = [("airtel", "Airtel Tchad"), ("moov", "Moov Africa Tchad")]
 
 
-class NumeroTelephone(db.Model):
+class NumeroTelephone(AppartientEcole, db.Model):
     """Un utilisateur peut avoir plusieurs numéros (principal, autre
     membre de la famille joignable, etc.) — pour être contacté en dehors
     de l'application, par exemple par SMS plus tard (sept. 2026)."""

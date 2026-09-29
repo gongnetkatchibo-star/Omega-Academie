@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -17,7 +18,7 @@ eleve_parents = db.Table(
 )
 
 
-class Eleve(db.Model):
+class Eleve(AppartientEcole, db.Model):
     __tablename__ = "eleves"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -51,13 +52,14 @@ class Eleve(db.Model):
 
     @classmethod
     def generer_matricule(cls, classe):
-        """Format officiel 2026-2027 fourni par la direction :
-        OA26-CLASSE-XXX (numéro séquentiel à 3 chiffres, par classe).
-        Le préfixe est fixe pour l'année en cours ; il devra être mis à
-        jour (ex. OA27) à la rentrée suivante — voir config.py."""
+        """PREFIXE-CLASSE-XXX (numéro séquentiel à 3 chiffres, par classe).
+        Le préfixe est celui de l'école (ex. OA26), modifiable dans les
+        paramètres de l'établissement à chaque rentrée."""
         from flask import current_app
+        from app.services.tenant import ecole_courante
 
-        prefixe = current_app.config.get("MATRICULE_PREFIXE", "OA26")
+        ecole = ecole_courante()
+        prefixe = (ecole.prefixe_matricule if ecole else None) or current_app.config.get("MATRICULE_PREFIXE", "OA26")
         code_classe = classe.nom.upper()
         rang = cls.query.filter_by(classe_id=classe.id).count() + 1
         return f"{prefixe}-{code_classe}-{rang:03d}"

@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime, timedelta
 
 from flask_login import UserMixin
@@ -39,7 +40,7 @@ ROLES_PERSONNEL = ["secretaire", "comptable", "responsable_pedagogique", "biblio
 STATUTS = ["en_attente", "actif", "refuse", "verrouille"]
 
 
-class User(UserMixin, db.Model):
+class User(AppartientEcole, UserMixin, db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -55,7 +56,7 @@ class User(UserMixin, db.Model):
     statut = db.Column(db.String(20), nullable=False, default="en_attente")
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
-    ecole_id = db.Column(db.Integer, db.ForeignKey("ecoles.id"))
+    ecole_id = db.Column(db.Integer, db.ForeignKey("ecoles.id"), index=True)
     ecole = db.relationship("Ecole", back_populates="utilisateurs")
 
     # Vérification de l'email — code à usage unique envoyé une seule fois,

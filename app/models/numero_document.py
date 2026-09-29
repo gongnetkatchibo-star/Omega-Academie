@@ -1,13 +1,14 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 
-class NumeroDocument(db.Model):
+class NumeroDocument(AppartientEcole, db.Model):
     """Compteur séquentiel par type de document et par année — garantit
     que deux documents n'ont jamais le même numéro de référence, même en
     cas d'utilisation simultanée par deux personnes (sept. 2026)."""
     __tablename__ = "numeros_documents"
     __table_args__ = (
-        db.UniqueConstraint("type_document", "annee", name="uq_numero_document_type_annee"),
+        db.UniqueConstraint("ecole_id", "type_document", "annee", name="uq_numero_document_ecole_type_annee"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -5,7 +6,7 @@ from app.extensions import db
 TYPES_RESSOURCE = ["livre", "cours", "exercice", "video"]
 
 
-class Ressource(db.Model):
+class Ressource(AppartientEcole, db.Model):
     __tablename__ = "ressources"
 
     id = db.Column(db.Integer, primary_key=True)

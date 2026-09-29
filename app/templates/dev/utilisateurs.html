@@ -59,7 +59,7 @@
           </td>
           <td>
             <select name="role" form="form-{{ u.id }}">
-              {% for r in roles %}
+              {% for r in roles if r != "developpeur" or current_user.role == "developpeur" %}
                 <option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ r }}</option>
               {% endfor %}
             </select>

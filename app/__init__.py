@@ -38,6 +38,8 @@ def create_app(config_name=None):
         )
 
     db.init_app(app)
+    from app.services.tenant import installer_isolement
+    installer_isolement(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
@@ -212,7 +214,46 @@ def create_app(config_name=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        # Chargé sans filtre d'école : c'est justement ce compte qui
+        # détermine l'école de la requête.
+        from sqlalchemy import select
+        return db.session.execute(
+            select(User).where(User.id == int(user_id)).execution_options(tous_etablissements=True)
+        ).scalar_one_or_none()
+
+    @app.before_request
+    def fixer_ecole_courante():
+        """Fixe l'école de la requête avant toute autre lecture en base.
+        Un compte sans école (hors super-administrateur) ou rattaché à
+        une école suspendue est déconnecté."""
+        from flask import g, request as req
+        from flask_login import logout_user
+        from app.services.tenant import determiner_ecole, est_super_admin
+        from app.models.ecole import Ecole
+
+        g.ecole_id = None
+        g.ecole_obj = None
+        if req.endpoint == "static" or not current_user.is_authenticated:
+            return
+        ecole_id = determiner_ecole(current_user)
+        if not est_super_admin(current_user):
+            ecole = db.session.get(Ecole, ecole_id) if ecole_id else None
+            if ecole is None or not ecole.actif:
+                if req.endpoint not in ("auth.connexion", "auth.deconnexion"):
+                    logout_user()
+                    flash("L'accès de cet établissement est suspendu. Contacte l'administrateur de la plateforme.", "error")
+                    return redirect(url_for("auth.connexion"))
+                return
+        g.ecole_id = ecole_id
+
+    @app.template_global()
+    def ecole():
+        from app.services.tenant import ecole_courante
+        return ecole_courante()
+
+    @app.template_global()
+    def nom_plateforme():
+        return app.config.get("PLATEFORME_NOM", "Toumaï Edu School")
 
     @app.before_request
     def verifier_compte_toujours_actif():
@@ -268,6 +309,9 @@ def create_app(config_name=None):
 
     from app.messagerie import messagerie_bp
     app.register_blueprint(messagerie_bp)
+
+    from app.plateforme import plateforme_bp
+    app.register_blueprint(plateforme_bp)
 
     from app.notes import notes_bp
     app.register_blueprint(notes_bp)
@@ -329,5 +373,7 @@ def create_app(config_name=None):
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes
         ajouter_colonnes_manquantes(app, db)
+        from app.services.migration_saas import migrer_vers_multi_etablissements
+        migrer_vers_multi_etablissements(app, db)
 
     return app

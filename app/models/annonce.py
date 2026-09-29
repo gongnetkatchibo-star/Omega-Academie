@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -13,7 +14,7 @@ DESTINATAIRES = ["tous", "parent", "enseignant", "eleve"]
 DESTINATAIRES_ENSEIGNANT = ["parent", "enseignant", "eleve"]
 
 
-class Annonce(db.Model):
+class Annonce(AppartientEcole, db.Model):
     __tablename__ = "annonces"
 
     id = db.Column(db.Integer, primary_key=True)

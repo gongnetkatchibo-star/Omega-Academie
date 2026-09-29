@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -17,7 +18,7 @@ LIBELLES_ECHEANCE = {
 }
 
 
-class Paiement(db.Model):
+class Paiement(AppartientEcole, db.Model):
     __tablename__ = "paiements"
 
     id = db.Column(db.Integer, primary_key=True)

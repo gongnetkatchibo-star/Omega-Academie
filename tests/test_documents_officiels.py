@@ -14,11 +14,28 @@ def test_date_officielle_format_1er():
 
 
 def test_numerotation_incremente_et_separe_par_type(app, db):
+    from flask import g
     from app.services.documents_officiels import numero_reference
 
-    assert numero_reference("CERT", annee=2026) == "001/CSOA/CERT/2026"
-    assert numero_reference("CERT", annee=2026) == "002/CSOA/CERT/2026"
-    assert numero_reference("ATTEST", annee=2026) == "001/CSOA/ATTEST/2026"
+    g.ecole_id = 1  # école de test, sigle « ET »
+    assert numero_reference("CERT", annee=2026) == "001/ET/CERT/2026"
+    assert numero_reference("CERT", annee=2026) == "002/ET/CERT/2026"
+    assert numero_reference("ATTEST", annee=2026) == "001/ET/ATTEST/2026"
+
+
+def test_numerotation_propre_a_chaque_ecole(app, db):
+    from flask import g
+    from app.models.ecole import Ecole
+    from app.services.documents_officiels import numero_reference
+
+    db.session.add(Ecole(id=2, nom="École B", sigle="EB", prefixe_matricule="EB26"))
+    db.session.commit()
+    g.ecole_id = 1
+    assert numero_reference("CERT", annee=2026) == "001/ET/CERT/2026"
+    g.ecole_id = 2
+    assert numero_reference("CERT", annee=2026) == "001/EB/CERT/2026"
+    g.ecole_id = 1
+    assert numero_reference("CERT", annee=2026) == "002/ET/CERT/2026"
 
 
 def test_certificat_scolarite_genere_un_pdf(client, creer_utilisateur, creer_classe, creer_eleve):

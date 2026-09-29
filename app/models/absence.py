@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class Absence(db.Model):
+class Absence(AppartientEcole, db.Model):
     __tablename__ = "absences"
     __table_args__ = (
         db.UniqueConstraint("eleve_id", "date", name="uq_absence_eleve_date"),

@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class SuiviCours(db.Model):
+class SuiviCours(AppartientEcole, db.Model):
     """Suivi de la progression d'un chapitre pour une classe/matière (Module 5)."""
 
     __tablename__ = "suivis_cours"

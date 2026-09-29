@@ -1,7 +1,8 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 
-class Classe(db.Model):
+class Classe(AppartientEcole, db.Model):
     __tablename__ = "classes"
     __table_args__ = (
         # Un même nom (ex. "CP1") peut exister sur plusieurs années
@@ -9,7 +10,7 @@ class Classe(db.Model):
         # permet de conserver et consulter les années précédentes
         # (document complémentaire, sept. 2026). Il ne peut simplement pas
         # y avoir deux fois "CP1" pour la MÊME année.
-        db.UniqueConstraint("nom", "annee_scolaire", name="uq_classe_nom_annee"),
+        db.UniqueConstraint("ecole_id", "nom", "annee_scolaire", name="uq_classe_ecole_nom_annee"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

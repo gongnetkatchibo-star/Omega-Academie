@@ -1,7 +1,8 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 
-class HistoriqueScolaire(db.Model):
+class HistoriqueScolaire(AppartientEcole, db.Model):
     __tablename__ = "historique_scolaire"
 
     id = db.Column(db.Integer, primary_key=True)

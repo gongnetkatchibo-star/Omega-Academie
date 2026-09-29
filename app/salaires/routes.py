@@ -4,6 +4,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 
 from app.extensions import db
+from app.services.tenant import nom_ecole_courante
 from app.models.user import User
 from app.models.salaire import Salaire, STATUTS_SALAIRE, LIBELLES_STATUT_SALAIRE, MOIS_LIBELLES
 from app.models.mouvement_caisse import MouvementCaisse
@@ -178,7 +179,7 @@ def marquer_paye(salaire_id):
                 f"Bonjour {salaire.personnel.nom_complet},\n\n"
                 f"Ton salaire de {salaire.libelle_periode} d'un montant de {salaire.montant:.0f} "
                 f"vient d'être enregistré comme versé.\n\n"
-                f"Ceci est une notification automatique d'Omega Académie."
+                f"Ceci est une notification automatique de {nom_ecole_courante()}."
             ),
         )
 

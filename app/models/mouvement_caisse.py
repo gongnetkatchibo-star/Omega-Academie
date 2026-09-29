@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -17,7 +18,7 @@ TYPES_CAISSE = [
 TYPE_SCOLARITE_AUTO = "Scolarité (Finances)"
 
 
-class MouvementCaisse(db.Model):
+class MouvementCaisse(AppartientEcole, db.Model):
     __tablename__ = "mouvements_caisse"
 
     id = db.Column(db.Integer, primary_key=True)

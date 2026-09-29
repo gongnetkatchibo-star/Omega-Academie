@@ -77,6 +77,10 @@ def modifier_utilisateur(user_id):
         flash("Statut invalide.", "error")
         return redirect(url_for("dev.utilisateurs"))
 
+    if nouveau_role == "developpeur" and current_user.role != "developpeur":
+        flash("Seul un administrateur de la plateforme peut attribuer ce rôle.", "error")
+        return redirect(url_for("dev.utilisateurs"))
+
     if utilisateur.id == current_user.id and nouveau_role != current_user.role:
         flash("Tu ne peux pas changer ton propre rôle depuis cet écran — demande à un autre développeur ou fondateur de le faire.", "error")
         return redirect(url_for("dev.utilisateurs"))
@@ -254,16 +258,48 @@ def journal_emails():
 @roles_required("developpeur", "fondateur", module="gestion_roles")
 def parametres():
     from app.models.parametre import ParametreEtablissement
+    from app.models.ecole import Ecole
+    from app.services.tenant import ecole_courante
+    from app.services.images_ecole import lire_image_televersee
 
     parametre = ParametreEtablissement.get()
+    ecole = ecole_courante()
 
     if request.method == "POST":
+        erreurs = []
+        nom = request.form.get("nom", "").strip()
+        sigle = request.form.get("sigle", "").strip()
+        prefixe = request.form.get("prefixe_matricule", "").strip().upper()
+        if not nom or not sigle or not prefixe:
+            erreurs.append("Le nom, le sigle et le préfixe des matricules sont obligatoires.")
+        elif Ecole.query.filter(Ecole.prefixe_matricule == prefixe, Ecole.id != ecole.id).first():
+            erreurs.append(f"Le préfixe {prefixe} est déjà utilisé par un autre établissement.")
+        images = {}
+        for champ in ("logo", "filigrane"):
+            contenu, info = lire_image_televersee(request.files.get(champ))
+            if contenu:
+                images[champ] = (contenu, info)
+            elif info:
+                erreurs.append(f"{champ.capitalize()} : {info}")
+        if erreurs:
+            for e in erreurs:
+                flash(e, "error")
+            return render_template("dev/parametres.html", parametre=parametre, etab=ecole)
+
+        ecole.nom, ecole.sigle, ecole.prefixe_matricule = nom, sigle, prefixe
+        ecole.ville = request.form.get("ville", "").strip() or None
+        ecole.pays = request.form.get("pays", "").strip() or None
+        ecole.slogan = request.form.get("slogan", "").strip() or None
+        for champ, (contenu, mime) in images.items():
+            setattr(ecole, champ, contenu)
+            setattr(ecole, f"{champ}_mime", mime)
         parametre.nom_directeur = request.form.get("nom_directeur", "").strip() or None
         parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Directeur"
         genre = request.form.get("genre_directeur", "M")
         parametre.genre_directeur = genre if genre in ("M", "F") else "M"
+        journaliser("modification_parametres_etablissement", details=ecole.nom, cible_type="Ecole", cible_id=ecole.id)
         db.session.commit()
         flash("Paramètres enregistrés.", "info")
         return redirect(url_for("dev.parametres"))
 
-    return render_template("dev/parametres.html", parametre=parametre)
+    return render_template("dev/parametres.html", parametre=parametre, etab=ecole)

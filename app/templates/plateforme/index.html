@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Plateforme{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", None)) }}
+  <h1>Établissements de la plateforme</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p class="lien-secondaire"><a href="{{ url_for('plateforme.nouvelle') }}">+ Nouvel établissement</a></p>
+
+  {% if ecoles %}
+    <table class="table">
+      <thead><tr><th></th><th>Établissement</th><th>Ville</th><th>Comptes</th><th>Élèves</th><th>État</th><th></th></tr></thead>
+      <tbody>
+        {% for e in ecoles %}
+          <tr>
+            <td>{% if e.logo %}<img src="{{ url_for('plateforme.image', ecole_id=e.id, image='logo') }}" alt="" style="height:44px;">{% else %}—{% endif %}</td>
+            <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">en cours</span>{% endif %}</td>
+            <td>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}</td>
+            <td>{{ stats[e.id].comptes }}</td>
+            <td>{{ stats[e.id].eleves }}</td>
+            <td class="{{ 'solde-ok' if e.actif else 'solde-du' }}">{{ "Actif" if e.actif else "Suspendu" }}</td>
+            <td>
+              <div class="actions-tableau actions-console">
+                <form method="post" action="{{ url_for('plateforme.entrer', ecole_id=e.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit">Entrer</button>
+                </form>
+                <a href="{{ url_for('plateforme.modifier', ecole_id=e.id) }}">Modifier</a>
+                <form method="post" action="{{ url_for('plateforme.basculer', ecole_id=e.id) }}" onsubmit="return confirm({{ ((('Suspendre ' if e.actif else 'Réactiver ') ~ e.nom ~ ' ?'))|tojson|forceescape }});">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="{{ 'bouton-danger' if e.actif else '' }}">{{ "Suspendre" if e.actif else "Réactiver" }}</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucun établissement pour l'instant.") }}
+  {% endif %}
+{% endblock %}

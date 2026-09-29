@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, make_respo
 from flask_login import login_required, current_user
 
 from app.extensions import db
+from app.services.tenant import nom_ecole_courante
 from app.models.classe import Classe
 from app.models.enseignant import Enseignant
 from app.models.emploi_du_temps import Creneau, JOURS
@@ -12,7 +13,6 @@ from app.services.cycles import cycle_du_role, classe_dans_le_cycle
 ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"]
 ROLES_LECTURE = ROLES_GESTION + ["enseignant", "eleve"]
 
-NOM_ETABLISSEMENT = "Omega Académie"
 
 
 def _verifier_cycle(classe_obj):
@@ -80,7 +80,9 @@ def classe(classe_id):
         heure_debut = request.form.get("heure_debut", "").strip()
         heure_fin = request.form.get("heure_fin", "").strip()
 
-        if not all([matiere, jour, heure_debut, heure_fin]):
+        if enseignant_id and db.session.get(Enseignant, enseignant_id) is None:
+            flash("Enseignant introuvable.", "error")
+        elif not all([matiere, jour, heure_debut, heure_fin]):
             flash("Merci de remplir tous les champs.", "error")
         elif heure_fin <= heure_debut:
             flash("L'heure de fin doit être après l'heure de début.", "error")
@@ -114,7 +116,7 @@ def classe_pdf(classe_id):
     from app.services.documents_officiels import contexte_entete_officiel
     html = render_template(
         "emploi_du_temps/pdf.html",
-        etablissement=NOM_ETABLISSEMENT, annee_scolaire=classe_obj.annee_scolaire,
+        etablissement=nom_ecole_courante(), annee_scolaire=classe_obj.annee_scolaire,
         classe=classe_obj, jours=JOURS, grille=_construire_grille(creneaux), enseignant=None,
         **contexte_entete_officiel(),
     )
@@ -167,7 +169,7 @@ def moi_classe_pdf(classe_id):
     from app.services.documents_officiels import contexte_entete_officiel
     html = render_template(
         "emploi_du_temps/pdf.html",
-        etablissement=NOM_ETABLISSEMENT, annee_scolaire=classe_obj.annee_scolaire,
+        etablissement=nom_ecole_courante(), annee_scolaire=classe_obj.annee_scolaire,
         classe=classe_obj, jours=JOURS, grille=_construire_grille(creneaux), enseignant=profil,
         **contexte_entete_officiel(),
     )

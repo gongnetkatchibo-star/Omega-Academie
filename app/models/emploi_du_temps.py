@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 JOURS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
 
 
-class Creneau(db.Model):
+class Creneau(AppartientEcole, db.Model):
     __tablename__ = "creneaux"
 
     id = db.Column(db.Integer, primary_key=True)

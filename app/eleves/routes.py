@@ -104,6 +104,9 @@ def nouveau():
                 pass
 
         classe = Classe.query.get(classe_id)
+        if classe is None:
+            flash("Classe introuvable.", "error")
+            return render_template("eleves/nouveau.html", classes=classes)
         eleve = Eleve(
             matricule=Eleve.generer_matricule(classe),
             nom_complet=nom_complet,

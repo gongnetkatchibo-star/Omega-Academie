@@ -1,7 +1,8 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 
-class Enseignant(db.Model):
+class Enseignant(AppartientEcole, db.Model):
     __tablename__ = "enseignants"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -19,7 +20,7 @@ class Enseignant(db.Model):
         return f"<Enseignant {self.nom_complet}>"
 
 
-class Affectation(db.Model):
+class Affectation(AppartientEcole, db.Model):
     __tablename__ = "affectations"
 
     id = db.Column(db.Integer, primary_key=True)

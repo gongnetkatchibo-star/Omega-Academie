@@ -72,7 +72,7 @@ def nouveau():
         user_id = request.form.get("user_id", type=int)
         specialite = request.form.get("specialite", "").strip()
 
-        if not user_id:
+        if not user_id or user_id not in {c.id for c in candidats}:
             flash("Merci de choisir un compte enseignant.", "error")
             return render_template("enseignants/nouveau.html", candidats=candidats)
 
@@ -102,7 +102,7 @@ def affecter(enseignant_id):
     classe_id = request.form.get("classe_id", type=int)
     matiere = request.form.get("matiere", "").strip()
 
-    if not classe_id or not matiere:
+    if not classe_id or not matiere or db.session.get(Classe, classe_id) is None:
         flash("Merci de choisir une classe et une matière.", "error")
     else:
         db.session.add(Affectation(enseignant_id=enseignant.id, classe_id=classe_id, matiere=matiere))

@@ -35,28 +35,34 @@ def roles_required(*roles, module=None):
 
 
 def logo_officiel_data_uri():
-    """Encode le logo officiel en data-URI — xhtml2pdf gère mal les
-    chemins de fichiers relatifs, l'encodage direct est fiable partout
-    (sept. 2026)."""
-    import base64
-    import os
+    """Logo de l'école courante en data-URI (xhtml2pdf gère mal les
+    chemins de fichiers). None si l'école n'a pas de logo."""
+    from app.services.tenant import ecole_courante
+    from app.services.images_ecole import data_uri
 
-    chemin = os.path.join(os.path.dirname(__file__), "static", "images", "logo-csoa-officiel.png")
-    with open(chemin, "rb") as f:
-        contenu = base64.b64encode(f.read()).decode("ascii")
-    return f"data:image/png;base64,{contenu}"
+    ecole = ecole_courante()
+    return data_uri(ecole.logo, ecole.logo_mime) if ecole else None
 
 
 def filigrane_data_uri():
-    """Filigrane officiel (Ω + livre, sans texte), extrait du document de
-    référence de l'école — déjà pâli, utilisé tel quel (sept. 2026)."""
-    import base64
-    import os
+    """Filigrane de l'école courante en data-URI, ou None."""
+    from app.services.tenant import ecole_courante
+    from app.services.images_ecole import data_uri
 
-    chemin = os.path.join(os.path.dirname(__file__), "static", "images", "filigrane-csoa.png")
-    with open(chemin, "rb") as f:
-        contenu = base64.b64encode(f.read()).decode("ascii")
-    return f"data:image/png;base64,{contenu}"
+    ecole = ecole_courante()
+    return data_uri(ecole.filigrane, ecole.filigrane_mime) if ecole else None
+
+
+def _ratio_image_filigrane():
+    from io import BytesIO
+    from PIL import Image
+    from app.services.tenant import ecole_courante
+
+    try:
+        largeur, hauteur = Image.open(BytesIO(ecole_courante().filigrane)).size
+        return largeur / hauteur
+    except Exception:
+        return 453.0 / 371.0
 
 
 def html_vers_pdf(html):
@@ -69,19 +75,33 @@ def html_vers_pdf(html):
     from io import BytesIO
     from xhtml2pdf import pisa
 
+    uri_filigrane = filigrane_data_uri()
+    if not uri_filigrane:
+        tampon = BytesIO()
+        pisa.CreatePDF(src=html, dest=tampon, encoding="utf-8")
+        tampon.seek(0)
+        return tampon.read()
+
     largeur_page, hauteur_page = 595.0, 842.0
     taille = re.search(r"@page\s*\{[^}]*?size:\s*([\d.]+)pt\s+([\d.]+)pt", html)
     if taille:
         largeur_page, hauteur_page = float(taille.group(1)), float(taille.group(2))
 
+    # Cadre du document de référence (453 x 371 pt), dans lequel l'image
+    # de l'école est centrée en gardant ses propres proportions.
     echelle = min(largeur_page / 595.0, hauteur_page / 842.0)
-    largeur_img, hauteur_img = 453.0 * echelle, 371.0 * echelle
+    cadre_l, cadre_h = 453.0 * echelle, 371.0 * echelle
+    cadre_haut = 260.0 / 842.0 * hauteur_page
+    ratio = _ratio_image_filigrane()
+    largeur_img, hauteur_img = cadre_l, cadre_l / ratio
+    if hauteur_img > cadre_h:
+        largeur_img, hauteur_img = cadre_h * ratio, cadre_h
     x = (largeur_page - largeur_img) / 2
-    haut_depuis_le_haut = 260.0 / 842.0 * hauteur_page
+    haut_depuis_le_haut = cadre_haut + (cadre_h - hauteur_img) / 2
     y_depuis_le_bas = hauteur_page - haut_depuis_le_haut - hauteur_img
 
     proprietes = (
-        f'background-image: url("{filigrane_data_uri()}"); '
+        f'background-image: url("{uri_filigrane}"); '
         f"background-object-position: {x:.0f}pt {y_depuis_le_bas:.0f}pt; "
         f"background-width: {largeur_img:.0f}pt; background-height: {hauteur_img:.0f}pt;"
     )
@@ -153,14 +173,15 @@ def export_xlsx(entetes, lignes, nom_fichier, titre_feuille="Export"):
 def export_pdf_liste(titre, sous_titre, entetes, lignes, nom_fichier):
     """Génère un PDF imprimable listant des lignes sous forme de tableau
     simple — utilisé pour les exports de listes (enseignants, élèves…).
-    Porte désormais l'en-tête officiel CSOA, comme tout document imprimé
+    Porte l'en-tête officiel de l'école courante, comme tout document imprimé
     de l'établissement (sept. 2026)."""
     from flask import make_response, render_template
     from app.services.documents_officiels import contexte_entete_officiel
+    from app.services.tenant import nom_ecole_courante
 
     html = render_template(
         "exports/liste_pdf.html", titre=titre, sous_titre=sous_titre,
-        entetes=entetes, lignes=lignes, etablissement="Omega Académie",
+        entetes=entetes, lignes=lignes, etablissement=nom_ecole_courante(),
         **contexte_entete_officiel(),
     )
     reponse = make_response(html_vers_pdf(html))

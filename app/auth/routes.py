@@ -12,6 +12,18 @@ from app.auth import auth_bp
 # administrateur général...) ne sont JAMAIS choisis par la personne
 # elle-même : elle s'inscrit en "personnel" générique, en attente, et
 # seul l'espace développeur peut ensuite lui attribuer le rôle précis.
+def _comptes():
+    """Recherche de comptes sur toute la plateforme : l'email est unique
+    tous établissements confondus, et l'école n'est connue qu'après
+    identification."""
+    return User.query.execution_options(tous_etablissements=True)
+
+
+def _ecoles_ouvertes():
+    from app.models.ecole import Ecole
+    return Ecole.query.filter_by(actif=True).order_by(Ecole.nom).all()
+
+
 ROLES_INSCRIPTION = ["parent", "enseignant", "personnel"]
 
 DUREE_VALIDITE_TOKEN = 1800  # 30 minutes
@@ -32,6 +44,11 @@ def email_depuis_token(token, max_age=DUREE_VALIDITE_TOKEN):
         return None
 
 
+def _nom_ecole(user):
+    from flask import current_app
+    return user.ecole.nom if user.ecole else current_app.config.get("PLATEFORME_NOM")
+
+
 def _envoyer_email_reset(user, lien_reset):
     """Envoie l'email via Brevo si une clé API est configurée. Retourne
     True si l'envoi a réussi, False sinon (pas configuré, ou erreur)."""
@@ -41,7 +58,7 @@ def _envoyer_email_reset(user, lien_reset):
         f"(valable 30 minutes) :\n{lien_reset}\n\n"
         f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
     )
-    return envoyer_email([user.email], "Réinitialisation de votre mot de passe — Omega Académie", corps)
+    return envoyer_email([user.email], f"Réinitialisation de votre mot de passe — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
 
 def _envoyer_email_reset_multi(destinataires, user, lien_reset):
@@ -56,7 +73,7 @@ def _envoyer_email_reset_multi(destinataires, user, lien_reset):
         f"(valable 30 minutes) :\n{lien_reset}\n\n"
         f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
     )
-    return envoyer_email(destinataires, "Réinitialisation de mot de passe — Omega Académie", corps)
+    return envoyer_email(destinataires, f"Réinitialisation de mot de passe — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
 
 def _envoyer_code_verification(user, code):
@@ -70,7 +87,7 @@ def _envoyer_code_verification(user, code):
         f"Une fois vérifié, ta demande de compte sera transmise "
         f"au secrétariat pour validation."
     )
-    return envoyer_email([user.email], "Vérifie ton email — Omega Académie", corps)
+    return envoyer_email([user.email], f"Vérifie ton email — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
 
 @auth_bp.route("/inscription", methods=["GET", "POST"])
@@ -80,6 +97,7 @@ def inscription():
         email = request.form.get("email", "").strip().lower()
         telephone = request.form.get("telephone", "").strip()
         genre = request.form.get("genre")
+        ecole_id = request.form.get("ecole_id", type=int)
         mot_de_passe = request.form.get("mot_de_passe", "")
         confirmation = request.form.get("confirmation", "")
 
@@ -106,20 +124,23 @@ def inscription():
             erreurs.append("Les mots de passe ne correspondent pas.")
         if role not in ROLES_INSCRIPTION:
             erreurs.append("Profil invalide.")
-        if email and User.query.filter_by(email=email).first():
+        if email and _comptes().filter_by(email=email).first():
             erreurs.append("Un compte existe déjà avec cet email.")
-        if telephone and User.query.filter_by(telephone=telephone).first():
+        if telephone and _comptes().filter_by(telephone=telephone).first():
             erreurs.append("Un compte existe déjà avec ce numéro de téléphone.")
 
         if genre not in ("M", "F"):
             erreurs.append("Merci d'indiquer le genre.")
+        if ecole_id not in {e.id for e in _ecoles_ouvertes()}:
+            erreurs.append("Merci de choisir ton établissement.")
 
         if erreurs:
             for e in erreurs:
                 flash(e, "error")
-            return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION)
+            return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION, ecoles=_ecoles_ouvertes())
 
         user = User(
+            ecole_id=ecole_id,
             genre=genre,
             nom_complet=nom_complet,
             prenom=prenom,
@@ -144,7 +165,7 @@ def inscription():
             flash(f"Aucun service d'email configuré — code de vérification : {code}", "info")
         return redirect(url_for("auth.verification_email"))
 
-    return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION)
+    return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION, ecoles=_ecoles_ouvertes())
 
 
 @auth_bp.route("/connexion", methods=["GET", "POST"])
@@ -156,7 +177,7 @@ def connexion():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         mot_de_passe = request.form.get("mot_de_passe", "")
-        user = User.query.filter_by(email=email).first()
+        user = _comptes().filter_by(email=email).first()
 
         if user is None or not user.verifier_mot_de_passe(mot_de_passe):
             flash("Email ou mot de passe incorrect.", "error")
@@ -195,7 +216,7 @@ def verification_email():
     if not user_id:
         return redirect(url_for("auth.inscription"))
 
-    user = User.query.get(user_id)
+    user = _comptes().get(user_id)
     if not user:
         session.pop("id_en_attente_verification", None)
         return redirect(url_for("auth.inscription"))
@@ -220,7 +241,7 @@ def verification_email():
 @auth_bp.route("/verification-inscription/renvoyer", methods=["POST"])
 def renvoyer_code_verification():
     user_id = session.get("id_en_attente_verification")
-    user = User.query.get(user_id) if user_id else None
+    user = _comptes().get(user_id) if user_id else None
     if not user:
         return redirect(url_for("auth.inscription"))
 
@@ -265,7 +286,7 @@ def mot_de_passe_oublie():
 
     if request.method == "POST":
         identifiant = request.form.get("email", "").strip()
-        user = User.query.filter_by(email=identifiant.lower()).first()
+        user = _comptes().filter_by(email=identifiant.lower()).first()
         if not user:
             # Un élève ne connaît généralement pas son email généré
             # automatiquement — il peut saisir son matricule à la place.
@@ -316,7 +337,7 @@ def reinitialiser(token):
         flash("Ce lien de réinitialisation est invalide ou a expiré.", "error")
         return redirect(url_for("auth.mot_de_passe_oublie"))
 
-    user = User.query.filter_by(email=email).first()
+    user = _comptes().filter_by(email=email).first()
     if user is None:
         flash("Ce lien de réinitialisation est invalide ou a expiré.", "error")
         return redirect(url_for("auth.mot_de_passe_oublie"))
@@ -343,7 +364,7 @@ def premiere_configuration():
     web — sans terminal ni Shell, indisponible sur le plan gratuit Render
     (sept. 2026). Se désactive automatiquement dès qu'un compte existe
     déjà dans la base, pour ne jamais pouvoir être réutilisée après coup."""
-    if User.query.count() > 0:
+    if _comptes().count() > 0:
         flash("La configuration initiale a déjà été faite — connecte-toi normalement.", "error")
         return redirect(url_for("auth.connexion"))
 
@@ -362,7 +383,7 @@ def premiere_configuration():
 
         # Re-vérifié juste avant l'écriture, au cas où deux personnes
         # tenteraient la configuration en même temps.
-        if User.query.count() > 0:
+        if _comptes().count() > 0:
             flash("La configuration initiale a déjà été faite — connecte-toi normalement.", "error")
             return redirect(url_for("auth.connexion"))
 

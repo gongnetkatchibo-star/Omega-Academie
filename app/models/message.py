@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class Message(db.Model):
+class Message(AppartientEcole, db.Model):
     """Fil de discussion simple entre un parent et l'école — tous les
     messages liés à un même parent_id forment un seul fil, que ce soit
     le parent ou un membre du personnel qui écrit (sept. 2026)."""

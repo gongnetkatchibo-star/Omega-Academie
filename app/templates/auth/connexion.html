@@ -4,9 +4,7 @@
 {% block content %}
   <div class="carte-connexion">
     <div class="connexion-formulaire">
-      <div class="logo-page">
-        <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie">
-      </div>
+      <p class="nom-plateforme">{{ nom_plateforme() }}</p>
       <h1>Connexion</h1>
 
       {% with messages = get_flashed_messages(with_categories=true) %}

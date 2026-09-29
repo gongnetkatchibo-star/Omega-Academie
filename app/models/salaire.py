@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -10,7 +11,7 @@ MOIS_LIBELLES = [
 ]
 
 
-class Salaire(db.Model):
+class Salaire(AppartientEcole, db.Model):
     __tablename__ = "salaires"
     __table_args__ = (
         db.UniqueConstraint("personnel_id", "mois", "annee", name="uq_salaire_personnel_periode"),

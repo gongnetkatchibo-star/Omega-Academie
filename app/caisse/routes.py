@@ -5,6 +5,7 @@ from flask import render_template, redirect, url_for, flash, request, make_respo
 from flask_login import login_required, current_user
 
 from app.extensions import db
+from app.services.tenant import nom_ecole_courante
 from app.models.mouvement_caisse import MouvementCaisse, TYPES_CAISSE
 from app.models.eleve import Eleve
 from app.models.paiement import MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
@@ -19,7 +20,6 @@ from app.services.journal import journaliser
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
 ROLES_SUPPRESSION = ["fondateur", "administrateur_general"]
 
-NOM_ETABLISSEMENT = "Omega Académie"
 
 
 @caisse_bp.route("/")
@@ -211,7 +211,7 @@ def recu_pdf(mouvement_id):
     autre ligne officielle."""
     m = MouvementCaisse.query.get_or_404(mouvement_id)
     from app.services.documents_officiels import contexte_entete_officiel
-    html = render_template("caisse/recu_pdf.html", etablissement=NOM_ETABLISSEMENT, m=m, **contexte_entete_officiel())
+    html = render_template("caisse/recu_pdf.html", etablissement=nom_ecole_courante(), m=m, **contexte_entete_officiel())
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename=recu_{m.reference or m.id}.pdf"

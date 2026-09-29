@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class Note(db.Model):
+class Note(AppartientEcole, db.Model):
     """Une note ponctuelle pour un élève, dans une matière et un trimestre (Module 6)."""
 
     __tablename__ = "notes"

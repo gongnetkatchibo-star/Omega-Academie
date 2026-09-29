@@ -11,7 +11,7 @@ login_manager.login_message = "Connectez-vous pour accéder à cette page."
 mail = Mail()
 
 
-def envoyer_email(destinataires, sujet, corps):
+def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
     """Envoie un email via l'API Brevo (HTTPS, port 443) — jamais via
     SMTP classique (ports 25/465/587), que Render bloque sur son plan
     gratuit depuis le 26 septembre 2025 (constaté sept. 2026, cause du
@@ -30,8 +30,10 @@ def envoyer_email(destinataires, sujet, corps):
     if not destinataires or not cle_api:
         return False
 
-    expediteur_email = current_app.config.get("MAIL_DEFAULT_SENDER") or "no-reply@omega-academie.local"
-    expediteur_nom = current_app.config.get("MAIL_DEFAULT_SENDER_NOM", "Omega Académie")
+    expediteur_email = current_app.config.get("MAIL_DEFAULT_SENDER") or "no-reply@toumai-edu-school.local"
+    from app.services.tenant import ecole_courante
+    ecole = ecole_courante()
+    expediteur_nom = nom_expediteur or (ecole.nom if ecole else None) or current_app.config.get("MAIL_DEFAULT_SENDER_NOM") or current_app.config.get("PLATEFORME_NOM")
 
     corps_html = "<br>".join(ligne for ligne in corps.split("\n"))
 

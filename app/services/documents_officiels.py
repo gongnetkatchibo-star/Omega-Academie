@@ -1,18 +1,28 @@
-"""Documents officiels du Complexe Scolaire Oméga Académie (CSOA) — un
-seul endroit pour la date, la numérotation et l'en-tête, repris à
-l'identique sur chaque document (certificat, attestation, décision...),
-sur le modèle exact du document officiel fourni par l'école
-(Décision N°001/CSOA/PCA/2026), sept. 2026."""
+"""Documents officiels de l'établissement courant — un seul endroit pour
+la date, la numérotation et l'en-tête, repris à l'identique sur chaque
+document. Nom, sigle, ville et logo viennent de l'école de la requête
+(mode multi-établissements)."""
 
 from datetime import date as date_cls
 
 from app.extensions import db
 from app.models.numero_document import NumeroDocument
 
-NOM_ETABLISSEMENT = "COMPLEXE SCOLAIRE OMEGA ACADÉMIE"
-VILLE_ETABLISSEMENT = "Pala"
-PAYS_ETABLISSEMENT = "Tchad"
-SIGLE_ETABLISSEMENT = "CSOA"
+
+
+def identite_ecole():
+    """Nom officiel (majuscules), sigle, ville et pays de l'école courante."""
+    from app.services.tenant import ecole_courante
+
+    ecole = ecole_courante()
+    if ecole is None:
+        return {"nom": "", "sigle": "", "ville": "", "pays": ""}
+    return {
+        "nom": ecole.nom_officiel,
+        "sigle": ecole.sigle or "",
+        "ville": ecole.ville or "",
+        "pays": ecole.pays or "",
+    }
 
 MOIS_LETTRES = [
     "janvier", "février", "mars", "avril", "mai", "juin",
@@ -32,7 +42,9 @@ def date_officielle(une_date=None):
 def lieu_et_date_officiels(une_date=None):
     """Ex. "Pala, le 1er juin 2026" — exactement le format du document
     original."""
-    return f"{VILLE_ETABLISSEMENT}, le {date_officielle(une_date)}"
+    ville = identite_ecole()["ville"]
+    date_texte = date_officielle(une_date)
+    return f"{ville}, le {date_texte}" if ville else f"Le {date_texte}"
 
 
 def numero_reference(type_document, annee=None):
@@ -49,7 +61,9 @@ def numero_reference(type_document, annee=None):
         .first()
     )
     if compteur is None:
-        compteur = NumeroDocument(type_document=type_document, annee=annee, dernier_numero=0)
+        from app.services.tenant import ecole_courante_id
+        compteur = NumeroDocument(type_document=type_document, annee=annee, dernier_numero=0,
+                                  ecole_id=ecole_courante_id())
         db.session.add(compteur)
         db.session.flush()
 
@@ -57,7 +71,8 @@ def numero_reference(type_document, annee=None):
     numero = compteur.dernier_numero
     db.session.commit()
 
-    return f"{numero:03d}/{SIGLE_ETABLISSEMENT}/{type_document}/{annee}"
+    sigle = identite_ecole()["sigle"] or "DOC"
+    return f"{numero:03d}/{sigle}/{type_document}/{annee}"
 
 
 def signataire_par_defaut():
@@ -76,11 +91,12 @@ def contexte_entete_officiel():
     nom de l'établissement, lieu et date, signataire par défaut."""
     from app.utils import logo_officiel_data_uri
 
+    identite = identite_ecole()
     return {
         "logo_officiel_uri": logo_officiel_data_uri(),
-        "nom_etablissement": NOM_ETABLISSEMENT,
-        "ville_etablissement": VILLE_ETABLISSEMENT,
-        "pays_etablissement": PAYS_ETABLISSEMENT,
+        "nom_etablissement": identite["nom"],
+        "ville_etablissement": identite["ville"],
+        "pays_etablissement": identite["pays"],
         "lieu_et_date": lieu_et_date_officiels(),
         "signataire": signataire_par_defaut(),
     }

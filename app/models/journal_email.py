@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
 
 
-class JournalEmail(db.Model):
+class JournalEmail(AppartientEcole, db.Model):
     """Trace de chaque email que l'application a tenté d'envoyer — pour
     pouvoir vérifier après coup ce qui est réellement parti en cas de
     réclamation ("je n'ai rien reçu") ou d'incident (sept. 2026)."""

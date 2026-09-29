@@ -9,8 +9,8 @@ def test_tableau_de_bord_sans_cartes(client, creer_utilisateur):
     connecter(client, "fond@test.com")
     html = client.get("/").data.decode()
     assert "carte-module" not in html
-    assert "logo-omega-academie.png" in html
-    assert "Vers l'excellence et la sagesse" in html or "Vers l&#39;excellence et la sagesse" in html
+    assert "École Test" in html  # école de test sans logo : son nom s'affiche
+    assert "Devise test" in html
 
 
 def test_finances_en_liste_deroulante(client, creer_utilisateur):

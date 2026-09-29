@@ -1,3 +1,4 @@
+from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
@@ -6,7 +7,7 @@ DECISIONS = ["en_attente", "admis", "refuse"]
 LIBELLES_DECISION = {"en_attente": "En attente", "admis": "Admis", "refuse": "Refusé"}
 
 
-class TestNiveau(db.Model):
+class TestNiveau(AppartientEcole, db.Model):
     __tablename__ = "tests_niveau"
 
     id = db.Column(db.Integer, primary_key=True)

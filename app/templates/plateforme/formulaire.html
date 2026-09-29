@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ "Modifier " ~ etab.nom if etab else "Nouvel établissement" }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), (etab.nom if etab else "Nouvel établissement", None)) }}
+  <h1>{{ "Modifier " ~ etab.nom if etab else "Nouvel établissement" }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% macro valeur(champ) %}{{ form.get(champ) if form.get(champ) is not none else (etab[champ] if etab and etab[champ] else "") }}{% endmacro %}
+
+  <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2>Identité</h2>
+    <label>Nom officiel<input type="text" name="nom" value="{{ valeur('nom') }}" required></label>
+    <label>Sigle<input type="text" name="sigle" value="{{ valeur('sigle') }}" maxlength="20" required></label>
+    <label>Ville<input type="text" name="ville" value="{{ valeur('ville') }}"></label>
+    <label>Pays<input type="text" name="pays" value="{{ valeur('pays') }}"></label>
+    <label>Devise<input type="text" name="slogan" value="{{ valeur('slogan') }}"></label>
+    <label>Préfixe des matricules<input type="text" name="prefixe_matricule" value="{{ valeur('prefixe_matricule') }}" maxlength="20" required></label>
+    <label>Logo{% if etab and etab.logo %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='logo') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
+    <label>Filigrane des documents{% if etab and etab.filigrane %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='filigrane') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
+      <input type="file" name="filigrane" accept="image/png,image/jpeg,image/webp"></label>
+
+    {% if not etab %}
+      <h2>Premier compte fondateur</h2>
+      <label>Nom complet<input type="text" name="fondateur_nom" value="{{ form.get('fondateur_nom', '') }}" required></label>
+      <label>Email<input type="email" name="fondateur_email" value="{{ form.get('fondateur_email', '') }}" required></label>
+      <label>Genre
+        <select name="fondateur_genre" required>
+          <option value="">—</option>
+          <option value="M" {% if form.get('fondateur_genre') == 'M' %}selected{% endif %}>Masculin</option>
+          <option value="F" {% if form.get('fondateur_genre') == 'F' %}selected{% endif %}>Féminin</option>
+        </select>
+      </label>
+      <label>Mot de passe provisoire<input type="text" name="fondateur_mot_de_passe" minlength="8" required autocomplete="off"></label>
+    {% endif %}
+    <button type="submit">{{ "Enregistrer" if etab else "Créer l'établissement" }}</button>
+  </form>
+{% endblock %}

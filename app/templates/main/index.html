@@ -16,6 +16,10 @@
   {% endif %}
 
   <div class="accueil-logo-central">
-    <img src="{{ url_for('static', filename='images/logo-omega-academie.png') }}" alt="Omega Académie">
+    {% if ecole() and ecole().logo %}
+      <img src="{{ url_for('main.image_ecole', image='logo') }}" alt="{{ ecole().nom }}">
+    {% elif ecole() %}
+      <p class="nom-plateforme">{{ ecole().nom }}</p>
+    {% endif %}
   </div>
 {% endblock %}

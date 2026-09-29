@@ -1,17 +1,40 @@
+from datetime import datetime
+
 from app.extensions import db
 
 
 class Ecole(db.Model):
+    """Un établissement scolaire hébergé sur la plateforme. Toutes les
+    données métier (élèves, notes, paiements...) portent un ecole_id et
+    ne sont visibles que depuis leur propre établissement."""
     __tablename__ = "ecoles"
 
     id = db.Column(db.Integer, primary_key=True)
     nom = db.Column(db.String(120), nullable=False)
-    slogan = db.Column(db.String(200))
+    sigle = db.Column(db.String(20))
+    ville = db.Column(db.String(80))
+    pays = db.Column(db.String(80))
+    slogan = db.Column(db.String(200))  # devise affichée dans la barre du haut
+    prefixe_matricule = db.Column(db.String(20), unique=True)
     couleur_principale = db.Column(db.String(7), default="#00387B")
     couleur_secondaire = db.Column(db.String(7), default="#DEA230")
     logo_path = db.Column(db.String(255))
+    logo = db.Column(db.LargeBinary)
+    logo_mime = db.Column(db.String(50))
+    filigrane = db.Column(db.LargeBinary)
+    filigrane_mime = db.Column(db.String(50))
+    actif = db.Column(db.Boolean, default=True, nullable=False)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
 
     utilisateurs = db.relationship("User", back_populates="ecole")
+
+    @property
+    def devise(self):
+        return self.slogan
+
+    @property
+    def nom_officiel(self):
+        return (self.nom or "").upper()
 
     def __repr__(self):
         return f"<Ecole {self.nom}>"

@@ -185,3 +185,19 @@ def supprimer_numero(numero_id):
     db.session.commit()
     flash("Numéro supprimé.", "info")
     return redirect(url_for("main.profil"))
+
+
+@main_bp.route("/etablissement/<any(logo, filigrane):image>")
+@login_required
+def image_ecole(image):
+    """Logo ou filigrane de l'école courante (stockés en base)."""
+    from flask import Response, abort
+    from app.services.tenant import ecole_courante
+
+    ecole = ecole_courante()
+    contenu = getattr(ecole, image, None) if ecole else None
+    if not contenu:
+        abort(404)
+    reponse = Response(contenu, mimetype=getattr(ecole, f"{image}_mime") or "image/png")
+    reponse.headers["Cache-Control"] = "private, max-age=3600"
+    return reponse

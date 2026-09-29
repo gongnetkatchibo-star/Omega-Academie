@@ -17,6 +17,7 @@ def _url_base_de_donnees():
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-in-production")
     SENTRY_DSN = os.environ.get("SENTRY_DSN")
+    PLATEFORME_NOM = os.environ.get("PLATEFORME_NOM", "Toumaï Edu School")
     SQLALCHEMY_DATABASE_URI = _url_base_de_donnees()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -29,7 +30,7 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
-    MAIL_DEFAULT_SENDER_NOM = os.environ.get("MAIL_DEFAULT_SENDER_NOM", "Omega Académie")
+    MAIL_DEFAULT_SENDER_NOM = os.environ.get("MAIL_DEFAULT_SENDER_NOM", "")
 
     # Envoi d'email via l'API Brevo (HTTPS) — remplace le SMTP classique,
     # bloqué par Render sur son plan gratuit (sept. 2026).

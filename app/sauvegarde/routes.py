@@ -61,7 +61,10 @@ def exporter():
             archive.writestr(f"{modele.__tablename__}.csv", sortie.getvalue())
 
     tampon.seek(0)
-    nom_fichier = f"sauvegarde_omega_academie_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.zip"
+    from app.services.tenant import ecole_courante
+    ecole = ecole_courante()
+    sigle = (ecole.sigle if ecole and ecole.sigle else "ecole").lower()
+    nom_fichier = f"sauvegarde_{sigle}_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.zip"
 
     from app.services.journal import journaliser
     journaliser("sauvegarde_exportee", details=nom_fichier)

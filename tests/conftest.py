@@ -4,15 +4,42 @@ Base en mémoire, recréée à zéro pour chaque test — aucun test ne peut
 donc être influencé par un autre, ni toucher la vraie base."""
 
 import pytest
+from flask import has_request_context
+from sqlalchemy import event
+from sqlalchemy.orm import Session
 
 from app import create_app
 from app.extensions import db as _db
+
+ECOLE_PAR_DEFAUT = 1
+
+
+@event.listens_for(Session, "before_flush")
+def _ecole_par_defaut_hors_requete(session_db, flush_context, instances):
+    """Tests uniquement : les données créées directement par un test (hors
+    requête HTTP) appartiennent à l'école n°1, sauf si le test précise
+    une autre école. Les requêtes HTTP, elles, passent par le vrai
+    mécanisme de l'application."""
+    if has_request_context():
+        return
+    from app.services.tenant import modeles_rattaches, est_super_admin, ecole_courante_id
+
+    ecole_par_defaut = ecole_courante_id() or ECOLE_PAR_DEFAUT
+
+    types = tuple(modeles_rattaches())
+    for objet in session_db.new:
+        if isinstance(objet, types) and getattr(objet, "ecole_id", None) is None and not est_super_admin(objet):
+            objet.ecole_id = ecole_par_defaut
 
 
 @pytest.fixture
 def app():
     application = create_app("testing")
     with application.app_context():
+        from app.models.ecole import Ecole
+        _db.session.add(Ecole(id=ECOLE_PAR_DEFAUT, nom="École Test", sigle="ET", ville="Pala",
+                              pays="Tchad", slogan="Devise test", prefixe_matricule="ET26"))
+        _db.session.commit()
         yield application
 
 
@@ -36,8 +63,8 @@ def connecter(client, email, mot_de_passe="p12345678"):
 def creer_utilisateur(db):
     from app.models.user import User
 
-    def _creer(nom_complet, email, role, statut="actif", mot_de_passe="p12345678"):
-        u = User(nom_complet=nom_complet, email=email, role=role, statut=statut)
+    def _creer(nom_complet, email, role, statut="actif", mot_de_passe="p12345678", ecole_id=None):
+        u = User(nom_complet=nom_complet, email=email, role=role, statut=statut, ecole_id=ecole_id)
         u.set_mot_de_passe(mot_de_passe)
         db.session.add(u)
         db.session.commit()

@@ -1,9 +1,10 @@
+from app.models.tenant import AppartientEcole
 from app.extensions import db
 
 
-class ParametreEtablissement(db.Model):
-    """Réglages globaux de l'école (une seule ligne, id=1) : signataire
-    proposé par défaut sur les documents générés."""
+class ParametreEtablissement(AppartientEcole, db.Model):
+    """Réglages propres à chaque école : signataire proposé par défaut
+    sur les documents générés (une ligne par école)."""
     __tablename__ = "parametres_etablissement"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -13,9 +14,9 @@ class ParametreEtablissement(db.Model):
 
     @staticmethod
     def get():
-        parametre = db.session.get(ParametreEtablissement, 1)
+        parametre = ParametreEtablissement.query.first()
         if parametre is None:
-            parametre = ParametreEtablissement(id=1, titre_directeur="Directeur", genre_directeur="M")
+            parametre = ParametreEtablissement(titre_directeur="Directeur", genre_directeur="M")
             db.session.add(parametre)
             db.session.commit()
         return parametre

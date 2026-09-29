@@ -1,10 +1,14 @@
+{% if logo_officiel_uri %}
 <div style="text-align:center; margin-bottom: 6px;">
-  <img src="{{ logo_officiel_uri }}" style="width:70px; height:auto;" alt="CSOA">
+  <img src="{{ logo_officiel_uri }}" style="width:70px; height:auto;" alt="">
 </div>
+{% endif %}
 <div style="text-align:center; font-weight:bold; font-size:13pt; margin-bottom:2px;">
   {{ nom_etablissement }}
 </div>
+{% if ville_etablissement or pays_etablissement %}
 <div style="text-align:center; font-weight:bold; font-size:11pt; margin-bottom:10px;">
-  {{ ville_etablissement|upper }} - {{ pays_etablissement|upper }}
+  {{ ville_etablissement|upper }}{% if ville_etablissement and pays_etablissement %} - {% endif %}{{ pays_etablissement|upper }}
 </div>
+{% endif %}
 <div style="border-top: 2px solid #000; margin-bottom: 20px;"></div>
