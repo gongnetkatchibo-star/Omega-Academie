@@ -9,8 +9,12 @@ def _url_base_de_donnees():
     postgresql://. On corrige automatiquement pour éviter une erreur de
     déploiement classique."""
     url = os.environ.get("DATABASE_URL")
+    # Pilote psycopg2 imposé : SQLAlchemy 2.1 choisit sinon psycopg (v3),
+    # absent de requirements.txt, et l'application ne démarre plus.
     if url and url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url and url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
     return url or "sqlite:///" + os.path.join(basedir, "instance", "app.db")
 
 
