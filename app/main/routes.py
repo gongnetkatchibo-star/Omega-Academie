@@ -125,7 +125,7 @@ def index():
         user=user,
         modules=modules,
         enfants=enfants,
-        mon_dossier_eleve=mon_dossier_eleve,
+        dossier_eleve=mon_dossier_eleve,
         est_personnel=user.role in ROLES_PERSONNEL,
         est_direction=user.role in ROLES_DIRECTION,
         alerte_sauvegarde=alerte_sauvegarde,

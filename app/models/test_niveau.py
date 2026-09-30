@@ -14,6 +14,7 @@ class TestNiveau(AppartientEcole, db.Model):
     nom_candidat = db.Column(db.String(120), nullable=False)
     date_naissance_candidat = db.Column(db.Date)
     sexe_candidat = db.Column(db.String(1))
+    telephone_parent = db.Column(db.String(30))
     classe_demandee_id = db.Column(db.Integer, db.ForeignKey("classes.id"), nullable=False)
     date_test = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     note_obtenue = db.Column(db.Float)

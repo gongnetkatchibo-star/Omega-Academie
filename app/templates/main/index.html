@@ -11,7 +11,7 @@
   {% if user.role == "parent" and not enfants %}
     {{ etat_vide("Aucun enfant n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
   {% endif %}
-  {% if user.role == "eleve" and not mon_dossier_eleve %}
+  {% if user.role == "eleve" and not dossier_eleve %}
     {{ etat_vide("Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
   {% endif %}
 

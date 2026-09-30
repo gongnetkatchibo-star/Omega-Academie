@@ -34,11 +34,21 @@
       <label>Je suis…
         <select name="role" id="champ-role" required>
           <option value="">Choisir un profil</option>
+          <option value="eleve">Élève</option>
           <option value="parent">Parent</option>
           <option value="enseignant">Enseignant</option>
           <option value="personnel">Personnel de l'école (précisé après validation)</option>
         </select>
       </label>
+
+      <div id="champs-eleve" style="display:none;">
+        <label>Matricule
+          <input type="text" name="matricule" id="champ-matricule" autocomplete="off" value="{{ request.form.get('matricule', '') }}">
+        </label>
+        <label>Date de naissance
+          <input type="date" name="date_naissance_eleve" id="champ-date-eleve">
+        </label>
+      </div>
 
       <div id="champs-standard">
         <label>Nom complet
@@ -58,17 +68,17 @@
         </label>
       </div>
 
-      <label>Genre
-        <select name="genre" required>
+      <label id="bloc-genre">Genre
+        <select name="genre" id="champ-genre" required>
           <option value="">—</option>
           <option value="M">Masculin</option>
           <option value="F">Féminin</option>
         </select>
       </label>
-      <label>Email
-        <input type="email" name="email" autocomplete="off" required>
+      <label><span>Email<span id="email-facultatif" style="display:none;"> (facultatif)</span></span>
+        <input type="email" name="email" id="champ-email" autocomplete="off" required>
       </label>
-      <label>Téléphone{% if True %} <span id="tel-obligatoire" style="display:none;">(obligatoire, unique)</span>{% endif %}
+      <label><span>Téléphone<span id="tel-obligatoire" style="display:none;"> (obligatoire, unique)</span></span>
         <input type="tel" name="telephone" id="champ-telephone" autocomplete="off">
       </label>
       <label>Mot de passe
@@ -93,11 +103,27 @@
       const telephone = document.getElementById('champ-telephone');
       const telObligatoire = document.getElementById('tel-obligatoire');
 
+      const champsEleve = document.getElementById('champs-eleve');
+      const blocGenre = document.getElementById('bloc-genre');
+      const genre = document.getElementById('champ-genre');
+      const email = document.getElementById('champ-email');
+      const emailFacultatif = document.getElementById('email-facultatif');
+      const matricule = document.getElementById('champ-matricule');
+      const dateEleve = document.getElementById('champ-date-eleve');
+
       function majAffichage() {
         const estParent = roleSelect.value === 'parent';
-        champsStandard.style.display = estParent ? 'none' : '';
+        const estEleve = roleSelect.value === 'eleve';
+        champsEleve.style.display = estEleve ? '' : 'none';
+        matricule.required = estEleve;
+        dateEleve.required = estEleve;
+        blocGenre.style.display = estEleve ? 'none' : '';
+        genre.required = !estEleve;
+        email.required = !estEleve;
+        emailFacultatif.style.display = estEleve ? '' : 'none';
+        champsStandard.style.display = (estParent || estEleve) ? 'none' : '';
         champsParent.style.display = estParent ? '' : 'none';
-        nomComplet.required = !estParent;
+        nomComplet.required = !estParent && !estEleve;
         prenom.required = estParent;
         nom.required = estParent;
         profession.required = estParent;
@@ -105,6 +131,7 @@
         telObligatoire.style.display = estParent ? '' : 'none';
       }
       roleSelect.addEventListener('change', majAffichage);
+      {% if request.form.get('role') %}roleSelect.value = {{ request.form.get('role')|tojson }};{% endif %}
       majAffichage();
     </script>
   {% endif %}

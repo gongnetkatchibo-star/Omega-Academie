@@ -20,8 +20,8 @@
       <form method="post" autocomplete="off">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
-        <label>Email
-          <input type="email" name="email" autocomplete="off" required>
+        <label>Email ou matricule
+          <input type="text" name="email" autocomplete="username" required>
         </label>
         <label>Mot de passe
           {{ champ_mot_de_passe("mot_de_passe") }}

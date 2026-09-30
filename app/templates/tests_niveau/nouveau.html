@@ -21,10 +21,13 @@
     <label>Date de naissance
       <input type="date" name="date_naissance_candidat">
     </label>
+    <label>Téléphone du parent
+      <input type="tel" name="telephone_parent" autocomplete="off">
+    </label>
     <label>Classe demandée
       <select name="classe_demandee_id" required>
         <option value="">— Choisir —</option>
-        {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }}</option>{% endfor %}
+        {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }} — note sur {{ bareme(c)[0] }}</option>{% endfor %}
       </select>
     </label>
     <label>Date du test

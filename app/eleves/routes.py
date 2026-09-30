@@ -1,5 +1,4 @@
 from datetime import datetime
-import secrets
 
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
@@ -118,20 +117,6 @@ def nouveau():
         db.session.add(eleve)
         db.session.flush()
 
-        # Création automatique du compte utilisateur de l'élève (document
-        # complémentaire, §4, sept. 2026) : identifiant technique basé sur
-        # le matricule (unique), mot de passe généré une seule fois — à
-        # communiquer à la famille, il ne sera plus jamais réaffiché.
-        email_auto = f"{eleve.matricule.lower()}@eleves.omega-academie.local"
-        mot_de_passe_auto = secrets.token_urlsafe(6)
-        compte_eleve = User(
-            nom_complet=nom_complet, email=email_auto, role="eleve", statut="actif",
-        )
-        compte_eleve.set_mot_de_passe(mot_de_passe_auto)
-        db.session.add(compte_eleve)
-        db.session.flush()
-        eleve.user_id = compte_eleve.id
-
         eleve.actualiser_statut_dossier()
         db.session.add(HistoriqueScolaire(
             eleve_id=eleve.id,
@@ -143,8 +128,7 @@ def nouveau():
 
         flash(
             f"Élève inscrit avec le matricule {eleve.matricule}. "
-            f"Compte élève créé — identifiant : {email_auto} / mot de passe : {mot_de_passe_auto} "
-            f"(à noter et communiquer à la famille, il ne sera plus affiché).",
+            f"L'élève peut créer son compte avec ce matricule et sa date de naissance.",
             "info",
         )
         return redirect(url_for("eleves.detail", eleve_id=eleve.id))

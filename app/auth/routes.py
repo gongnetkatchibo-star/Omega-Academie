@@ -90,10 +90,91 @@ def _envoyer_code_verification(user, code):
     return envoyer_email([user.email], f"Vérifie ton email — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
 
+DOMAINE_EMAIL_TECHNIQUE_ELEVE = ("@eleves.local", "@eleves.omega-academie.local")
+
+
+def _email_technique(email):
+    return email.endswith(DOMAINE_EMAIL_TECHNIQUE_ELEVE)
+
+
+def _eleve_par_matricule(matricule, ecole_id=None):
+    from sqlalchemy import select
+    from app.models.eleve import Eleve
+
+    requete = select(Eleve).where(Eleve.matricule == matricule.strip().upper())
+    if ecole_id is not None:
+        requete = requete.where(Eleve.ecole_id == ecole_id)
+    return db.session.execute(requete.execution_options(tous_etablissements=True)).scalar_one_or_none()
+
+
+def _inscription_eleve():
+    """L'élève crée lui-même son compte : son matricule et sa date de
+    naissance doivent correspondre à son dossier. Si le dossier n'a pas
+    de date de naissance, le compte attend la validation du secrétariat."""
+    from datetime import datetime
+
+    ecoles = _ecoles_ouvertes()
+    ecole_id = request.form.get("ecole_id", type=int)
+    matricule = request.form.get("matricule", "").strip().upper()
+    date_saisie = request.form.get("date_naissance_eleve", "")
+    email = request.form.get("email", "").strip().lower()
+    telephone = request.form.get("telephone", "").strip()
+    mot_de_passe = request.form.get("mot_de_passe", "")
+    confirmation = request.form.get("confirmation", "")
+
+    def refuser(message):
+        flash(message, "error")
+        return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION, ecoles=ecoles)
+
+    if ecole_id not in {e.id for e in ecoles}:
+        return refuser("Merci de choisir ton établissement.")
+    if not matricule or not date_saisie or not mot_de_passe:
+        return refuser("Le matricule, la date de naissance et le mot de passe sont obligatoires.")
+    if len(mot_de_passe) < 8:
+        return refuser("Le mot de passe doit faire au moins 8 caractères.")
+    if mot_de_passe != confirmation:
+        return refuser("Les mots de passe ne correspondent pas.")
+    try:
+        date_naissance = datetime.strptime(date_saisie, "%Y-%m-%d").date()
+    except ValueError:
+        return refuser("Date de naissance invalide.")
+
+    eleve = _eleve_par_matricule(matricule, ecole_id)
+    if eleve is None or not eleve.actif or (eleve.date_naissance and eleve.date_naissance != date_naissance):
+        return refuser("Matricule ou date de naissance incorrect.")
+    if eleve.user_id:
+        return refuser("Un compte existe déjà pour ce matricule. Utilise « Mot de passe oublié » si besoin.")
+    if email and _comptes().filter_by(email=email).first():
+        return refuser("Un compte existe déjà avec cet email.")
+    if telephone and _comptes().filter_by(telephone=telephone).first():
+        return refuser("Un compte existe déjà avec ce numéro de téléphone.")
+
+    statut = "actif" if eleve.date_naissance else "en_attente"
+    compte = User(
+        ecole_id=eleve.ecole_id, nom_complet=eleve.nom_complet, genre=eleve.sexe,
+        email=email or f"{matricule.lower()}@eleves.local", telephone=telephone or None,
+        role="eleve", statut=statut, email_verifie=not email,
+    )
+    compte.set_mot_de_passe(mot_de_passe)
+    db.session.add(compte)
+    db.session.flush()
+    eleve.user_id = compte.id
+    db.session.commit()
+
+    if statut == "actif":
+        flash(f"Compte créé. Connecte-toi avec ton matricule {matricule}.", "info")
+    else:
+        flash("Compte créé. Il sera activé après vérification de ton dossier par le secrétariat.", "info")
+    return redirect(url_for("auth.connexion"))
+
+
 @auth_bp.route("/inscription", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def inscription():
     if request.method == "POST":
         role = request.form.get("role")
+        if role == "eleve":
+            return _inscription_eleve()
         email = request.form.get("email", "").strip().lower()
         telephone = request.form.get("telephone", "").strip()
         genre = request.form.get("genre")
@@ -175,12 +256,16 @@ def connexion():
         return redirect(url_for("main.index"))
 
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        identifiant = request.form.get("email", "").strip()
         mot_de_passe = request.form.get("mot_de_passe", "")
-        user = _comptes().filter_by(email=email).first()
+        if "@" in identifiant:
+            user = _comptes().filter_by(email=identifiant.lower()).first()
+        else:
+            eleve = _eleve_par_matricule(identifiant) if identifiant else None
+            user = eleve.compte if eleve else None
 
         if user is None or not user.verifier_mot_de_passe(mot_de_passe):
-            flash("Email ou mot de passe incorrect.", "error")
+            flash("Identifiant ou mot de passe incorrect.", "error")
             return render_template("auth/connexion.html")
 
         if user.statut == "en_attente":
@@ -270,9 +355,10 @@ def _destinataires_reset(user):
     if user.role == "eleve":
         from app.models.eleve import Eleve
         eleve = Eleve.query.filter_by(user_id=user.id).first()
-        if eleve and eleve.parents:
-            return [p.email for p in eleve.parents]
-        return []
+        destinataires = [p.email for p in eleve.parents] if eleve else []
+        if not _email_technique(user.email):
+            destinataires.append(user.email)
+        return destinataires
     return [user.email]
 
 
@@ -290,8 +376,7 @@ def mot_de_passe_oublie():
         if not user:
             # Un élève ne connaît généralement pas son email généré
             # automatiquement — il peut saisir son matricule à la place.
-            from app.models.eleve import Eleve
-            eleve = Eleve.query.filter_by(matricule=identifiant.upper()).first()
+            eleve = _eleve_par_matricule(identifiant) if identifiant else None
             if eleve and eleve.compte:
                 user = eleve.compte
 
