@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class JournalAction(AppartientEcole, db.Model):
@@ -17,7 +18,7 @@ class JournalAction(AppartientEcole, db.Model):
     details = db.Column(db.String(300))
     cible_type = db.Column(db.String(40))
     cible_id = db.Column(db.Integer)
-    date_action = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    date_action = db.Column(db.DateTime, default=maintenant, nullable=False)
 
     utilisateur = db.relationship("User")
 

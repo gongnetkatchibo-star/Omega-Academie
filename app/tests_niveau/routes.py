@@ -11,6 +11,7 @@ from app.tests_niveau import tests_niveau_bp
 from app.utils import roles_required
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle, filtrer_par_cycle
 from app.services.admission import bareme, decision_pour_note, inscrire_candidat_admis
+from app.services.temps import maintenant
 
 # Même périmètre que la gestion des élèves — le module remplace le suivi
 # papier/Excel des tests d'admission (document complémentaire, sept. 2026).
@@ -58,9 +59,9 @@ def nouveau():
         except ValueError:
             date_naissance = None
         try:
-            date_test = datetime.strptime(date_test_str, "%Y-%m-%d").date() if date_test_str else datetime.utcnow().date()
+            date_test = datetime.strptime(date_test_str, "%Y-%m-%d").date() if date_test_str else maintenant().date()
         except ValueError:
-            date_test = datetime.utcnow().date()
+            date_test = maintenant().date()
 
         test = TestNiveau(
             nom_candidat=nom_candidat, date_naissance_candidat=date_naissance,

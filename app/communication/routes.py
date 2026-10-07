@@ -9,6 +9,7 @@ from app.extensions import db
 from app.models.annonce import Annonce, DESTINATAIRES, DESTINATAIRES_ENSEIGNANT
 from app.communication import communication_bp
 from app.utils import roles_required, EXTENSIONS_PIECE_JOINTE, extension_autorisee
+from app.services.temps import maintenant
 
 ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant"]
 
@@ -48,7 +49,7 @@ def liste():
     annonces = requete.order_by(Annonce.date_publication.desc()).all()
 
     toutes_les_annees = {a.date_publication.year for a in Annonce.query.all()}
-    annee_courante = datetime.utcnow().year
+    annee_courante = maintenant().year
     annees_disponibles = sorted(toutes_les_annees | {annee_courante}, reverse=True)
 
     return render_template(
@@ -87,7 +88,7 @@ def nouvelle():
         nom_unique = None
         if fichier and fichier.filename:
             nom_securise = secure_filename(fichier.filename)
-            nom_unique = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{nom_securise}"
+            nom_unique = f"{maintenant().strftime('%Y%m%d%H%M%S')}_{nom_securise}"
             fichier.save(os.path.join(_dossier_upload(), nom_unique))
 
         annonce = Annonce(

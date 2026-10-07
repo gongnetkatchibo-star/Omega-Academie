@@ -22,7 +22,7 @@ def notifier_paiement(paiement, eleve):
     corps = (
         f"Bonjour,\n\n"
         f"Un paiement vient d'être enregistré pour {eleve.nom_complet} :\n"
-        f"- Échéance : {LIBELLES_ECHEANCE[paiement.echeance]}\n"
+        f"- Échéance : {paiement.libelle_echeance}\n"
         f"- Montant : {paiement.montant:.0f}\n"
         f"- Reçu : {paiement.numero_recu}\n"
         f"- Date : {paiement.date_paiement.strftime('%d/%m/%Y')}\n\n"

@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -63,6 +64,12 @@ class Config:
     # d'atteindre le code de la route (sept. 2026). 20 Mo couvre
     # largement un document ou une photo de bonne qualité.
     MAX_CONTENT_LENGTH = 20 * 1024 * 1024
+
+    # Déconnexion automatique après ce temps sans activité.
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_HEURES", "4")))
+    # Blocage d'un compte après des mots de passe faux répétés.
+    ECHECS_CONNEXION_MAX = 5
+    BLOCAGE_MINUTES = 15
 
 
 class DevelopmentConfig(Config):

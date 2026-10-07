@@ -1657,3 +1657,42 @@ textarea {
 .table-bulletin th:first-child, .table-bulletin td:first-child { width: 20%; }
 .table-bulletin th:nth-child(3), .table-bulletin td:nth-child(3),
 .table-bulletin th:nth-child(5), .table-bulletin td:nth-child(5) { width: 8%; }
+
+/* Fiche élève */
+.fiche-eleve {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #dfe6ec;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 12px 0 18px 0;
+}
+
+.photo-eleve {
+  width: 120px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #cfd8e0;
+}
+
+.fiche-eleve-champs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 18px;
+  margin: 0;
+  flex: 1;
+  min-width: 260px;
+}
+
+.fiche-eleve-champs dt {
+  color: #5a6573;
+  font-weight: 600;
+}
+
+.fiche-eleve-champs dd {
+  margin: 0;
+}

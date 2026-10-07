@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 # Publication interne à l'application uniquement — l'envoi réel par
 # SMS/email nécessitera un service comme Twilio ou une passerelle SMS
@@ -23,7 +24,7 @@ class Annonce(AppartientEcole, db.Model):
     destinataire = db.Column(db.String(20), nullable=False, default="tous")
     nom_fichier = db.Column(db.String(255))
     auteur_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    date_publication = db.Column(db.DateTime, default=datetime.utcnow)
+    date_publication = db.Column(db.DateTime, default=maintenant)
 
     auteur = db.relationship("User")
 

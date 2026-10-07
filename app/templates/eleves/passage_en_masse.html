@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Passage de classe{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Passage de classe", None)) }}
+  {{ banniere("eleves", "Passage de classe" ~ (" — " ~ classe.nom ~ " " ~ classe.annee_scolaire if classe else "")) }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if not classe %}
+    {% if classes %}
+      <table class="table">
+        <thead><tr><th>Classe</th><th>Année</th><th></th></tr></thead>
+        <tbody>
+          {% for c in classes %}
+            <tr>
+              <td><strong>{{ c.nom }}</strong></td><td>{{ c.annee_scolaire }}</td>
+              <td><a href="{{ url_for('eleves.passage_en_masse', classe_id=c.id) }}">Préparer le passage</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      {{ etat_vide("Aucune classe ne contient d'élèves.") }}
+    {% endif %}
+  {% elif not annee_cible %}
+    <div class="carte-attente">
+      <p>Aucune année scolaire postérieure à {{ classe.annee_scolaire }} n'existe encore.
+        <a href="{{ url_for('classes.demarrer_annee') }}">Démarrer la nouvelle année scolaire</a>, puis reviens ici.</p>
+    </div>
+  {% elif not eleves %}
+    {{ etat_vide("Tous les élèves de cette classe ont déjà été traités.") }}
+  {% else %}
+    <p>
+      Année d'arrivée : <strong>{{ annee_cible }}</strong> ·
+      Admis → <strong>{{ superieure.nom if superieure else "aucune classe supérieure (fin de cycle)" }}</strong> ·
+      Redoublants → <strong>{{ meme_niveau.nom if meme_niveau else "classe absente de " ~ annee_cible }}</strong>
+    </p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="classe_id" value="{{ classe.id }}">
+      <input type="hidden" name="annee_cible" value="{{ annee_cible }}">
+      <table class="table">
+        <thead><tr><th>Élève</th><th>Moyenne annuelle /{{ calcul.bareme }}</th><th>Rang</th><th>Décision</th></tr></thead>
+        <tbody>
+          {% for e in eleves %}
+            {% set b = calcul.bulletins.get(e.id) %}
+            <tr>
+              <td>{{ e.nom_complet }}</td>
+              <td class="{% if b %}{{ 'solde-ok' if b.moyenne >= calcul.seuil else 'solde-du' }}{% endif %}">{{ "%.2f"|format(b.moyenne) if b else "Aucune note" }}</td>
+              <td>{{ b.rang if b else "—" }}</td>
+              <td>
+                <select name="decision_{{ e.id }}" aria-label="Décision pour {{ e.nom_complet }}">
+                  {% for cle, libelle in decisions.items() %}
+                    {% if (cle != "admis" or superieure) and (cle != "redouble" or meme_niveau) %}
+                      <option value="{{ cle }}" {% if cle == propositions[e.id] %}selected{% endif %}>{{ libelle }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" onclick="return confirm('Appliquer ces décisions aux {{ eleves|length }} élève(s) ?');">Appliquer le passage</button>
+    </form>
+  {% endif %}
+{% endblock %}

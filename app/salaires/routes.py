@@ -11,6 +11,7 @@ from app.models.mouvement_caisse import MouvementCaisse
 from app.salaires import salaires_bp
 from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
 from app.services.journal import journaliser
+from app.services.temps import maintenant
 
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
 ROLES_SUPPRESSION = ["fondateur", "administrateur_general"]
@@ -152,7 +153,7 @@ def marquer_paye(salaire_id):
         return redirect(url_for("salaires.liste"))
 
     salaire.statut = "paye"
-    salaire.date_paiement = datetime.utcnow().date()
+    salaire.date_paiement = maintenant().date()
     journaliser("salaire_marque_paye", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode} ({salaire.montant:.0f})", cible_type="Salaire", cible_id=salaire.id)
     db.session.flush()
 

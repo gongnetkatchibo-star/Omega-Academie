@@ -15,6 +15,7 @@ from decimal import Decimal
 from sqlalchemy import Boolean, Date, DateTime, LargeBinary, Numeric, Time, select
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 VERSION_FORMAT = 2
 NOM_FICHIER_DONNEES = "donnees.json"
@@ -95,7 +96,7 @@ def exporter_ecole(ecole):
 
     return {
         "version": VERSION_FORMAT,
-        "date": dt.datetime.utcnow().isoformat(timespec="seconds"),
+        "date": maintenant().isoformat(timespec="seconds"),
         "ecole": {"nom": ecole.nom, "sigle": ecole.sigle, "prefixe_matricule": ecole.prefixe_matricule},
         "tables": tables,
     }

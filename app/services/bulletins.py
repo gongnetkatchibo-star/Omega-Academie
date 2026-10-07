@@ -57,15 +57,24 @@ def _moyenne(valeurs):
     return round(sum(valeurs) / len(valeurs), 2) if valeurs else None
 
 
+def _moyenne_ponderee(notes):
+    """Moyenne de [(valeur, coefficient de l'évaluation), …]."""
+    poids = sum(c for _, c in notes)
+    return round(sum(v * c for v, c in notes) / poids, 2) if poids else None
+
+
 def _periode(notes_par_eleve, coefficients, bareme):
-    """Bulletins d'une période à partir de {eleve_id: {matiere: [valeurs]}}."""
+    """Bulletins d'une période à partir de
+    {eleve_id: {matiere: [(valeur, coefficient de l'évaluation), …]}}."""
     par_eleve, generales = {}, {}
     par_matiere = defaultdict(dict)  # {matiere: {eleve_id: moyenne}}
 
     for eleve_id, matieres in notes_par_eleve.items():
         lignes, total, poids = {}, 0.0, 0.0
         for matiere, valeurs in matieres.items():
-            moyenne = _moyenne(valeurs)
+            moyenne = _moyenne_ponderee(valeurs)
+            if moyenne is None:
+                continue
             coefficient = coefficients.get(matiere, 1)
             lignes[matiere] = {"moyenne": moyenne, "coefficient": coefficient}
             par_matiere[matiere][eleve_id] = moyenne
@@ -121,9 +130,15 @@ def bulletins_de_la_classe(classe, periode, annee):
     eleves_actifs = {e.id for e in Eleve.query.filter_by(classe_id=classe.id, actif=True).all()}
 
     par_trimestre = {t: defaultdict(lambda: defaultdict(list)) for t in TRIMESTRES}
+    from app.models.evaluation import Evaluation
+    poids_evaluation = {
+        e.id: e.coefficient for e in Evaluation.query.filter_by(classe_id=classe.id, annee_scolaire=annee).all()
+    }
     for n in Note.query.filter_by(classe_id=classe.id, annee_scolaire=annee).all():
         if n.eleve_id in eleves_actifs and n.trimestre in par_trimestre and n.bareme:
-            par_trimestre[n.trimestre][n.eleve_id][n.matiere].append(n.valeur * bareme / n.bareme)
+            par_trimestre[n.trimestre][n.eleve_id][n.matiere].append(
+                (n.valeur * bareme / n.bareme, poids_evaluation.get(n.evaluation_id, 1) or 1)
+            )
 
     absences = defaultdict(lambda: {"justifiees": 0, "non_justifiees": 0})
     for a in Absence.query.filter_by(classe_id=classe.id).all():

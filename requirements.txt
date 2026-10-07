@@ -13,3 +13,4 @@ gunicorn==22.0.0
 sentry-sdk[flask]==2.17.0
 Flask-Limiter==3.8.0
 SQLAlchemy==2.1.1
+tzdata==2025.2

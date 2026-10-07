@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 TYPES_RESSOURCE = ["livre", "cours", "exercice", "video"]
 
@@ -16,7 +17,7 @@ class Ressource(AppartientEcole, db.Model):
     description = db.Column(db.Text)
     nom_fichier = db.Column(db.String(255), nullable=False)
     ajoute_par_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    date_ajout = db.Column(db.DateTime, default=datetime.utcnow)
+    date_ajout = db.Column(db.DateTime, default=maintenant)
 
     # Le bibliothécaire peut verrouiller une ressource sensible ou rare :
     # elle reste consultable en ligne (lecture inline) mais ne peut plus

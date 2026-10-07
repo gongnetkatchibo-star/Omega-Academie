@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class Message(AppartientEcole, db.Model):
@@ -14,7 +15,7 @@ class Message(AppartientEcole, db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     auteur_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     contenu = db.Column(db.Text, nullable=False)
-    date_envoi = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    date_envoi = db.Column(db.DateTime, default=maintenant, nullable=False)
     lu_par_ecole = db.Column(db.Boolean, default=False, nullable=False)
     lu_par_parent = db.Column(db.Boolean, default=False, nullable=False)
 

@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class Note(AppartientEcole, db.Model):
@@ -18,11 +19,15 @@ class Note(AppartientEcole, db.Model):
     trimestre = db.Column(db.String(10), nullable=False)  # T1, T2, T3
     annee_scolaire = db.Column(db.String(9), nullable=False)
     enseignant_id = db.Column(db.Integer, db.ForeignKey("enseignants.id"))
-    date_saisie = db.Column(db.DateTime, default=datetime.utcnow)
+    # Évaluation à laquelle appartient la note (les notes saisies avant
+    # l'arrivée des évaluations y sont rattachées au démarrage).
+    evaluation_id = db.Column(db.Integer, db.ForeignKey("evaluations.id"), index=True)
+    date_saisie = db.Column(db.DateTime, default=maintenant)
 
     eleve = db.relationship("Eleve")
     classe = db.relationship("Classe")
     enseignant = db.relationship("Enseignant")
+    evaluation = db.relationship("Evaluation", back_populates="notes")
 
     @property
     def valeur_sur_20(self):

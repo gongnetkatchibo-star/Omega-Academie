@@ -5,6 +5,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 ROLES = [
     "developpeur",
@@ -54,7 +55,7 @@ class User(AppartientEcole, UserMixin, db.Model):
     mot_de_passe_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(40), nullable=False)
     statut = db.Column(db.String(20), nullable=False, default="en_attente")
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=maintenant)
 
     ecole_id = db.Column(db.Integer, db.ForeignKey("ecoles.id"), index=True)
     ecole = db.relationship("Ecole", back_populates="utilisateurs")
@@ -66,6 +67,10 @@ class User(AppartientEcole, UserMixin, db.Model):
     code_2fa_expiration = db.Column(db.DateTime)
     email_verifie = db.Column(db.Boolean, default=False, nullable=False)
 
+    # Blocage temporaire après plusieurs mots de passe faux d'affilée.
+    echecs_connexion = db.Column(db.Integer, default=0, nullable=False)
+    bloque_jusqua = db.Column(db.DateTime)
+
     def set_mot_de_passe(self, mot_de_passe):
         self.mot_de_passe_hash = generate_password_hash(mot_de_passe)
 
@@ -75,13 +80,13 @@ class User(AppartientEcole, UserMixin, db.Model):
     def generer_code_2fa(self):
         import random
         self.code_2fa = f"{random.randint(0, 999999):06d}"
-        self.code_2fa_expiration = datetime.utcnow() + timedelta(minutes=10)
+        self.code_2fa_expiration = maintenant() + timedelta(minutes=10)
         return self.code_2fa
 
     def verifier_code_2fa(self, code):
         if not self.code_2fa or not self.code_2fa_expiration:
             return False
-        if datetime.utcnow() > self.code_2fa_expiration:
+        if maintenant() > self.code_2fa_expiration:
             return False
         return code.strip() == self.code_2fa
 

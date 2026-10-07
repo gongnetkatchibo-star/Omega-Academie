@@ -29,6 +29,17 @@
         <option value="F" {% if parametre.genre_directeur == "F" %}selected{% endif %}>Féminin</option>
       </select>
     </label>
+
+    <h2>Dates limites de paiement</h2>
+    <label>Inscription
+      <input type="date" name="date_limite_inscription" value="{{ parametre.date_limite_inscription.isoformat() if parametre.date_limite_inscription else '' }}">
+    </label>
+    <label>Tranche 1
+      <input type="date" name="date_limite_tranche_1" value="{{ parametre.date_limite_tranche_1.isoformat() if parametre.date_limite_tranche_1 else '' }}">
+    </label>
+    <label>Tranche 2
+      <input type="date" name="date_limite_tranche_2" value="{{ parametre.date_limite_tranche_2.isoformat() if parametre.date_limite_tranche_2 else '' }}">
+    </label>
     <button type="submit">Enregistrer</button>
   </form>
 {% endblock %}

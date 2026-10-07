@@ -232,3 +232,16 @@ def normaliser_numero_tchad(saisie):
         return None
 
     return f"+235{chiffres}"
+
+
+def montant_entier(valeur):
+    """Montant saisi → entier strictement positif, ou None. Le franc CFA
+    n'a pas de centimes : on refuse les décimales plutôt que d'arrondir
+    en silence."""
+    try:
+        nombre = float(str(valeur).replace(" ", "").replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    if nombre <= 0 or nombre != int(nombre) or nombre > 1_000_000_000:
+        return None
+    return int(nombre)

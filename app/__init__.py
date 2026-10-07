@@ -37,6 +37,14 @@ def create_app(config_name=None):
             send_default_pii=False,  # jamais de données personnelles des utilisateurs envoyées à Sentry
         )
 
+    if config_name == "production" and not os.environ.get("SECRET_KEY"):
+        # Sans clé secrète, n'importe qui pourrait fabriquer une session.
+        # On en tire une au hasard plutôt que de démarrer avec une valeur
+        # connue : les sessions sont simplement perdues à chaque redémarrage.
+        import secrets
+        app.config["SECRET_KEY"] = secrets.token_hex(32)
+        app.logger.warning("SECRET_KEY absente : clé temporaire générée. Définis SECRET_KEY sur le serveur.")
+
     db.init_app(app)
     from app.services.tenant import installer_isolement
     installer_isolement(app)
@@ -375,6 +383,8 @@ def create_app(config_name=None):
         from app.models.journal_email import JournalEmail  # noqa: F401
         from app.models.parametre import ParametreEtablissement  # noqa: F401
         from app.models.bulletin import CoefficientMatiere, AppreciationBulletin  # noqa: F401
+        from app.models.evaluation import Evaluation  # noqa: F401
+        from app.models.frais_annexe import FraisAnnexe  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes
@@ -383,5 +393,7 @@ def create_app(config_name=None):
         creer_index_manquants(app, db)
         from app.services.migration_saas import migrer_vers_multi_etablissements
         migrer_vers_multi_etablissements(app, db)
+        from app.services.evaluations import rattacher_notes_sans_evaluation
+        rattacher_notes_sans_evaluation(app)
 
     return app

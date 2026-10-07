@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 STATUTS_DOSSIER = ["complet", "incomplet"]
@@ -28,8 +29,22 @@ class Eleve(AppartientEcole, db.Model):
     sexe = db.Column(db.String(1))
     classe_id = db.Column(db.Integer, db.ForeignKey("classes.id"), nullable=False)
     telephone_parent = db.Column(db.String(30))
+    # Dossier complet (facultatif, renseigné à l'inscription ou plus tard).
+    lieu_naissance = db.Column(db.String(120))
+    nationalite = db.Column(db.String(60))
+    adresse = db.Column(db.String(200))
+    nom_pere = db.Column(db.String(120))
+    nom_mere = db.Column(db.String(120))
+    personne_urgence = db.Column(db.String(120))
+    telephone_urgence = db.Column(db.String(30))
+    ecole_origine = db.Column(db.String(150))
+    # Remise accordée sur la scolarité (bourse, fratrie, enfant du personnel…).
+    remise_pourcent = db.Column(db.Float, default=0)
+    remise_motif = db.Column(db.String(120))
+    photo = db.Column(db.LargeBinary)
+    photo_mime = db.Column(db.String(40))
     statut_dossier = db.Column(db.String(20), default="incomplet")
-    date_inscription = db.Column(db.DateTime, default=datetime.utcnow)
+    date_inscription = db.Column(db.DateTime, default=maintenant)
     actif = db.Column(db.Boolean, default=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), unique=True)
 
@@ -45,7 +60,7 @@ class Eleve(AppartientEcole, db.Model):
 
     @staticmethod
     def annee_scolaire_courante():
-        aujourd_hui = datetime.utcnow()
+        aujourd_hui = maintenant()
         if aujourd_hui.month >= 9:
             return f"{aujourd_hui.year}-{aujourd_hui.year + 1}"
         return f"{aujourd_hui.year - 1}-{aujourd_hui.year}"

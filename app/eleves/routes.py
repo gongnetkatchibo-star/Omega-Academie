@@ -133,6 +133,91 @@ def export(fmt):
     return redirect(url_for("eleves.liste"))
 
 
+CHAMPS_DOSSIER = {
+    "lieu_naissance": 120, "nationalite": 60, "adresse": 200, "nom_pere": 120, "nom_mere": 120,
+    "personne_urgence": 120, "telephone_urgence": 30, "ecole_origine": 150,
+}
+
+
+def _appliquer_dossier(eleve):
+    """Renseigne les champs du dossier et la photo depuis le formulaire.
+    Retourne un message d'erreur, ou None."""
+    from app.services.images_ecole import photo_identite
+
+    for champ, longueur in CHAMPS_DOSSIER.items():
+        setattr(eleve, champ, request.form.get(champ, "").strip()[:longueur] or None)
+    contenu, resultat = photo_identite(request.files.get("photo"))
+    if contenu:
+        eleve.photo, eleve.photo_mime = contenu, resultat
+    elif resultat:
+        return resultat
+    if request.form.get("retirer_photo") == "on":
+        eleve.photo, eleve.photo_mime = None, None
+    return None
+
+
+def _peut_voir(eleve):
+    est_lie_comme_parent = current_user in eleve.parents
+    est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id
+    return current_user.role in ROLES_LECTURE or current_user.role == "developpeur" or est_lie_comme_parent or est_soi_meme
+
+
+@eleves_bp.route("/<int:eleve_id>/photo")
+@login_required
+def photo(eleve_id):
+    from flask import Response
+
+    eleve = Eleve.query.get_or_404(eleve_id)
+    if not _peut_voir(eleve) or not eleve.photo:
+        abort(404)
+    reponse = Response(eleve.photo, mimetype=eleve.photo_mime or "image/jpeg")
+    reponse.headers["Cache-Control"] = "private, max-age=300"
+    return reponse
+
+
+@eleves_bp.route("/<int:eleve_id>/modifier", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def modifier(eleve_id):
+    eleve = Eleve.query.get_or_404(eleve_id)
+    if not classe_dans_le_cycle(eleve.classe, cycle_du_role(current_user.role)):
+        abort(403)
+
+    if request.method == "POST":
+        nom_complet = request.form.get("nom_complet", "").strip()
+        sexe = request.form.get("sexe")
+        date_str = request.form.get("date_naissance", "")
+        erreur = None
+        date_naissance = None
+        if date_str:
+            try:
+                date_naissance = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                erreur = "Date de naissance invalide."
+        if not nom_complet:
+            erreur = "Le nom est obligatoire."
+        if not erreur:
+            eleve.nom_complet = nom_complet[:120]
+            eleve.sexe = sexe if sexe in ("M", "F") else None
+            eleve.date_naissance = date_naissance
+            eleve.telephone_parent = request.form.get("telephone_parent", "").strip()[:30] or None
+            erreur = _appliquer_dossier(eleve)
+        if erreur:
+            db.session.rollback()
+            flash(erreur, "error")
+        else:
+            eleve.actualiser_statut_dossier()
+            if eleve.compte:
+                eleve.compte.nom_complet = eleve.nom_complet
+            from app.services.journal import journaliser
+            journaliser("modification_eleve", details=eleve.nom_complet, cible_type="Eleve", cible_id=eleve.id)
+            db.session.commit()
+            flash("Dossier mis à jour.", "info")
+            return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+
+    return render_template("eleves/modifier.html", eleve=eleve)
+
+
 @eleves_bp.route("/nouveau", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
@@ -172,6 +257,10 @@ def nouveau():
             sexe=sexe,
             telephone_parent=telephone_parent or None,
         )
+        erreur_dossier = _appliquer_dossier(eleve)
+        if erreur_dossier:
+            flash(erreur_dossier, "error")
+            return render_template("eleves/nouveau.html", classes=classes)
         db.session.add(eleve)
         db.session.flush()
 
@@ -201,9 +290,7 @@ def detail(eleve_id):
     # Accès basé sur la relation, pas sur le rôle : n'importe quel compte
     # (personnel compris) peut être parent d'un élève. Le personnel de
     # gestion voit toujours tout ; les autres doivent être un parent lié.
-    est_lie_comme_parent = current_user in eleve.parents
-    est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id
-    if current_user.role not in ROLES_LECTURE and current_user.role != "developpeur" and not est_lie_comme_parent and not est_soi_meme:
+    if not _peut_voir(eleve):
         abort(403)
     classe_superieure = Classe.query.filter_by(niveau=eleve.classe.niveau + 1, annee_scolaire=eleve.classe.annee_scolaire).first()
     parents_disponibles = (
@@ -264,6 +351,86 @@ def retirer_parent(eleve_id, parent_id):
         db.session.commit()
         flash(f"{parent.nom_complet} délié de {eleve.nom_complet}.", "info")
     return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+
+
+DECISIONS_PASSAGE = {
+    "admis": "Passe en classe supérieure", "redouble": "Redouble",
+    "sortant": "Quitte l'école (fin de cycle)", "rester": "Ne pas déplacer",
+}
+
+
+@eleves_bp.route("/passage-de-classe", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def passage_en_masse():
+    """Fin d'année : toute une classe passe dans les classes de l'année
+    suivante. La décision de chaque élève est proposée d'après sa moyenne
+    annuelle, et reste modifiable avant d'appliquer."""
+    from app.services.bulletins import bulletins_de_la_classe
+
+    cycle = cycle_du_role(current_user.role)
+    toutes = filtrer_par_cycle(Classe.query.order_by(Classe.annee_scolaire.desc(), Classe.niveau, Classe.nom).all(), cycle)
+    classe = next((c for c in toutes if c.id == request.values.get("classe_id", type=int)), None)
+    if classe is None:
+        avec_eleves = [c for c in toutes if Eleve.query.filter_by(classe_id=c.id, actif=True).count()]
+        return render_template("eleves/passage_en_masse.html", classe=None, classes=avec_eleves)
+
+    annees_suivantes = sorted({c.annee_scolaire for c in toutes if c.annee_scolaire > classe.annee_scolaire})
+    annee_cible = request.values.get("annee_cible") or (annees_suivantes[0] if annees_suivantes else None)
+    if annee_cible not in annees_suivantes:
+        annee_cible = None
+    superieure = Classe.query.filter_by(niveau=classe.niveau + 1, annee_scolaire=annee_cible).order_by(Classe.nom).first() if annee_cible else None
+    meme_niveau = Classe.query.filter_by(niveau=classe.niveau, annee_scolaire=annee_cible).order_by(Classe.nom).first() if annee_cible else None
+
+    eleves = Eleve.query.filter_by(classe_id=classe.id, actif=True).order_by(Eleve.nom_complet).all()
+    calcul = bulletins_de_la_classe(classe, "AN", classe.annee_scolaire)
+
+    def proposition(eleve):
+        bulletin = calcul["bulletins"].get(eleve.id)
+        if bulletin is None:
+            return "rester"
+        if bulletin["moyenne"] < calcul["seuil"]:
+            return "redouble"
+        return "admis" if superieure else "sortant"
+
+    if request.method == "POST" and annee_cible:
+        bilan = {"admis": 0, "redouble": 0, "sortant": 0}
+        for eleve in eleves:
+            decision = request.form.get(f"decision_{eleve.id}", "rester")
+            destination = {"admis": superieure, "redouble": meme_niveau}.get(decision)
+            if decision not in bilan or (decision != "sortant" and destination is None):
+                continue
+            historique = (
+                HistoriqueScolaire.query.filter_by(eleve_id=eleve.id, classe_id=classe.id)
+                .order_by(HistoriqueScolaire.id.desc()).first()
+            )
+            if historique:
+                historique.resultat = "echec" if decision == "redouble" else "admis"
+            if decision == "sortant":
+                eleve.actif = False
+            else:
+                eleve.classe_id = destination.id
+                db.session.add(HistoriqueScolaire(
+                    eleve_id=eleve.id, classe_id=destination.id, annee_scolaire=annee_cible, resultat="en_cours",
+                ))
+            bilan[decision] += 1
+        from app.services.journal import journaliser
+        journaliser("passage_en_masse", details=(
+            f"{classe.nom} {classe.annee_scolaire} vers {annee_cible} : {bilan['admis']} admis, "
+            f"{bilan['redouble']} redoublant(s), {bilan['sortant']} sortant(s)"
+        ), cible_type="Classe", cible_id=classe.id)
+        db.session.commit()
+        flash(
+            f"{classe.nom} : {bilan['admis']} élève(s) en classe supérieure, {bilan['redouble']} redoublant(s), "
+            f"{bilan['sortant']} sortant(s).", "info",
+        )
+        return redirect(url_for("eleves.passage_en_masse"))
+
+    return render_template(
+        "eleves/passage_en_masse.html", classe=classe, eleves=eleves, calcul=calcul, annee_cible=annee_cible,
+        annees_suivantes=annees_suivantes, superieure=superieure, meme_niveau=meme_niveau,
+        propositions={e.id: proposition(e) for e in eleves}, decisions=DECISIONS_PASSAGE,
+    )
 
 
 @eleves_bp.route("/<int:eleve_id>/passage", methods=["POST"])

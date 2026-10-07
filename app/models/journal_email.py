@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class JournalEmail(AppartientEcole, db.Model):
@@ -14,7 +15,7 @@ class JournalEmail(AppartientEcole, db.Model):
     destinataires = db.Column(db.String(500), nullable=False)  # séparés par des virgules
     sujet = db.Column(db.String(200), nullable=False)
     reussi = db.Column(db.Boolean, nullable=False)
-    date_envoi = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    date_envoi = db.Column(db.DateTime, default=maintenant, nullable=False)
 
     def __repr__(self):
         return f"<JournalEmail {self.sujet} -> {self.destinataires} ({'OK' if self.reussi else 'échec'})>"

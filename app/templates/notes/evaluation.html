@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ evaluation.titre }} — {{ classe.nom }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, url_for('notes.saisie', classe_id=classe.id)), (evaluation.titre, None)) }}
+  {{ banniere("notes", evaluation.titre, classe.nom ~ " · " ~ evaluation.matiere ~ " · " ~ evaluation.trimestre ~ " · " ~ evaluation.libelle_type ~ " du " ~ evaluation.date.strftime("%d/%m/%Y") ~ " · coefficient " ~ "%g"|format(evaluation.coefficient)) }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if eleves %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <table class="table">
+        <thead><tr><th>Élève</th><th>Note (/{{ bareme|int }})</th></tr></thead>
+        <tbody>
+          {% for e in eleves %}
+            <tr>
+              <td>{{ e.nom_complet }}</td>
+              <td><input type="number" step="0.25" min="0" max="{{ bareme }}" name="note_{{ e.id }}" value="{{ '%g'|format(notes[e.id]) if e.id in notes else '' }}" aria-label="Note de {{ e.nom_complet }}"></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit">Enregistrer les notes</button>
+    </form>
+  {% else %}
+    {{ etat_vide("Aucun élève dans cette classe.") }}
+  {% endif %}
+
+  <form method="post" action="{{ url_for('notes.supprimer_evaluation', evaluation_id=evaluation.id) }}" onsubmit="return confirm('Supprimer cette évaluation et toutes ses notes ?');" style="margin-top:24px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="bouton-danger">Supprimer l'évaluation</button>
+  </form>
+{% endblock %}

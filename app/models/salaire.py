@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 STATUTS_SALAIRE = ["impaye", "paye"]
 LIBELLES_STATUT_SALAIRE = {"impaye": "Impayé", "paye": "Payé"}
@@ -25,7 +26,7 @@ class Salaire(AppartientEcole, db.Model):
     statut = db.Column(db.String(20), nullable=False, default="impaye")
     date_paiement = db.Column(db.Date)
     responsable_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=maintenant)
 
     # Coordonnées de la personne payée au moment du salaire — utile
     # quand elles diffèrent de son compte (ex. email personnel pour

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Frais annexes{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Finances", url_for('finances.liste')), ("Frais annexes", None)) }}
+  {{ banniere("finances", "Frais annexes", annee) }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if frais %}
+    <table class="table">
+      <thead><tr><th>Frais</th><th>Montant</th><th>Classe</th><th>Date limite</th><th>Encaissé</th><th></th></tr></thead>
+      <tbody>
+        {% for f in frais %}
+          <tr>
+            <td><strong>{{ f.libelle }}</strong></td>
+            <td>{{ f.montant|int }}</td>
+            <td>{{ f.classe.nom if f.classe else "Toutes les classes" }}</td>
+            <td>{{ f.date_limite.strftime("%d/%m/%Y") if f.date_limite else "—" }}</td>
+            <td>{{ encaisse[f.id]|int }}</td>
+            <td>
+              {% if acces("fondateur", "administrateur_general") and not encaisse[f.id] %}
+                <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm('Supprimer ce frais ?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="bouton-danger">Supprimer</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucun frais annexe pour cette année.") }}
+  {% endif %}
+
+  <h2>Nouveau frais</h2>
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Libellé
+      <input type="text" name="libelle" maxlength="80" required>
+    </label>
+    <label>Montant
+      <input type="number" name="montant" min="1" step="1" required>
+    </label>
+    <label>Classe
+      <select name="classe_id">
+        <option value="">Toutes les classes</option>
+        {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Date limite de paiement
+      <input type="date" name="date_limite">
+    </label>
+    <button type="submit">Ajouter</button>
+  </form>
+{% endblock %}

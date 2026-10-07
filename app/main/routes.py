@@ -9,6 +9,7 @@ from app.models.eleve import Eleve
 from app.models.telephone import NumeroTelephone, OPERATEURS_TCHAD
 from app.utils import normaliser_numero_tchad
 from app.services.guides import guides_pour, guide_pour, DESCRIPTION_PLATEFORME
+from app.services.temps import maintenant
 
 
 def _modules_pour(role):
@@ -117,7 +118,7 @@ def index():
         if derniere is None:
             alerte_sauvegarde = "Aucune sauvegarde n'a encore été téléchargée."
         else:
-            jours_ecoules = (datetime.utcnow() - derniere.date_action).days
+            jours_ecoules = (maintenant() - derniere.date_action).days
             if jours_ecoules >= jours_limite:
                 alerte_sauvegarde = f"Dernière sauvegarde téléchargée il y a {jours_ecoules} jours."
 
@@ -197,6 +198,29 @@ def guide(cle):
 def profil():
     numeros = NumeroTelephone.query.filter_by(user_id=current_user.id).all()
     return render_template("main/profil.html", numeros=numeros, operateurs=OPERATEURS_TCHAD)
+
+
+@main_bp.route("/profil/mot-de-passe", methods=["POST"])
+@login_required
+def changer_mot_de_passe():
+    actuel = request.form.get("mot_de_passe_actuel", "")
+    nouveau = request.form.get("nouveau_mot_de_passe", "")
+    confirmation = request.form.get("confirmation", "")
+    if not current_user.verifier_mot_de_passe(actuel):
+        flash("Le mot de passe actuel est incorrect.", "error")
+    elif len(nouveau) < 8:
+        flash("Le nouveau mot de passe doit faire au moins 8 caractères.", "error")
+    elif nouveau != confirmation:
+        flash("Les deux saisies du nouveau mot de passe ne correspondent pas.", "error")
+    elif nouveau == actuel:
+        flash("Le nouveau mot de passe doit être différent de l'actuel.", "error")
+    else:
+        from app.services.journal import journaliser
+        current_user.set_mot_de_passe(nouveau)
+        journaliser("changement_mot_de_passe", cible_type="User", cible_id=current_user.id)
+        db.session.commit()
+        flash("Mot de passe modifié.", "info")
+    return redirect(url_for("main.profil"))
 
 
 @main_bp.route("/profil/genre", methods=["POST"])

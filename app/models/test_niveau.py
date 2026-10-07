@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 DECISIONS = ["en_attente", "admis", "refuse"]
 LIBELLES_DECISION = {"en_attente": "En attente", "admis": "Admis", "refuse": "Refusé"}
@@ -16,7 +17,7 @@ class TestNiveau(AppartientEcole, db.Model):
     sexe_candidat = db.Column(db.String(1))
     telephone_parent = db.Column(db.String(30))
     classe_demandee_id = db.Column(db.Integer, db.ForeignKey("classes.id"), nullable=False)
-    date_test = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    date_test = db.Column(db.Date, nullable=False, default=maintenant)
     note_obtenue = db.Column(db.Float)
     decision = db.Column(db.String(20), nullable=False, default="en_attente")
     observation = db.Column(db.String(300))
@@ -24,7 +25,7 @@ class TestNiveau(AppartientEcole, db.Model):
     # Renseigné après coup si le candidat est effectivement inscrit comme
     # élève (le test précède souvent la création du dossier officiel).
     eleve_id = db.Column(db.Integer, db.ForeignKey("eleves.id"))
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=maintenant)
 
     classe_demandee = db.relationship("Classe")
     evaluateur = db.relationship("User")

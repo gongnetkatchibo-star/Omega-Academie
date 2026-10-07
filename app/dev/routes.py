@@ -313,6 +313,13 @@ def parametres():
         parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Directeur"
         genre = request.form.get("genre_directeur", "M")
         parametre.genre_directeur = genre if genre in ("M", "F") else "M"
+        from datetime import datetime as _dt
+        for echeance in ("inscription", "tranche_1", "tranche_2"):
+            saisie = request.form.get(f"date_limite_{echeance}", "")
+            try:
+                setattr(parametre, f"date_limite_{echeance}", _dt.strptime(saisie, "%Y-%m-%d").date() if saisie else None)
+            except ValueError:
+                pass
         journaliser("modification_parametres_etablissement", details=ecole.nom, cible_type="Ecole", cible_id=ecole.id)
         db.session.commit()
         flash("Paramètres enregistrés.", "info")

@@ -7,9 +7,13 @@
     <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule de l'élève">
     <button type="submit">Chercher</button>
   </form>
+  <p class="lien-secondaire">
+    {% if en_retard %}<a href="{{ url_for('finances.liste', q=terme) }}">Tous les élèves</a>{% else %}<a href="{{ url_for('finances.liste', retard=1, q=terme) }}">Seulement les retards</a>{% endif %}
+    · <a href="{{ url_for('finances.frais_annexes') }}">Frais annexes</a>
+  </p>
   {% if lignes %}
     <table class="table">
-      <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>En retard</th><th>Statut</th><th></th></tr></thead>
       <tbody>
         {% for l in lignes %}
           <tr>
@@ -18,6 +22,7 @@
             <td>{{ l.du|int }}</td>
             <td>{{ l.paye|int }}</td>
             <td class="{% if l.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ l.solde|int }}</td>
+            <td class="{% if l.retard > 0 %}solde-du{% endif %}">{{ l.retard|int if l.retard > 0 else "—" }}</td>
             <td class="{% if l.statut == 'PAYÉ' %}solde-ok{% else %}solde-du{% endif %}">{{ l.statut }}</td>
             <td><a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}">Détail</a></td>
           </tr>
@@ -26,6 +31,6 @@
     </table>
     {{ pagination(page) }}
   {% else %}
-    {{ etat_vide("Aucun élève pour l'instant.") }}
+    {{ etat_vide("Aucun élève en retard de paiement." if en_retard else "Aucun élève pour l'instant.") }}
   {% endif %}
 {% endblock %}

@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class Absence(AppartientEcole, db.Model):
@@ -13,11 +14,11 @@ class Absence(AppartientEcole, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     eleve_id = db.Column(db.Integer, db.ForeignKey("eleves.id"), nullable=False)
     classe_id = db.Column(db.Integer, db.ForeignKey("classes.id"), nullable=False)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    date = db.Column(db.Date, nullable=False, default=maintenant)
     justifiee = db.Column(db.Boolean, default=False, nullable=False)
     motif = db.Column(db.String(200))
     enseignant_id = db.Column(db.Integer, db.ForeignKey("enseignants.id"))
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=maintenant)
 
     eleve = db.relationship("Eleve")
     classe = db.relationship("Classe")

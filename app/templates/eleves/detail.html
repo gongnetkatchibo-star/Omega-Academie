@@ -6,6 +6,7 @@
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p class="lien-secondaire">
+      <a href="{{ url_for('eleves.modifier', eleve_id=eleve.id) }}">Modifier le dossier</a> ·
       <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=eleve.id) }}">Certificat de scolarité (PDF)</a> ·
       <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">Attestation de fréquentation (PDF)</a>
     </p>
@@ -21,12 +22,23 @@
     {% endif %}
   {% endwith %}
 
-  <p><strong>Matricule :</strong> {{ eleve.matricule }}</p>
-  <p><strong>Genre :</strong> {{ eleve.sexe|genre_libelle }}</p>
-  <p><strong>Classe actuelle :</strong> {{ eleve.classe.nom }}</p>
-  <p><strong>Date de naissance :</strong> {{ eleve.date_naissance or "—" }}</p>
-  <p><strong>Téléphone parent/tuteur :</strong> {{ eleve.telephone_parent or "—" }}</p>
-  <p><strong>Inscrit le :</strong> {{ eleve.date_inscription.strftime("%d/%m/%Y") }}</p>
+  <div class="fiche-eleve">
+    {% if eleve.photo %}<img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=eleve.id) }}" alt="Photo de {{ eleve.nom_complet }}">{% endif %}
+    <dl class="fiche-eleve-champs">
+      <dt>Matricule</dt><dd>{{ eleve.matricule }}</dd>
+      <dt>Classe</dt><dd>{{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})</dd>
+      <dt>Genre</dt><dd>{{ eleve.sexe|genre_libelle }}</dd>
+      <dt>Naissance</dt><dd>{{ eleve.date_naissance.strftime("%d/%m/%Y") if eleve.date_naissance else "—" }}{% if eleve.lieu_naissance %} à {{ eleve.lieu_naissance }}{% endif %}</dd>
+      {% if eleve.nationalite %}<dt>Nationalité</dt><dd>{{ eleve.nationalite }}</dd>{% endif %}
+      {% if eleve.adresse %}<dt>Adresse</dt><dd>{{ eleve.adresse }}</dd>{% endif %}
+      {% if eleve.nom_pere %}<dt>Père</dt><dd>{{ eleve.nom_pere }}</dd>{% endif %}
+      {% if eleve.nom_mere %}<dt>Mère</dt><dd>{{ eleve.nom_mere }}</dd>{% endif %}
+      <dt>Téléphone parent</dt><dd>{{ eleve.telephone_parent or "—" }}</dd>
+      {% if eleve.personne_urgence or eleve.telephone_urgence %}<dt>Urgence</dt><dd>{{ eleve.personne_urgence or "" }}{% if eleve.telephone_urgence %} — {{ eleve.telephone_urgence }}{% endif %}</dd>{% endif %}
+      {% if eleve.ecole_origine %}<dt>École d'origine</dt><dd>{{ eleve.ecole_origine }}</dd>{% endif %}
+      <dt>Inscrit le</dt><dd>{{ eleve.date_inscription.strftime("%d/%m/%Y") }}</dd>
+    </dl>
+  </div>
   <p><strong>Parents liés :</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}

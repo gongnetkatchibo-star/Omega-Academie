@@ -9,9 +9,11 @@ from app.notes import notes_bp
 from app.utils import roles_required
 from app.services.moyennes import bareme_pour_classe
 from app.models.bulletin import AppreciationBulletin, CoefficientMatiere
+from app.models.evaluation import Evaluation, TYPES_EVALUATION, LIBELLES_TYPE
 from app.services.bulletins import bulletins_de_la_classe, matieres_de_la_classe, ANNUEL, LIBELLES_PERIODE
 
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle
+from app.services.temps import maintenant
 
 ROLES_SUPERVISION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"]
 TRIMESTRES = ["T1", "T2", "T3"]
@@ -41,80 +43,138 @@ def index():
     return render_template("notes/index.html", classes=classes, supervision=supervision)
 
 
+def _matieres_enseignees(classe_id):
+    """Matières que le compte enseigne dans la classe (liste vide sinon)."""
+    profil = current_user.profil_enseignant if current_user.role == "enseignant" else None
+    if profil is None:
+        return None, []
+    return profil, sorted({a.matiere for a in profil.affectations if a.classe_id == classe_id})
+
+
 @notes_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
 @login_required
 @roles_required("enseignant")
 def saisie(classe_id):
+    """Évaluations de la classe dans les matières de l'enseignant, et
+    création d'une nouvelle évaluation."""
+    from datetime import datetime
+
     classe_obj = Classe.query.get_or_404(classe_id)
-    profil = current_user.profil_enseignant if current_user.role == "enseignant" else None
-    matieres = None
+    profil, matieres = _matieres_enseignees(classe_id)
+    if current_user.role == "enseignant" and not matieres:
+        flash("Vous n'enseignez pas dans cette classe.", "error")
+        return redirect(url_for("classes.liste"))
 
-    if current_user.role == "enseignant":
-        matieres = [a.matiere for a in profil.affectations if a.classe_id == classe_id] if profil else []
-        if not matieres:
-            flash("Vous n'enseignez pas dans cette classe.", "error")
-            return redirect(url_for("classes.liste"))
-
-    eleves = Eleve.query.filter_by(classe_id=classe_id, actif=True).order_by(Eleve.nom_complet).all()
-    bareme = bareme_pour_classe(classe_obj)
-
-    # Matière/trimestre déjà choisis (rechargement en GET) : on prépare les
-    # notes existantes pour que l'enseignant les voie et puisse les
-    # corriger, plutôt que de ressaisir à l'aveugle.
-    matiere_choisie = request.args.get("matiere", "")
-    trimestre_choisi = request.args.get("trimestre", "")
-    notes_existantes = {}
-    if matiere_choisie in (matieres or []) and trimestre_choisi in TRIMESTRES:
-        annee = Eleve.annee_scolaire_courante()
-        for n in Note.query.filter_by(
-            classe_id=classe_id, matiere=matiere_choisie, trimestre=trimestre_choisi, annee_scolaire=annee,
-        ).all():
-            notes_existantes[n.eleve_id] = n.valeur
-
-    if request.method == "POST" and current_user.role == "enseignant":
+    annee = classe_obj.annee_scolaire
+    if request.method == "POST" and profil is not None:
         matiere = request.form.get("matiere")
         trimestre = request.form.get("trimestre")
+        titre = request.form.get("titre", "").strip()[:120]
+        type_evaluation = request.form.get("type")
+        coefficient = request.form.get("coefficient", type=float)
+        try:
+            date_evaluation = datetime.strptime(request.form.get("date", ""), "%Y-%m-%d").date()
+        except ValueError:
+            date_evaluation = None
 
         if matiere not in matieres or trimestre not in TRIMESTRES:
             flash("Merci de choisir une matière que vous enseignez et un trimestre valide.", "error")
+        elif not titre or type_evaluation not in TYPES_EVALUATION or date_evaluation is None:
+            flash("Le titre, le type et la date de l'évaluation sont obligatoires.", "error")
+        elif coefficient is None or not 0 < coefficient <= 10:
+            flash("Le coefficient doit être compris entre 0,5 et 10.", "error")
         else:
-            annee = Eleve.annee_scolaire_courante()
-            nb_saisies = 0
-            for eleve in eleves:
-                valeur_str = request.form.get(f"note_{eleve.id}", "").strip()
-                if valeur_str == "":
-                    continue
-                try:
-                    valeur = float(valeur_str)
-                except ValueError:
-                    continue
-                # Corrige la note existante au lieu d'en créer une deuxième
-                # (une resaisie pour le même élève/matière/trimestre est
-                # une correction, pas un doublon — sinon la moyenne
-                # compterait la note deux fois).
-                note_existante = Note.query.filter_by(
-                    eleve_id=eleve.id, classe_id=classe_id, matiere=matiere,
-                    trimestre=trimestre, annee_scolaire=annee,
-                ).first()
-                if note_existante:
-                    note_existante.valeur = valeur
-                    note_existante.bareme = bareme
-                else:
-                    db.session.add(Note(
-                        eleve_id=eleve.id, classe_id=classe_id, matiere=matiere,
-                        valeur=valeur, bareme=bareme, trimestre=trimestre,
-                        annee_scolaire=annee, enseignant_id=profil.id,
-                    ))
-                nb_saisies += 1
+            evaluation = Evaluation(
+                classe_id=classe_id, matiere=matiere, trimestre=trimestre, annee_scolaire=annee, titre=titre,
+                type=type_evaluation, date=date_evaluation, coefficient=coefficient, enseignant_id=profil.id,
+            )
+            db.session.add(evaluation)
             db.session.commit()
-            flash(f"{nb_saisies} note(s) enregistrée(s) (les valeurs déjà saisies ont été corrigées, pas dupliquées).", "info")
-            return redirect(url_for("notes.saisie", classe_id=classe_id, matiere=matiere, trimestre=trimestre))
+            return redirect(url_for("notes.evaluation", evaluation_id=evaluation.id))
+
+    evaluations = []
+    if matieres:
+        evaluations = (
+            Evaluation.query.filter(Evaluation.classe_id == classe_id, Evaluation.annee_scolaire == annee,
+                                    Evaluation.matiere.in_(matieres))
+            .order_by(Evaluation.trimestre, Evaluation.matiere, Evaluation.date).all()
+        )
+    effectif = Eleve.query.filter_by(classe_id=classe_id, actif=True).count()
+    return render_template(
+        "notes/saisie.html", classe=classe_obj, matieres=matieres, trimestres=TRIMESTRES, evaluations=evaluations,
+        types=TYPES_EVALUATION, libelles_type=LIBELLES_TYPE, effectif=effectif, bareme=bareme_pour_classe(classe_obj),
+        aujourd_hui=maintenant().date().isoformat(),
+    )
+
+
+def _evaluation_de_l_enseignant(evaluation_id):
+    evaluation = Evaluation.query.get_or_404(evaluation_id)
+    profil, matieres = _matieres_enseignees(evaluation.classe_id)
+    if profil is None or evaluation.matiere not in matieres:
+        abort(403)
+    return evaluation, profil
+
+
+@notes_bp.route("/evaluation/<int:evaluation_id>", methods=["GET", "POST"])
+@login_required
+@roles_required("enseignant")
+def evaluation(evaluation_id):
+    """Saisie des notes d'une évaluation. Ressaisir corrige la note de
+    cette évaluation, sans jamais en créer une deuxième."""
+    evaluation, profil = _evaluation_de_l_enseignant(evaluation_id)
+    classe_obj = evaluation.classe
+    bareme = bareme_pour_classe(classe_obj)
+    eleves = Eleve.query.filter_by(classe_id=classe_obj.id, actif=True).order_by(Eleve.nom_complet).all()
+    existantes = {n.eleve_id: n for n in Note.query.filter_by(evaluation_id=evaluation.id).all()}
+
+    if request.method == "POST":
+        nb_saisies, hors_bareme = 0, 0
+        for eleve in eleves:
+            valeur_str = request.form.get(f"note_{eleve.id}", "").strip().replace(",", ".")
+            note = existantes.get(eleve.id)
+            if valeur_str == "":
+                if note:  # case vidée : la note est retirée (élève absent à l'évaluation)
+                    db.session.delete(note)
+                continue
+            try:
+                valeur = float(valeur_str)
+            except ValueError:
+                continue
+            if not 0 <= valeur <= bareme:
+                hors_bareme += 1
+                continue
+            if note:
+                note.valeur = valeur
+                note.bareme = bareme
+            else:
+                db.session.add(Note(
+                    eleve_id=eleve.id, classe_id=classe_obj.id, matiere=evaluation.matiere, valeur=valeur,
+                    bareme=bareme, trimestre=evaluation.trimestre, annee_scolaire=evaluation.annee_scolaire,
+                    enseignant_id=profil.id, evaluation_id=evaluation.id,
+                ))
+            nb_saisies += 1
+        db.session.commit()
+        flash(f"{nb_saisies} note(s) enregistrée(s).", "info")
+        if hors_bareme:
+            flash(f"{hors_bareme} note(s) ignorée(s) : elles doivent être comprises entre 0 et {bareme}.", "error")
+        return redirect(url_for("notes.evaluation", evaluation_id=evaluation.id))
 
     return render_template(
-        "notes/saisie.html", classe=classe_obj, eleves=eleves, matieres=matieres,
-        trimestres=TRIMESTRES, bareme=bareme, matiere_choisie=matiere_choisie,
-        trimestre_choisi=trimestre_choisi, notes_existantes=notes_existantes,
+        "notes/evaluation.html", evaluation=evaluation, classe=classe_obj, eleves=eleves, bareme=bareme,
+        notes={eleve_id: n.valeur for eleve_id, n in existantes.items()},
     )
+
+
+@notes_bp.route("/evaluation/<int:evaluation_id>/supprimer", methods=["POST"])
+@login_required
+@roles_required("enseignant")
+def supprimer_evaluation(evaluation_id):
+    evaluation, _ = _evaluation_de_l_enseignant(evaluation_id)
+    classe_id = evaluation.classe_id
+    db.session.delete(evaluation)  # ses notes partent avec elle
+    db.session.commit()
+    flash("Évaluation supprimée, avec ses notes.", "info")
+    return redirect(url_for("notes.saisie", classe_id=classe_id))
 
 
 def _acces_bulletin(eleve):

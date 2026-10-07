@@ -10,6 +10,7 @@ from flask_login import login_required
 from app.extensions import db
 from app.sauvegarde import sauvegarde_bp
 from app.utils import roles_required
+from app.services.temps import maintenant
 
 # Toutes les tables exportées — si un nouveau module ajoute un modèle,
 # il suffit de l'ajouter ici pour qu'il soit couvert par la sauvegarde.
@@ -75,7 +76,7 @@ def exporter():
 
     tampon.seek(0)
     sigle = (ecole.sigle if ecole and ecole.sigle else "ecole").lower()
-    nom_fichier = f"sauvegarde_{sigle}_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.zip"
+    nom_fichier = f"sauvegarde_{sigle}_{maintenant().strftime('%Y%m%d_%H%M')}.zip"
 
     from app.services.journal import journaliser
     journaliser("sauvegarde_exportee", details=nom_fichier)

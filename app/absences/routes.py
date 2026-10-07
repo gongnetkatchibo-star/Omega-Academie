@@ -10,6 +10,7 @@ from app.models.absence import Absence
 from app.absences import absences_bp
 from app.utils import roles_required
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle
+from app.services.temps import maintenant
 
 ROLES_SUPERVISION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"]
 
@@ -42,11 +43,11 @@ def saisie(classe_id):
         return redirect(url_for("classes.liste"))
 
     eleves = Eleve.query.filter_by(classe_id=classe_id, actif=True).order_by(Eleve.nom_complet).all()
-    date_str = request.args.get("date") or request.form.get("date") or datetime.utcnow().date().isoformat()
+    date_str = request.args.get("date") or request.form.get("date") or maintenant().date().isoformat()
     try:
         date_selectionnee = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
-        date_selectionnee = datetime.utcnow().date()
+        date_selectionnee = maintenant().date()
 
     absences_existantes = {
         a.eleve_id: a for a in Absence.query.filter_by(classe_id=classe_id, date=date_selectionnee).all()

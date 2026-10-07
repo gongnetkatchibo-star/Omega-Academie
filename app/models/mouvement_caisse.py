@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 TYPES_CAISSE = [
     "Uniforme",
@@ -22,7 +23,7 @@ class MouvementCaisse(AppartientEcole, db.Model):
     __tablename__ = "mouvements_caisse"
 
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    date = db.Column(db.Date, nullable=False, default=maintenant)
     type = db.Column(db.String(60), nullable=False)
     reference = db.Column(db.String(60))
     libelle = db.Column(db.String(200), nullable=False)
@@ -30,7 +31,7 @@ class MouvementCaisse(AppartientEcole, db.Model):
     depense = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     observation = db.Column(db.String(300))
     responsable_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    date_saisie = db.Column(db.DateTime, default=datetime.utcnow)
+    date_saisie = db.Column(db.DateTime, default=maintenant)
 
     # Traçabilité vers l'élève concerné quand la ligne vient d'un paiement
     # de scolarité — les parents se retrouvent via eleve.parents (pas

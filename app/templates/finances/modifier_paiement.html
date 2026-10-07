@@ -10,7 +10,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Échéance
       <select name="echeance" required>
-        {% for ech in echeances %}<option value="{{ ech }}" {% if ech == paiement.echeance %}selected{% endif %}>{{ libelles_echeance[ech] }}</option>{% endfor %}
+        {% for e in resume.echeances + resume.annexes %}<option value="{{ e.cle }}" {% if e.cle == choisie %}selected{% endif %}>{{ e.libelle }}</option>{% endfor %}
       </select>
     </label>
     <label>Montant

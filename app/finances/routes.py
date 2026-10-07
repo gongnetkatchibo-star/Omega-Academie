@@ -6,7 +6,8 @@ from app.models.eleve import Eleve
 from app.models.paiement import Paiement, MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
 from app.finances import finances_bp
 from app.utils import roles_required
-from app.services.paiements import enregistrer_paiement, resume_paiements
+from app.services.paiements import enregistrer_paiement, resume_paiements, analyser_echeance
+from app.utils import montant_entier
 from app.services.journal import journaliser
 from app.models.mouvement_caisse import MouvementCaisse
 
@@ -28,12 +29,95 @@ def liste():
     if terme:
         motif = f"%{terme}%"
         requete = requete.filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
-    page = paginer(requete.order_by(Eleve.nom_complet))
-    lignes = []
-    for e in page:
-        r = resume_paiements(e)
-        lignes.append({"eleve": e, "du": r["du"], "paye": r["paye"], "solde": r["solde"], "statut": r["statut"]})
-    return render_template("finances/liste.html", lignes=lignes, page=page, terme=terme)
+    en_retard = request.args.get("retard") == "1"
+    if en_retard:
+        # Le retard dépend des paiements et des dates limites : il se
+        # calcule élève par élève, puis on pagine le résultat.
+        from app.services.pagination import paginer_liste
+        tous = [(e, resume_paiements(e)) for e in requete.order_by(Eleve.nom_complet).all()]
+        page = paginer_liste([(e, r) for e, r in tous if r["retard"] > 0])
+        couples = list(page)
+    else:
+        page = paginer(requete.order_by(Eleve.nom_complet))
+        couples = [(e, resume_paiements(e)) for e in page]
+    lignes = [
+        {"eleve": e, "du": r["du"], "paye": r["paye"], "solde": r["solde"], "statut": r["statut"], "retard": r["retard"]}
+        for e, r in couples
+    ]
+    return render_template("finances/liste.html", lignes=lignes, page=page, terme=terme, en_retard=en_retard)
+
+
+@finances_bp.route("/<int:eleve_id>/remise", methods=["POST"])
+@login_required
+@roles_required(*ROLES_SUPPRESSION)
+def remise(eleve_id):
+    """Remise sur la scolarité : réservée à la direction, comme la
+    suppression d'un paiement."""
+    eleve = Eleve.query.get_or_404(eleve_id)
+    pourcent = request.form.get("remise_pourcent", type=float)
+    if pourcent is None or not 0 <= pourcent <= 100:
+        flash("La remise doit être comprise entre 0 et 100 %.", "error")
+    else:
+        eleve.remise_pourcent = pourcent
+        eleve.remise_motif = request.form.get("remise_motif", "").strip()[:120] or None
+        journaliser("remise_scolarite", details=f"{eleve.nom_complet} — {pourcent:g} % ({eleve.remise_motif or 'sans motif'})",
+                    cible_type="Eleve", cible_id=eleve.id)
+        db.session.commit()
+        flash(f"Remise de {pourcent:g} % enregistrée." if pourcent else "Remise retirée.", "info")
+    return redirect(url_for("finances.detail", eleve_id=eleve.id))
+
+
+@finances_bp.route("/frais-annexes", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="finances")
+def frais_annexes():
+    from datetime import datetime
+    from app.models.classe import Classe
+    from app.models.frais_annexe import FraisAnnexe
+
+    annee = Eleve.annee_scolaire_courante()
+    classes = Classe.query.filter_by(annee_scolaire=annee).order_by(Classe.niveau, Classe.nom).all()
+    if request.method == "POST":
+        libelle = request.form.get("libelle", "").strip()[:80]
+        montant = montant_entier(request.form.get("montant"))
+        classe_id = request.form.get("classe_id", type=int)
+        date_str = request.form.get("date_limite", "")
+        try:
+            date_limite = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else None
+        except ValueError:
+            date_limite = None
+        if not libelle or not montant or (classe_id and classe_id not in {c.id for c in classes}):
+            flash("Le libellé et un montant valide sont obligatoires.", "error")
+        else:
+            db.session.add(FraisAnnexe(libelle=libelle, montant=montant, annee_scolaire=annee,
+                                       classe_id=classe_id or None, date_limite=date_limite))
+            journaliser("creation_frais_annexe", details=f"{libelle} — {montant}")
+            db.session.commit()
+            flash(f"Frais « {libelle} » ajouté.", "info")
+        return redirect(url_for("finances.frais_annexes"))
+
+    frais = FraisAnnexe.query.filter_by(annee_scolaire=annee).order_by(FraisAnnexe.id).all()
+    encaisse = {
+        f.id: sum(p.montant for p in Paiement.query.filter_by(frais_annexe_id=f.id).all()) for f in frais
+    }
+    return render_template("finances/frais_annexes.html", frais=frais, classes=classes, annee=annee, encaisse=encaisse)
+
+
+@finances_bp.route("/frais-annexes/<int:frais_id>/supprimer", methods=["POST"])
+@login_required
+@roles_required(*ROLES_SUPPRESSION)
+def supprimer_frais_annexe(frais_id):
+    from app.models.frais_annexe import FraisAnnexe
+
+    frais = FraisAnnexe.query.get_or_404(frais_id)
+    if Paiement.query.filter_by(frais_annexe_id=frais.id).count():
+        flash("Impossible de supprimer ce frais : des paiements y sont déjà rattachés.", "error")
+    else:
+        journaliser("suppression_frais_annexe", details=frais.libelle)
+        db.session.delete(frais)
+        db.session.commit()
+        flash("Frais supprimé.", "info")
+    return redirect(url_for("finances.frais_annexes"))
 
 
 @finances_bp.route("/<int:eleve_id>/relancer", methods=["POST"])
@@ -91,16 +175,17 @@ def detail(eleve_id):
             abort(403)
 
     if request.method == "POST":
-        montant = request.form.get("montant", type=float)
+        montant = montant_entier(request.form.get("montant"))
         mode = request.form.get("mode")
-        echeance = request.form.get("echeance")
+        choix = analyser_echeance(request.form.get("echeance"), eleve)
         reference = request.form.get("reference", "").strip()
 
-        if not montant or montant <= 0 or mode not in MODES_PAIEMENT or echeance not in ECHEANCES:
-            flash("Merci de saisir un montant valide, un mode de paiement et une échéance.", "error")
+        if not montant or mode not in MODES_PAIEMENT or choix is None:
+            flash("Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance.", "error")
         else:
+            echeance, frais_annexe = choix
             paiement = enregistrer_paiement(
-                eleve, montant, mode, echeance, current_user, reference=reference or None,
+                eleve, montant, mode, echeance, current_user, reference=reference or None, frais_annexe=frais_annexe,
             )
             flash(f"Paiement enregistré — reçu {paiement.numero_recu}. Visible immédiatement dans la Caisse.", "info")
         return redirect(url_for("finances.detail", eleve_id=eleve.id))
@@ -110,7 +195,7 @@ def detail(eleve_id):
     return render_template(
         "finances/detail.html", eleve=eleve, resume=resume,
         paiements=paiements, modes=MODES_PAIEMENT, echeances=ECHEANCES,
-        libelles_echeance=LIBELLES_ECHEANCE,
+        libelles_echeance=LIBELLES_ECHEANCE, peut_remise=current_user.role in ROLES_SUPPRESSION + ["developpeur"],
     )
 
 
@@ -122,18 +207,20 @@ def modifier_paiement(paiement_id):
     eleve = paiement.eleve
 
     if request.method == "POST":
-        montant = request.form.get("montant", type=float)
+        montant = montant_entier(request.form.get("montant"))
         mode = request.form.get("mode")
-        echeance = request.form.get("echeance")
+        choix = analyser_echeance(request.form.get("echeance"), eleve)
         reference = request.form.get("reference", "").strip()
 
-        if not montant or montant <= 0 or mode not in MODES_PAIEMENT or echeance not in ECHEANCES:
-            flash("Merci de saisir un montant valide, un mode de paiement et une échéance.", "error")
+        if not montant or mode not in MODES_PAIEMENT or choix is None:
+            flash("Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance.", "error")
             return redirect(url_for("finances.modifier_paiement", paiement_id=paiement.id))
 
+        echeance, frais_annexe = choix
         paiement.montant = montant
         paiement.mode = mode
         paiement.echeance = echeance
+        paiement.frais_annexe_id = frais_annexe.id if frais_annexe else None
         paiement.reference = reference or None
 
         journaliser(
@@ -149,7 +236,8 @@ def modifier_paiement(paiement_id):
             mouvement.recette = montant
             mouvement.reference = paiement.numero_recu
             mouvement.libelle = (
-                f"Scolarité — {eleve.nom_complet} ({LIBELLES_ECHEANCE[echeance]}) [corrigé]"
+                f"{frais_annexe.libelle} — {eleve.nom_complet} [corrigé]" if frais_annexe
+                else f"Scolarité — {eleve.nom_complet} ({LIBELLES_ECHEANCE[echeance]}) [corrigé]"
             )
 
         db.session.commit()
@@ -157,8 +245,9 @@ def modifier_paiement(paiement_id):
         return redirect(url_for("finances.detail", eleve_id=eleve.id))
 
     return render_template(
-        "finances/modifier_paiement.html", paiement=paiement, eleve=eleve,
-        modes=MODES_PAIEMENT, echeances=ECHEANCES, libelles_echeance=LIBELLES_ECHEANCE,
+        "finances/modifier_paiement.html", paiement=paiement, eleve=eleve, modes=MODES_PAIEMENT,
+        resume=resume_paiements(eleve, paiement.annee_scolaire),
+        choisie=f"annexe_{paiement.frais_annexe_id}" if paiement.frais_annexe_id else paiement.echeance,
     )
 
 

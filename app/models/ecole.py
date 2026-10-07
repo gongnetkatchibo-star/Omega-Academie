@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class Ecole(db.Model):
@@ -24,7 +25,7 @@ class Ecole(db.Model):
     filigrane = db.Column(db.LargeBinary)
     filigrane_mime = db.Column(db.String(50))
     actif = db.Column(db.Boolean, default=True, nullable=False)
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=maintenant)
 
     utilisateurs = db.relationship("User", back_populates="ecole")
 

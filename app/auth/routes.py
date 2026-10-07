@@ -6,6 +6,7 @@ from app.extensions import db, envoyer_email
 from app import limiter
 from app.models.user import User
 from app.auth import auth_bp
+from app.services.temps import maintenant
 
 # Profils autorisés à s'inscrire eux-mêmes (en attente de validation).
 # Les rôles à responsabilité (secrétaire, directeur, comptable,
@@ -264,9 +265,31 @@ def connexion():
             eleve = _eleve_par_matricule(identifiant) if identifiant else None
             user = eleve.compte if eleve else None
 
+        from datetime import timedelta
+        instant = maintenant()
+        if user is not None and user.bloque_jusqua and user.bloque_jusqua > instant:
+            minutes = int((user.bloque_jusqua - instant).total_seconds() // 60) + 1
+            flash(f"Trop de tentatives : ce compte est bloqué encore {minutes} minute(s).", "error")
+            return render_template("auth/connexion.html")
+
         if user is None or not user.verifier_mot_de_passe(mot_de_passe):
+            if user is not None:
+                user.echecs_connexion = (user.echecs_connexion or 0) + 1
+                if user.echecs_connexion >= current_app.config["ECHECS_CONNEXION_MAX"]:
+                    user.bloque_jusqua = instant + timedelta(minutes=current_app.config["BLOCAGE_MINUTES"])
+                    user.echecs_connexion = 0
+                    from app.models.journal import JournalAction
+                    db.session.add(JournalAction(
+                        ecole_id=user.ecole_id, action="compte_bloque", cible_type="User", cible_id=user.id,
+                        details=f"{user.email} — mots de passe faux répétés",
+                    ))
+                db.session.commit()
             flash("Identifiant ou mot de passe incorrect.", "error")
             return render_template("auth/connexion.html")
+
+        if user.echecs_connexion or user.bloque_jusqua:
+            user.echecs_connexion, user.bloque_jusqua = 0, None
+            db.session.commit()
 
         if user.statut == "en_attente":
             flash("Votre compte est en attente de validation par le secrétariat.", "warning")
@@ -281,6 +304,7 @@ def connexion():
             return render_template("auth/connexion.html")
 
         login_user(user)
+        session.permanent = True  # déconnexion automatique après inactivité
         flash(f"Bienvenue, {user.nom_complet}.", "info")
 
         # Retour direct à la page demandée avant la connexion (ex. le
@@ -434,8 +458,12 @@ def reinitialiser(token):
         if not mot_de_passe or mot_de_passe != confirmation:
             flash("Les mots de passe ne correspondent pas.", "error")
             return render_template("auth/reinitialiser.html", token=token)
+        if len(mot_de_passe) < 8:
+            flash("Le mot de passe doit faire au moins 8 caractères.", "error")
+            return render_template("auth/reinitialiser.html", token=token)
 
         user.set_mot_de_passe(mot_de_passe)
+        user.echecs_connexion, user.bloque_jusqua = 0, None
         db.session.commit()
         flash("Mot de passe réinitialisé. Tu peux te connecter.", "info")
         return redirect(url_for("auth.connexion"))

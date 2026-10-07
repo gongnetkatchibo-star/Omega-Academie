@@ -15,8 +15,9 @@
   {% endwith %}
 
   {% if classes %}
-    <form method="post">
+    <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2>Identité</h2>
       <label>Nom complet
         <input type="text" name="nom_complet" required>
       </label>
@@ -38,6 +39,8 @@
           {% endfor %}
         </select>
       </label>
+      {% set e = none %}
+      {% include "eleves/_champs_dossier.html" %}
       <button type="submit">Inscrire l'élève</button>
     </form>
   {% else %}

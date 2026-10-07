@@ -1,0 +1,41 @@
+{# Champs du dossier communs à l'inscription et à la modification. `e` = élève ou None. #}
+{% macro v(champ) %}{{ request.form.get(champ) if request.form.get(champ) is not none else ((e[champ] or "") if e else "") }}{% endmacro %}
+<h2>État civil</h2>
+<label>Lieu de naissance
+  <input type="text" name="lieu_naissance" maxlength="120" value="{{ v('lieu_naissance') }}">
+</label>
+<label>Nationalité
+  <input type="text" name="nationalite" maxlength="60" value="{{ v('nationalite') }}">
+</label>
+<label>Adresse (quartier)
+  <input type="text" name="adresse" maxlength="200" value="{{ v('adresse') }}">
+</label>
+<label>École d'origine
+  <input type="text" name="ecole_origine" maxlength="150" value="{{ v('ecole_origine') }}">
+</label>
+
+<h2>Famille</h2>
+<label>Nom du père
+  <input type="text" name="nom_pere" maxlength="120" value="{{ v('nom_pere') }}">
+</label>
+<label>Nom de la mère
+  <input type="text" name="nom_mere" maxlength="120" value="{{ v('nom_mere') }}">
+</label>
+<label>Téléphone du parent ou tuteur
+  <input type="tel" name="telephone_parent" maxlength="30" value="{{ v('telephone_parent') }}">
+</label>
+<label>Personne à prévenir en cas d'urgence
+  <input type="text" name="personne_urgence" maxlength="120" value="{{ v('personne_urgence') }}">
+</label>
+<label>Téléphone d'urgence
+  <input type="tel" name="telephone_urgence" maxlength="30" value="{{ v('telephone_urgence') }}">
+</label>
+
+<h2>Photo</h2>
+{% if e and e.photo %}
+  <p><img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=e.id) }}" alt="Photo de {{ e.nom_complet }}"></p>
+  <label class="ligne-case"><input type="checkbox" name="retirer_photo"> Retirer la photo</label>
+{% endif %}
+<label>{{ "Remplacer la photo" if e and e.photo else "Photo d'identité" }}
+  <input type="file" name="photo" accept="image/png,image/jpeg,image/webp">
+</label>

@@ -13,6 +13,7 @@ le cas le plus fréquent ici : ajouter une colonne simple avec une valeur
 par défaut."""
 
 from sqlalchemy import inspect, text
+from app.services.temps import maintenant
 
 
 def _valeur_sql_par_defaut(colonne):
@@ -22,7 +23,7 @@ def _valeur_sql_par_defaut(colonne):
         return None
     valeur = colonne.default.arg
     if callable(valeur):
-        return None  # ex. datetime.utcnow — pas de DEFAULT SQL simple et portable
+        return None  # ex. maintenant — pas de DEFAULT SQL simple et portable
     if isinstance(valeur, bool):
         return "TRUE" if valeur else "FALSE"
     if isinstance(valeur, (int, float)):

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import champ_mot_de_passe %}
 {% block title %}Mon profil{% endblock %}
 {% block content %}
   {{ fil_ariane(("Mon profil", None)) }}
@@ -18,6 +19,21 @@
       </select>
     </label>
     <button type="submit">Enregistrer</button>
+  </form>
+
+  <h2>Mot de passe</h2>
+  <form method="post" action="{{ url_for('main.changer_mot_de_passe') }}" class="formulaire-etroit" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Mot de passe actuel
+      {{ champ_mot_de_passe("mot_de_passe_actuel", autocomplete="current-password") }}
+    </label>
+    <label>Nouveau mot de passe
+      {{ champ_mot_de_passe("nouveau_mot_de_passe") }}
+    </label>
+    <label>Confirmer le nouveau mot de passe
+      {{ champ_mot_de_passe("confirmation") }}
+    </label>
+    <button type="submit">Changer le mot de passe</button>
   </form>
 
   <h2>Mes numéros</h2>

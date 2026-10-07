@@ -2,6 +2,7 @@ from app.models.tenant import AppartientEcole
 from datetime import datetime
 
 from app.extensions import db
+from app.services.temps import maintenant
 
 
 class SuiviCours(AppartientEcole, db.Model):
@@ -17,7 +18,7 @@ class SuiviCours(AppartientEcole, db.Model):
     pourcentage = db.Column(db.Integer, default=0)  # 0-100
     en_retard = db.Column(db.Boolean, default=False)
     difficultes = db.Column(db.Text)
-    date_maj = db.Column(db.DateTime, default=datetime.utcnow)
+    date_maj = db.Column(db.DateTime, default=maintenant)
 
     classe = db.relationship("Classe")
     enseignant = db.relationship("Enseignant")
