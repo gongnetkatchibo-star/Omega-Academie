@@ -4,7 +4,7 @@ même chiffre (même principe que app/services/moyennes.py)."""
 
 from app.models.eleve import Eleve
 from app.models.paiement import Paiement
-from app.services.moyennes import moyenne_eleve, a_reussi
+from app.services.moyennes import moyenne_et_reussite
 
 
 def stats_reussite(eleves, annee):
@@ -15,11 +15,11 @@ def stats_reussite(eleves, annee):
     reussites = 0
     echecs = 0
     for e in eleves:
-        moyenne = moyenne_eleve(e, annee)
+        moyenne, reussi = moyenne_et_reussite(e, annee)
         if moyenne is None:
             continue
         moyennes.append(moyenne)
-        if a_reussi(e, annee):
+        if reussi:
             reussites += 1
         else:
             echecs += 1
@@ -53,21 +53,30 @@ def tableau_par_sexe(eleves, annee):
     return resultat
 
 
-def stats_financieres(eleves, annee, classe_de=None):
-    """`classe_de` (optionnel) : dict {eleve_id: Classe} à utiliser à la
-    place de `eleve.classe` — indispensable pour une année passée, où la
-    classe actuelle de l'élève n'est plus celle de l'année consultée."""
-    def classe_de_l_eleve(e):
-        return classe_de[e.id] if classe_de else e.classe
+def stats_financieres(eleves, annee, classe_de=None, resumes=None):
+    """Totaux tirés du même calcul que l'écran Finances
+    (resume_paiements) : l'attendu tient compte des remises et des frais
+    annexes, comme l'encaissé.
 
-    total_a_recouvrer = sum(classe_de_l_eleve(e).frais_annuel for e in eleves if classe_de_l_eleve(e))
-    eleve_ids = {e.id for e in eleves}
-    total_encaisse = sum(
-        p.montant for p in Paiement.query.filter_by(annee_scolaire=annee).all()
-        if p.eleve_id in eleve_ids
+    `classe_de` (optionnel) : dict {eleve_id: Classe} à utiliser à la
+    place de `eleve.classe` — indispensable pour une année passée, où la
+    classe actuelle de l'élève n'est plus celle de l'année consultée.
+    `resumes` (optionnel) : {eleve_id: résumé} déjà calculés."""
+    from app.services.paiements import resume_paiements
+
+    if resumes is None:
+        resumes = {
+            e.id: resume_paiements(e, annee, classe=(classe_de[e.id] if classe_de else None)) for e in eleves
+        }
+    lignes = [resumes[e.id] for e in eleves]
+    total_a_recouvrer = sum(r["du"] for r in lignes)
+    total_encaisse = sum(r["paye"] for r in lignes)
+    # Somme des soldes par élève : le trop-perçu d'une famille ne
+    # compense pas la dette d'une autre.
+    solde_a_recouvrer = sum(r["solde"] for r in lignes)
+    taux_recouvrement = (
+        (total_a_recouvrer - solde_a_recouvrer) / total_a_recouvrer * 100 if total_a_recouvrer else 0
     )
-    solde_a_recouvrer = max(0, total_a_recouvrer - total_encaisse)
-    taux_recouvrement = (total_encaisse / total_a_recouvrer * 100) if total_a_recouvrer else 0
     return {
         "total_a_recouvrer": total_a_recouvrer,
         "total_encaisse": total_encaisse,

@@ -41,7 +41,9 @@ class Eleve(AppartientEcole, db.Model):
     # Remise accordée sur la scolarité (bourse, fratrie, enfant du personnel…).
     remise_pourcent = db.Column(db.Float, default=0)
     remise_motif = db.Column(db.String(120))
-    photo = db.Column(db.LargeBinary)
+    # Chargée seulement quand on l'affiche : sans cela, chaque liste
+    # d'élèves ramènerait toutes les photos de la base.
+    photo = db.deferred(db.Column(db.LargeBinary))
     photo_mime = db.Column(db.String(40))
     statut_dossier = db.Column(db.String(20), default="incomplet")
     date_inscription = db.Column(db.DateTime, default=maintenant)
@@ -75,9 +77,19 @@ class Eleve(AppartientEcole, db.Model):
 
         ecole = ecole_courante()
         prefixe = (ecole.prefixe_matricule if ecole else None) or current_app.config.get("MATRICULE_PREFIXE", "OA26")
-        code_classe = classe.nom.upper()
-        rang = cls.query.filter_by(classe_id=classe.id).count() + 1
-        return f"{prefixe}-{code_classe}-{rang:03d}"
+        debut = f"{prefixe}-{classe.nom.upper()}-"
+        # Numéro suivant le plus grand déjà attribué (et non « nombre
+        # d'élèves + 1 », qui redonnait un matricule existant après un
+        # changement de classe ou une suppression). Le matricule est
+        # unique sur toute la plateforme : on regarde toutes les écoles.
+        from sqlalchemy import select
+
+        existants = db.session.execute(
+            select(cls.matricule).where(cls.matricule.startswith(debut, autoescape=True))
+            .execution_options(tous_etablissements=True)
+        ).scalars().all()
+        rangs = [int(m[len(debut):]) for m in existants if m[len(debut):].isdigit()]
+        return f"{debut}{max(rangs, default=0) + 1:03d}"
 
     def dossier_est_complet(self):
         """Un dossier est complet quand toutes les informations

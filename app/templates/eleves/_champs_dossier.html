@@ -32,10 +32,10 @@
 </label>
 
 <h2>Photo</h2>
-{% if e and e.photo %}
+{% if e and e.photo_mime %}
   <p><img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=e.id) }}" alt="Photo de {{ e.nom_complet }}"></p>
   <label class="ligne-case"><input type="checkbox" name="retirer_photo"> Retirer la photo</label>
 {% endif %}
-<label>{{ "Remplacer la photo" if e and e.photo else "Photo d'identité" }}
+<label>{{ "Remplacer la photo" if e and e.photo_mime else "Photo d'identité" }}
   <input type="file" name="photo" accept="image/png,image/jpeg,image/webp">
 </label>

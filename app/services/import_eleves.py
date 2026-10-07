@@ -135,7 +135,6 @@ def importer(lignes):
         (e.nom_complet.strip().lower(), e.classe_id)
         for e in Eleve.query.filter(Eleve.classe_id.in_({l["classe"].id for l in lignes})).all()
     }
-    rangs = {}
     crees = deja = 0
     for ligne in lignes:
         classe = ligne["classe"]
@@ -144,12 +143,8 @@ def importer(lignes):
             deja += 1
             continue
         existants.add(cle)
-        if classe.id not in rangs:
-            rangs[classe.id] = Eleve.query.filter_by(classe_id=classe.id).count()
-        rangs[classe.id] += 1
-        prefixe = Eleve.generer_matricule(classe).rsplit("-", 1)[0]
         eleve = Eleve(
-            matricule=f"{prefixe}-{rangs[classe.id]:03d}", nom_complet=ligne["nom"], classe_id=classe.id,
+            matricule=Eleve.generer_matricule(classe), nom_complet=ligne["nom"], classe_id=classe.id,
             date_naissance=ligne["date_naissance"], sexe=ligne["sexe"], telephone_parent=ligne["telephone"],
         )
         db.session.add(eleve)

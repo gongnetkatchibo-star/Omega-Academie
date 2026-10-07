@@ -78,8 +78,8 @@ class User(AppartientEcole, UserMixin, db.Model):
         return check_password_hash(self.mot_de_passe_hash, mot_de_passe)
 
     def generer_code_2fa(self):
-        import random
-        self.code_2fa = f"{random.randint(0, 999999):06d}"
+        import secrets  # tirage imprévisible, contrairement à random
+        self.code_2fa = f"{secrets.randbelow(1_000_000):06d}"
         self.code_2fa_expiration = maintenant() + timedelta(minutes=10)
         return self.code_2fa
 

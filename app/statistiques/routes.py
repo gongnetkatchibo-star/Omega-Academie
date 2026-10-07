@@ -88,7 +88,7 @@ def tableau():
     )
 
     if vue == "finances":
-        par_tranche, _ = stats_finance_par_tranche(eleves_vue, annee, classe_de)
+        par_tranche, resumes = stats_finance_par_tranche(eleves_vue, annee, classe_de)
         nb_par_filtre = {
             cle: len(filtrer_eleves_par_situation(eleves_vue, annee, cle, classe_de))
             for cle in LIBELLES_FILTRE_FINANCE
@@ -97,7 +97,7 @@ def tableau():
             par_tranche=par_tranche,
             libelles_filtre=LIBELLES_FILTRE_FINANCE,
             nb_par_filtre=nb_par_filtre,
-            **stats_financieres(eleves_vue, annee, classe_de),
+            **stats_financieres(eleves_vue, annee, classe_de, resumes=resumes),
         )
     else:
         contexte["tableau_sexe"] = tableau_par_sexe(eleves_vue, annee)

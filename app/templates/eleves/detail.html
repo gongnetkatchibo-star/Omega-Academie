@@ -23,7 +23,7 @@
   {% endwith %}
 
   <div class="fiche-eleve">
-    {% if eleve.photo %}<img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=eleve.id) }}" alt="Photo de {{ eleve.nom_complet }}">{% endif %}
+    {% if eleve.photo_mime %}<img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=eleve.id) }}" alt="Photo de {{ eleve.nom_complet }}">{% endif %}
     <dl class="fiche-eleve-champs">
       <dt>Matricule</dt><dd>{{ eleve.matricule }}</dd>
       <dt>Classe</dt><dd>{{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})</dd>

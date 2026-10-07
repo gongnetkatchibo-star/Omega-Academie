@@ -28,7 +28,8 @@ class Ressource(AppartientEcole, db.Model):
     # serveur) : Render efface le disque à chaque redéploiement sur le
     # plan gratuit, ce qui rendait les fichiers introuvables après coup
     # (constaté sept. 2026). La base de données, elle, est persistante.
-    contenu = db.Column(db.LargeBinary)
+    # Chargé seulement au téléchargement, jamais pour afficher la liste.
+    contenu = db.deferred(db.Column(db.LargeBinary))
     type_mime = db.Column(db.String(100))
 
     ajoute_par = db.relationship("User")

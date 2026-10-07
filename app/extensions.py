@@ -10,6 +10,9 @@ login_manager.login_view = "auth.connexion"
 login_manager.login_message = "Connectez-vous pour accéder à cette page."
 mail = Mail()
 
+# Nombre de destinataires par appel à Brevo (qui en accepte 1000 au plus).
+LOT_EMAILS = 500
+
 
 def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
     """Envoie un email via l'API Brevo (HTTPS, port 443) — jamais via
@@ -25,7 +28,8 @@ def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
     import requests
     from flask import current_app
 
-    destinataires = [d for d in destinataires if d]
+    # Sans doublon : un même compte ne reçoit jamais deux fois le message.
+    destinataires = list(dict.fromkeys(d for d in destinataires if d))
     cle_api = current_app.config.get("BREVO_API_KEY")
     if not destinataires or not cle_api:
         return False
@@ -35,23 +39,34 @@ def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
     ecole = ecole_courante()
     expediteur_nom = nom_expediteur or (ecole.nom if ecole else None) or current_app.config.get("MAIL_DEFAULT_SENDER_NOM") or current_app.config.get("PLATEFORME_NOM")
 
-    corps_html = "<br>".join(ligne for ligne in corps.split("\n"))
+    from markupsafe import escape
+    corps_html = "<br>".join(str(escape(ligne)) for ligne in corps.split("\n"))
 
     reussi = False
     try:
-        reponse = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            headers={"api-key": cle_api, "Content-Type": "application/json", "accept": "application/json"},
-            json={
+        resultats = []
+        for debut in range(0, len(destinataires), LOT_EMAILS):
+            lot = destinataires[debut:debut + LOT_EMAILS]
+            message = {
                 "sender": {"name": expediteur_nom, "email": expediteur_email},
-                "to": [{"email": d} for d in destinataires],
                 "subject": sujet,
                 "htmlContent": corps_html,
                 "textContent": corps,
-            },
-            timeout=10,
-        )
-        reussi = reponse.status_code in (200, 201)
+            }
+            if len(lot) == 1:
+                message["to"] = [{"email": lot[0]}]
+            else:
+                # Un exemplaire par personne : aucun destinataire ne voit
+                # l'adresse des autres (une annonce part à tous les parents).
+                message["messageVersions"] = [{"to": [{"email": d}]} for d in lot]
+            reponse = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": cle_api, "Content-Type": "application/json", "accept": "application/json"},
+                json=message,
+                timeout=20,
+            )
+            resultats.append(reponse.status_code in (200, 201, 202))
+        reussi = all(resultats)
         return reussi
     except Exception:
         current_app.logger.exception("Échec de l'envoi d'un email via Brevo.")
@@ -62,9 +77,10 @@ def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
         # réclamation ("je n'ai rien reçu") ou d'incident (sept. 2026).
         try:
             from app.models.journal_email import JournalEmail
-            db.session.add(JournalEmail(
-                destinataires=", ".join(destinataires), sujet=sujet, reussi=reussi,
-            ))
+            liste = ", ".join(destinataires)
+            if len(liste) > 500:  # taille de la colonne
+                liste = f"{len(destinataires)} destinataires : {liste}"[:497] + "..."
+            db.session.add(JournalEmail(destinataires=liste, sujet=sujet[:200], reussi=reussi))
             db.session.commit()
         except Exception:
             db.session.rollback()
