@@ -65,6 +65,26 @@ class Config:
     # largement un document ou une photo de bonne qualité.
     MAX_CONTENT_LENGTH = 20 * 1024 * 1024
 
+    # Nombre de serveurs web placés devant l'application (nginx = 1).
+    # Indispensable en production : sans cela l'application croit que
+    # tous les visiteurs ont la même adresse (celle de nginx) et que le
+    # site est en http. Laisser 0 quand l'application est jointe en direct.
+    PROXY_COUCHES = int(os.environ.get("PROXY_COUCHES", "0"))
+
+    # Compteur des tentatives de connexion. « memory:// » = un compteur
+    # par processus ; indiquer une adresse Redis pour un compteur commun.
+    RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+
+    # Durée pendant laquelle un processus garde les permissions en mémoire.
+    PERMISSIONS_CACHE_SECONDES = int(os.environ.get("PERMISSIONS_CACHE_SECONDES", "20"))
+
+    # PostgreSQL : vérifier une connexion avant de s'en servir (elle a pu
+    # être coupée pendant une période calme) et la renouveler régulièrement.
+    SQLALCHEMY_ENGINE_OPTIONS = (
+        {"pool_pre_ping": True, "pool_recycle": 1800}
+        if SQLALCHEMY_DATABASE_URI.startswith("postgresql") else {}
+    )
+
     # Déconnexion automatique après ce temps sans activité.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_HEURES", "4")))
     # Blocage d'un compte après des mots de passe faux répétés.
@@ -88,6 +108,8 @@ class TestingConfig(Config):
     TESTING = True
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+    PERMISSIONS_CACHE_SECONDES = 0  # toujours relues : un test voit tout de suite ses changements
 
 
 config = {

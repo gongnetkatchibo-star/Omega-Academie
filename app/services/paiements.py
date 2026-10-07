@@ -25,7 +25,30 @@ def _contexte_frais(annee):
     return cache[annee]
 
 
-def resume_paiements(eleve, annee=None, classe=None):
+def resumes_paiements(eleves, annee=None, classe_de=None):
+    """{eleve_id: résumé} pour toute une liste d'élèves : les paiements
+    de l'année sont lus en une fois, au lieu d'une requête par élève.
+    `classe_de` : {eleve_id: Classe} pour une année passée (voir
+    resume_paiements)."""
+    from collections import defaultdict
+
+    eleves = list(eleves)
+    annee = annee or Eleve.annee_scolaire_courante()
+    requete = Paiement.query.filter_by(annee_scolaire=annee)
+    if len(eleves) <= 500:
+        requete = requete.filter(Paiement.eleve_id.in_([e.id for e in eleves]))
+    par_eleve = defaultdict(list)
+    for paiement in requete.all():
+        par_eleve[paiement.eleve_id].append(paiement)
+    return {
+        e.id: resume_paiements(
+            e, annee, classe=(classe_de[e.id] if classe_de else None), paiements=par_eleve.get(e.id, []),
+        )
+        for e in eleves
+    }
+
+
+def resume_paiements(eleve, annee=None, classe=None, paiements=None):
     """Montant attendu/payé détaillé par échéance, plus un statut global.
     Partagé par Finances et Statistiques — un seul calcul, jamais deux
     définitions différentes du même chiffre.
@@ -35,7 +58,9 @@ def resume_paiements(eleve, annee=None, classe=None):
 
     `classe` (optionnel) : à préciser pour une année passée, où la classe
     actuelle de l'élève (eleve.classe) n'est plus celle de l'année
-    consultée — sinon les montants attendus seraient faux."""
+    consultée — sinon les montants attendus seraient faux.
+    `paiements` (optionnel) : paiements de l'élève pour cette année, déjà
+    lus (voir resumes_paiements)."""
     from app.services.temps import aujourd_hui
 
     annee = annee or Eleve.annee_scolaire_courante()
@@ -52,7 +77,9 @@ def resume_paiements(eleve, annee=None, classe=None):
         "tranche_1": apres_remise(classe.frais_tranche1),
         "tranche_2": apres_remise(classe.frais_tranche2),
     }
-    paiements_annee = [p for p in eleve.paiements if p.annee_scolaire == annee]
+    paiements_annee = (
+        paiements if paiements is not None else [p for p in eleve.paiements if p.annee_scolaire == annee]
+    )
     paye_par_echeance = {ech: 0 for ech in ECHEANCES}
     paye_par_annexe = {}
     for p in paiements_annee:

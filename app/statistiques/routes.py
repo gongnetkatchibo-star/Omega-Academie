@@ -90,7 +90,7 @@ def tableau():
     if vue == "finances":
         par_tranche, resumes = stats_finance_par_tranche(eleves_vue, annee, classe_de)
         nb_par_filtre = {
-            cle: len(filtrer_eleves_par_situation(eleves_vue, annee, cle, classe_de))
+            cle: len(filtrer_eleves_par_situation(eleves_vue, annee, cle, classe_de, resumes=resumes))
             for cle in LIBELLES_FILTRE_FINANCE
         }
         contexte.update(

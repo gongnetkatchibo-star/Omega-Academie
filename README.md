@@ -1,105 +1,86 @@
-# Toumaï Edu School — squelette Flask
+# Toumaï Edu School
 
-Squelette de départ pour la plateforme Omega Académie / Toumaï Edu School :
-structure de dossiers, configuration, et base de données SQLite prêtes à l'emploi.
+Plateforme de gestion scolaire multi-établissements (Flask). Une seule
+adresse pour toutes les écoles : chaque école ne voit que ses propres
+données, et le super-administrateur (rôle `developpeur`) crée et
+administre les écoles depuis la console Plateforme.
 
-## Structure
+## Modules
 
-```
-toumai_edu_school/
-├── app/
-│   ├── __init__.py        # application factory
-│   ├── extensions.py      # instances db, migrate, login_manager
-│   ├── models/
-│   │   ├── ecole.py        # table ecoles (prépare le multi-écoles, Phase 4)
-│   │   └── user.py         # table users (rôles + statut de validation)
-│   ├── main/                # page d'accueil de vérification
-│   ├── templates/
-│   └── static/css/style.css # couleurs Omega Académie (#00387B / #DEA230)
-├── instance/                 # contient toumai.db (généré, non versionné)
-├── config.py
-├── run.py
-├── requirements.txt
-└── .env.example
-```
+| Domaine | Modules |
+|---|---|
+| Scolarité | Classes, élèves (dossier, photo, import Excel, passage de classe), tests de niveau, documents officiels (certificat, attestation) |
+| Pédagogie | Notes par évaluation, coefficients, bulletins PDF, absences, emplois du temps, enseignants, suivi des cours, alertes |
+| Finances | Scolarité par échéances, remises, frais annexes, reçus, caisse, salaires, statistiques |
+| Communication | Annonces, messagerie parent-école, notifications par email (Brevo), bibliothèque numérique, assistant |
+| Administration | Validation des comptes, rôles et permissions, paramètres de l'école, journal d'actions, sauvegarde et restauration |
 
-## Installation
+## Installation (poste de développement)
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate        # Windows : venv\Scripts\activate
-pip install -r requirements.txt
+source venv/bin/activate
+pip install -r requirements-dev.txt
 cp .env.example .env
-```
-
-## Créer la base de données SQLite
-
-```bash
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
-```
-
-(ou plus simple pour démarrer vite : `flask shell` puis `db.create_all()`)
-
-## Créer le tout premier compte (bootstrap)
-
-Personne ne peut approuver le premier secrétaire — il faut donc créer un
-premier compte déjà actif directement en ligne de commande :
-
-```bash
-flask creer-compte-initial
-```
-
-Renseigner un nom, un email, un mot de passe, et le rôle (`fondateur` par
-défaut). Ce compte peut ensuite se connecter et approuver tous les autres.
-
-## Lancer le serveur
-
-```bash
 python3 run.py
 ```
 
-Puis ouvrir http://127.0.0.1:5000 — redirige vers la connexion si aucun
-compte actif n'est connecté.
+Ouvrir http://127.0.0.1:5000. Sans `DATABASE_URL`, la base est un
+fichier SQLite dans `instance/`. Les tables, et les colonnes ajoutées
+par une mise à jour, sont créées automatiquement au démarrage.
 
-## Déjà en place
+Au tout premier lancement, la page `/auth/premiere-configuration` crée
+le compte super-administrateur ; c'est lui qui crée ensuite les écoles.
 
-- Modèle `User` avec les 11 rôles du cahier des charges et un champ
-  `statut` (`en_attente` / `actif` / `refuse`) qui bloque la connexion
-  tant que le secrétaire n'a pas approuvé le compte (§3 du cahier des
-  charges).
-- Modèle `Ecole` avec logo et couleurs, pour préparer le mode marque
-  blanche multi-écoles (§9).
-- **Authentification complète** : inscription (parent, enseignant,
-  personnel administratif) avec statut `en_attente`, connexion qui
-  bloque les comptes non validés, déconnexion.
-- **Validation des comptes** : page `/secretariat/demandes` réservée aux
-  rôles secrétaire/fondateur/administrateur général, avec approbation
-  ou refus (testé avec un contrôle d'accès 403 pour les autres rôles).
-- Commande `flask creer-compte-initial` pour le bootstrap.
+## Tests
 
-## Déjà en place — les 10 modules du cahier des charges
+```bash
+pytest
+```
 
-- **Module 1 — Classes** (`/classes/`) : création manuelle ou en un clic (CP1 à 4ème), frais annuel par classe.
-- **Module 2 — Élèves** (`/eleves/`) : inscription avec matricule automatique, dossier numérique, historique, passage en classe supérieure.
-- **Module 3 — Enseignants** (`/enseignants/`) : profil enseignant (spécialité), affectation à une classe + matière.
-- **Module 4 — Emploi du temps** (`/emploi-du-temps/`) : créneaux par classe, vue « Mon EDT » pour l'enseignant.
-- **Module 5 — Suivi des cours** (`/suivi-cours/`) : chapitres, % de progression, signalement de retard, tableau de bord direction.
-- **Module 6 — Notes et bulletins** (`/notes/`) : saisie par classe/matière/trimestre (barème /10 pour CP1-CM2, /20 au-delà — §6), bulletin avec moyenne générale et classement.
-- **Module 7 — Finances** (`/finances/`) : frais dû/payé/solde par élève, enregistrement manuel des paiements (espèces, Mobile Money, virement).
-- **Module 8 — Bibliothèque numérique** (`/bibliotheque/`) : dépôt de fichiers (livres, cours, exercices, vidéos), téléchargement.
-- **Module 9 — Communication** (`/communication/`) : annonces internes ciblées par rôle (tous, parents, enseignants, élèves).
-- **Module 10 — Assistant IA** (`/assistant/`) : aperçu d'interface uniquement — pas de modèle d'IA connecté.
+La suite utilise une base en mémoire et ne touche jamais la vraie base.
 
-## Limites connues et prochaines étapes réelles
+## Mise en production
 
-Ces points nécessitent des services externes (identifiants, comptes marchands) que je ne peux pas configurer ici :
+Voir [`deploiement/LISEZMOI.md`](deploiement/LISEZMOI.md) : service
+gunicorn (`gunicorn.conf.py`), nginx, sauvegarde nocturne.
 
-- **Mobile Money** (§9) : le module Finances enregistre les paiements manuellement ; l'intégration réelle Orange Money/MTN nécessite leurs API et des identifiants marchands.
-- **SMS/email** (§9) : les annonces restent internes à l'application ; l'envoi réel demande un service comme Twilio ou une passerelle SMS locale.
-- **IA** (Module 10) : l'écran existe mais ne fait aucun appel à un modèle réel — c'est le point d'intégration prévu pour une API d'IA.
-- **PDF des bulletins** (§6) : le bulletin est une page HTML imprimable, pas encore un vrai fichier PDF généré.
-- **Multi-écoles / marque blanche** (§9, Phase 4) : l'architecture reste mono-école pour l'instant ; passer en SaaS demandera de relier Classe/Eleve à `Ecole` partout et un panneau super-administrateur.
+Commandes utiles :
 
-## Prochaine étape suggérée
+```bash
+flask creer-compte-initial      # créer un compte actif en ligne de commande
+flask sauvegarder-ecoles        # une archive de sauvegarde par école
+```
+
+## Envoi automatique vers GitHub
+
+`outils/installer_envoi_auto.sh` installe sur le poste de développement
+un service qui crée un commit et le pousse dès que le dossier change.
+
+```bash
+bash outils/installer_envoi_auto.sh            # installer
+bash outils/installer_envoi_auto.sh --etat     # état et derniers envois
+bash outils/installer_envoi_auto.sh --retirer  # désinstaller
+```
+
+## Organisation du code
+
+```
+app/
+├── __init__.py      création de l'application, sécurité, modules
+├── models/          tables de la base (une école = un ecole_id partout)
+├── services/        calculs partagés : moyennes, bulletins, paiements,
+│                    statistiques, sauvegarde, isolement entre écoles
+├── <module>/        routes de chaque module
+├── templates/       pages
+└── static/          styles, images
+tests/               tests automatiques
+deploiement/         modèles pour le serveur
+outils/              envoi automatique vers GitHub
+```
+
+## Ce qui n'est pas encore branché
+
+- SMS et WhatsApp : les notifications partent par email uniquement.
+- Paiement Mobile Money en ligne : les paiements sont saisis par le comptable.
+- Assistant : répond à quelques questions par mots-clés, sans modèle d'IA.

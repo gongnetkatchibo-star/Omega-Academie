@@ -1,0 +1,19 @@
+# Service de l'application (à copier dans /etc/systemd/system/).
+# Adapter User, WorkingDirectory et les chemins si le dossier diffère.
+[Unit]
+Description=Toumaï Edu School (gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=toumai
+Group=toumai
+WorkingDirectory=/opt/toumai_edu_school
+EnvironmentFile=/opt/toumai_edu_school/.env
+Environment=FLASK_ENV=production
+Environment=PROXY_COUCHES=1
+ExecStart=/opt/toumai_edu_school/venv/bin/gunicorn run:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+# Sauvegarde de tous les établissements (lancée par toumai-sauvegarde.timer).
+[Unit]
+Description=Sauvegarde Toumaï Edu School
+
+[Service]
+Type=oneshot
+User=toumai
+Group=toumai
+WorkingDirectory=/opt/toumai_edu_school
+EnvironmentFile=/opt/toumai_edu_school/.env
+Environment=FLASK_ENV=production
+Environment=FLASK_APP=run.py
+ExecStart=/opt/toumai_edu_school/venv/bin/flask sauvegarder-ecoles --dossier /var/sauvegardes/toumai --garder 30

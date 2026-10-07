@@ -49,6 +49,19 @@ def exporter():
     un CSV par table, lisible dans un tableur. Les CSV excluent le mot
     de passe (haché) des comptes ; le fichier de restauration le garde,
     sinon personne ne pourrait se reconnecter après restauration."""
+    tampon, nom_fichier = construire_archive()
+
+    from app.services.journal import journaliser
+    journaliser("sauvegarde_exportee", details=nom_fichier)
+    db.session.commit()
+
+    return send_file(tampon, as_attachment=True, download_name=nom_fichier, mimetype="application/zip")
+
+
+def construire_archive():
+    """Archive de sauvegarde de l'école courante : (contenu, nom de
+    fichier). Utilisée par le téléchargement manuel et par la sauvegarde
+    planifiée (flask sauvegarder-ecoles)."""
     tampon = io.BytesIO()
     with zipfile.ZipFile(tampon, "w", zipfile.ZIP_DEFLATED) as archive:
         for modele in _modeles_a_exporter():
@@ -77,9 +90,4 @@ def exporter():
     tampon.seek(0)
     sigle = (ecole.sigle if ecole and ecole.sigle else "ecole").lower()
     nom_fichier = f"sauvegarde_{sigle}_{maintenant().strftime('%Y%m%d_%H%M')}.zip"
-
-    from app.services.journal import journaliser
-    journaliser("sauvegarde_exportee", details=nom_fichier)
-    db.session.commit()
-
-    return send_file(tampon, as_attachment=True, download_name=nom_fichier, mimetype="application/zip")
+    return tampon, nom_fichier

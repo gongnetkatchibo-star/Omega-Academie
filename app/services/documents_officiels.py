@@ -7,6 +7,7 @@ from datetime import date as date_cls
 
 from app.extensions import db
 from app.models.numero_document import NumeroDocument
+from app.services.temps import aujourd_hui  # date de l'école, pas celle du serveur
 
 
 
@@ -33,7 +34,7 @@ MOIS_LETTRES = [
 def date_officielle(une_date=None):
     """Formate une date comme sur le document original : "1er juin 2026",
     "5 septembre 2026" — jamais saisie à la main, toujours calculée."""
-    une_date = une_date or date_cls.today()
+    une_date = une_date or aujourd_hui()
     jour = une_date.day
     jour_texte = "1er" if jour == 1 else str(jour)
     return f"{jour_texte} {MOIS_LETTRES[une_date.month - 1]} {une_date.year}"
@@ -52,7 +53,7 @@ def numero_reference(type_document, annee=None):
     année — ex. "003/CSOA/CERT/2026". S'incrémente tout seul, jamais
     saisi à la main, jamais de doublon possible même si deux personnes
     génèrent un document au même moment (verrouillage de ligne)."""
-    annee = annee or date_cls.today().year
+    annee = annee or aujourd_hui().year
 
     compteur = (
         NumeroDocument.query

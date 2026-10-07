@@ -6,7 +6,7 @@ from app.models.eleve import Eleve
 from app.models.paiement import Paiement, MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
 from app.finances import finances_bp
 from app.utils import roles_required
-from app.services.paiements import enregistrer_paiement, resume_paiements, analyser_echeance
+from app.services.paiements import enregistrer_paiement, resume_paiements, resumes_paiements, analyser_echeance
 from app.utils import montant_entier
 from app.services.journal import journaliser
 from app.models.mouvement_caisse import MouvementCaisse
@@ -34,12 +34,15 @@ def liste():
         # Le retard dépend des paiements et des dates limites : il se
         # calcule élève par élève, puis on pagine le résultat.
         from app.services.pagination import paginer_liste
-        tous = [(e, resume_paiements(e)) for e in requete.order_by(Eleve.nom_complet).all()]
+        eleves = requete.order_by(Eleve.nom_complet).all()
+        resumes = resumes_paiements(eleves)
+        tous = [(e, resumes[e.id]) for e in eleves]
         page = paginer_liste([(e, r) for e, r in tous if r["retard"] > 0])
         couples = list(page)
     else:
         page = paginer(requete.order_by(Eleve.nom_complet))
-        couples = [(e, resume_paiements(e)) for e in page]
+        resumes = resumes_paiements(page.elements)
+        couples = [(e, resumes[e.id]) for e in page]
     lignes = [
         {"eleve": e, "du": r["du"], "paye": r["paye"], "solde": r["solde"], "statut": r["statut"], "retard": r["retard"]}
         for e, r in couples

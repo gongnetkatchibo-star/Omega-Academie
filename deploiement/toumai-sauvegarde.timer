@@ -1,0 +1,11 @@
+# Chaque nuit à 1 h (heure du serveur) ; rattrapée au démarrage si le
+# serveur était éteint à cette heure-là.
+[Unit]
+Description=Sauvegarde nocturne Toumaï Edu School
+
+[Timer]
+OnCalendar=*-*-* 01:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

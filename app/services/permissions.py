@@ -9,20 +9,34 @@ décision prend le dessus sur la valeur par défaut — pour CE rôle et CE
 module précisément, sans toucher au reste.
 """
 
+import time
+
+from flask import current_app
+
 from app.models.permission import Permission
 
-_cache = {}
+# Les permissions sont relues en base au plus toutes les N secondes
+# (PERMISSIONS_CACHE_SECONDES) : chaque processus du serveur garde sa
+# propre copie, et un changement fait dans l'un doit atteindre les
+# autres sans redémarrage. Auparavant la copie n'était jamais relue une
+# fois remplie — et relue à CHAQUE vérification tant qu'elle était vide.
+_CLE = "permissions_cache"
 
 
 def _charger():
-    if not _cache:
-        for p in Permission.query.all():
-            _cache[(p.role, p.module)] = p.autorise
-    return _cache
+    etat = current_app.extensions.get(_CLE)
+    duree = current_app.config.get("PERMISSIONS_CACHE_SECONDES", 20)
+    if etat is None or time.monotonic() - etat["lu_le"] >= duree:
+        etat = {
+            "lu_le": time.monotonic(),
+            "valeurs": {(p.role, p.module): p.autorise for p in Permission.query.all()},
+        }
+        current_app.extensions[_CLE] = etat
+    return etat["valeurs"]
 
 
 def vider_cache():
-    _cache.clear()
+    current_app.extensions.pop(_CLE, None)
 
 
 def role_a_acces(role, module, roles_par_defaut):

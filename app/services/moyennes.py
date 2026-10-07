@@ -42,23 +42,29 @@ def _classe_et_notes(eleve, annee_scolaire=None, classe=None):
     return classe, [n for n in notes if n.classe_id == classe.id]
 
 
-def _moyenne_annuelle(classe, notes):
+def _moyenne_annuelle(classe, notes, coefficients=None, poids_evaluation=None):
     """Même calcul que le bulletin annuel (services/bulletins.py) : par
     trimestre, moyenne de chaque matière pondérée par le coefficient des
     évaluations, puis moyenne générale pondérée par le coefficient des
-    matières ; l'année est la moyenne des trimestres notés."""
+    matières ; l'année est la moyenne des trimestres notés.
+
+    `coefficients` ({matière: coefficient} de la classe) et
+    `poids_evaluation` ({id d'évaluation: coefficient}) sont lus en base
+    s'ils ne sont pas fournis."""
     from collections import defaultdict
     from app.models.bulletin import CoefficientMatiere
     from app.models.evaluation import Evaluation
 
     bareme = bareme_pour_classe(classe)
-    coefficients = {
-        c.matiere: c.coefficient for c in CoefficientMatiere.query.filter_by(classe_id=classe.id).all()
-    }
-    ids = {n.evaluation_id for n in notes if n.evaluation_id}
-    poids_evaluation = (
-        {e.id: e.coefficient for e in Evaluation.query.filter(Evaluation.id.in_(ids)).all()} if ids else {}
-    )
+    if coefficients is None:
+        coefficients = {
+            c.matiere: c.coefficient for c in CoefficientMatiere.query.filter_by(classe_id=classe.id).all()
+        }
+    if poids_evaluation is None:
+        ids = {n.evaluation_id for n in notes if n.evaluation_id}
+        poids_evaluation = (
+            {e.id: e.coefficient for e in Evaluation.query.filter(Evaluation.id.in_(ids)).all()} if ids else {}
+        )
 
     par_trimestre = {t: defaultdict(list) for t in TRIMESTRES}
     for n in notes:
@@ -91,6 +97,60 @@ def moyenne_et_reussite(eleve, annee_scolaire=None, classe=None):
     if moyenne is None:
         return None, None
     return moyenne, moyenne >= seuil_reussite_pour_classe(classe)
+
+
+def moyennes_et_reussites(eleves, annee_scolaire=None):
+    """{eleve_id: (moyenne annuelle, a réussi)} pour toute une liste
+    d'élèves, en quelques requêtes au lieu de trois par élève — pour les
+    écrans qui parcourent toute l'école (statistiques, alertes). Même
+    résultat que moyenne_et_reussite() élève par élève."""
+    from collections import defaultdict
+    from app.models.bulletin import CoefficientMatiere
+    from app.models.classe import Classe
+    from app.models.evaluation import Evaluation
+
+    eleves = list(eleves)
+    resultats = {e.id: (None, None) for e in eleves}
+    ids = [e.id for e in eleves]
+
+    notes_par_eleve = defaultdict(list)
+    for debut in range(0, len(ids), 500):
+        requete = Note.query.filter(Note.eleve_id.in_(ids[debut:debut + 500]))
+        if annee_scolaire:
+            requete = requete.filter_by(annee_scolaire=annee_scolaire)
+        for note in requete.order_by(Note.id).all():
+            notes_par_eleve[note.eleve_id].append(note)
+    if not notes_par_eleve:
+        return resultats
+
+    classes = {c.id: c for c in Classe.query.all()}
+    coefficients = defaultdict(dict)
+    for c in CoefficientMatiere.query.all():
+        coefficients[c.classe_id][c.matiere] = c.coefficient
+    evaluations = Evaluation.query
+    if annee_scolaire:
+        evaluations = evaluations.filter_by(annee_scolaire=annee_scolaire)
+    poids_evaluation = {e.id: e.coefficient for e in evaluations.all()}
+
+    for eleve in eleves:
+        notes = notes_par_eleve.get(eleve.id)
+        if not notes:
+            continue
+        # Même choix de classe que _classe_et_notes().
+        if any(n.classe_id == eleve.classe_id for n in notes):
+            classe_id = eleve.classe_id
+        else:
+            classe_id = notes[-1].classe_id
+        classe = classes.get(classe_id)
+        if classe is None:
+            continue
+        moyenne = _moyenne_annuelle(
+            classe, [n for n in notes if n.classe_id == classe_id],
+            coefficients.get(classe_id, {}), poids_evaluation,
+        )
+        if moyenne is not None:
+            resultats[eleve.id] = (moyenne, moyenne >= seuil_reussite_pour_classe(classe))
+    return resultats
 
 
 def moyenne_eleve(eleve, annee_scolaire=None, classe=None):

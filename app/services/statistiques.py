@@ -4,18 +4,23 @@ même chiffre (même principe que app/services/moyennes.py)."""
 
 from app.models.eleve import Eleve
 from app.models.paiement import Paiement
-from app.services.moyennes import moyenne_et_reussite
+from app.services.moyennes import moyennes_et_reussites
 
 
-def stats_reussite(eleves, annee):
+def stats_reussite(eleves, annee, resultats=None):
     """Moyenne générale + taux de réussite/échec pour un ensemble
     d'élèves — seuls ceux ayant au moins une note comptent (on ne peut
-    pas juger un élève sans notes)."""
+    pas juger un élève sans notes).
+
+    `resultats` (optionnel) : {eleve_id: (moyenne, a réussi)} déjà
+    calculés, pour ne pas refaire le calcul à chaque sous-groupe."""
+    if resultats is None:
+        resultats = moyennes_et_reussites(eleves, annee)
     moyennes = []
     reussites = 0
     echecs = 0
     for e in eleves:
-        moyenne, reussi = moyenne_et_reussite(e, annee)
+        moyenne, reussi = resultats.get(e.id, (None, None))
         if moyenne is None:
             continue
         moyennes.append(moyenne)
@@ -42,9 +47,10 @@ def tableau_par_sexe(eleves, annee):
         "Filles": [e for e in eleves if e.sexe == "F"],
         "Total": eleves,
     }
+    resultats = moyennes_et_reussites(eleves, annee)
     resultat = {}
     for colonne, groupe in colonnes.items():
-        s = stats_reussite(groupe, annee)
+        s = stats_reussite(groupe, annee, resultats)
         resultat[colonne] = {
             "effectif": len(groupe),
             "taux_reussite": s["taux_reussite"],
@@ -62,12 +68,10 @@ def stats_financieres(eleves, annee, classe_de=None, resumes=None):
     place de `eleve.classe` — indispensable pour une année passée, où la
     classe actuelle de l'élève n'est plus celle de l'année consultée.
     `resumes` (optionnel) : {eleve_id: résumé} déjà calculés."""
-    from app.services.paiements import resume_paiements
+    from app.services.paiements import resumes_paiements
 
     if resumes is None:
-        resumes = {
-            e.id: resume_paiements(e, annee, classe=(classe_de[e.id] if classe_de else None)) for e in eleves
-        }
+        resumes = resumes_paiements(eleves, annee, classe_de)
     lignes = [resumes[e.id] for e in eleves]
     total_a_recouvrer = sum(r["du"] for r in lignes)
     total_encaisse = sum(r["paye"] for r in lignes)
@@ -96,9 +100,9 @@ def stats_finance_par_tranche(eleves, annee, classe_de=None):
     """Statistiques financières ventilées par échéance (Inscription,
     Tranche 1, Tranche 2) — même principe que le tableau par sexe, mais
     pour l'argent (document complémentaire, sept. 2026)."""
-    from app.services.paiements import resume_paiements
+    from app.services.paiements import resumes_paiements
 
-    resumes = {e.id: resume_paiements(e, annee, classe=(classe_de[e.id] if classe_de else None)) for e in eleves}
+    resumes = resumes_paiements(eleves, annee, classe_de)
     par_tranche = {}
     for i, cle in enumerate(["inscription", "tranche_1", "tranche_2"]):
         attendu = sum(r["echeances"][i]["attendu"] for r in resumes.values())
@@ -111,14 +115,17 @@ def stats_finance_par_tranche(eleves, annee, classe_de=None):
     return par_tranche, resumes
 
 
-def filtrer_eleves_par_situation(eleves, annee, filtre, classe_de=None):
+def filtrer_eleves_par_situation(eleves, annee, filtre, classe_de=None, resumes=None):
     """Retourne les élèves correspondant à un filtre de situation de
-    paiement — chaque liste est ensuite téléchargeable telle quelle."""
-    from app.services.paiements import resume_paiements
+    paiement — chaque liste est ensuite téléchargeable telle quelle.
+    `resumes` (optionnel) : {eleve_id: résumé} déjà calculés."""
+    from app.services.paiements import resumes_paiements
 
+    if resumes is None:
+        resumes = resumes_paiements(eleves, annee, classe_de)
     resultat = []
     for e in eleves:
-        r = resume_paiements(e, annee, classe=(classe_de[e.id] if classe_de else None))
+        r = resumes[e.id]
         paye = {ech["cle"]: ech["paye"] >= ech["attendu"] and ech["attendu"] > 0 for ech in r["echeances"]}
         if filtre == "inscription_seule" and paye["inscription"] and not paye["tranche_1"] and not paye["tranche_2"]:
             resultat.append(e)

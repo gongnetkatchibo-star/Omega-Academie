@@ -45,6 +45,14 @@ def create_app(config_name=None):
         app.config["SECRET_KEY"] = secrets.token_hex(32)
         app.logger.warning("SECRET_KEY absente : clé temporaire générée. Définis SECRET_KEY sur le serveur.")
 
+    if app.config.get("PROXY_COUCHES"):
+        # Derrière nginx : retrouver la vraie adresse du visiteur et le
+        # fait que la connexion est en https (limite de tentatives par
+        # personne, liens https dans les emails, cookie sécurisé).
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        couches = app.config["PROXY_COUCHES"]
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=couches, x_proto=couches, x_host=couches)
+
     db.init_app(app)
     from app.services.tenant import installer_isolement
     installer_isolement(app)
@@ -369,6 +377,9 @@ def create_app(config_name=None):
         db.session.add(user)
         db.session.commit()
         click.echo(f"Compte {role} créé et actif : {email}")
+
+    from app.sauvegarde.commandes import enregistrer_commandes
+    enregistrer_commandes(app)
 
     # Création automatique des tables manquantes à chaque démarrage —
     # ne touche jamais aux tables/données déjà existantes. Nécessaire sur
