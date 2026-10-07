@@ -60,6 +60,24 @@ def _conflit_creneau(classe_id, enseignant_id, jour, heure_debut, heure_fin, exc
     return None
 
 
+@emploi_du_temps_bp.route("/")
+@login_required
+@roles_required(*ROLES_GESTION)
+def index():
+    """Entrée du menu : les classes de l'année, chacune avec son emploi du temps."""
+    from app.models.eleve import Eleve
+    from app.services.cycles import cycle_du_role, filtrer_par_cycle
+
+    classes = filtrer_par_cycle(
+        Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau, Classe.nom).all(),
+        cycle_du_role(current_user.role),
+    )
+    return render_template(
+        "classes/choisir.html", classes=classes, titre="Emplois du temps", icone_cle="emploi_du_temps",
+        endpoint="emploi_du_temps.classe", libelle="Emploi du temps",
+    )
+
+
 @emploi_du_temps_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_LECTURE)

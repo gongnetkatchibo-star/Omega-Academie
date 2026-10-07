@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ titre }}{% endblock %}
+{% block content %}
+  {{ fil_ariane((titre, None)) }}
+  {{ banniere(icone_cle, titre) }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% if classes %}
+    <table class="table">
+      <thead><tr><th>Classe</th><th>Année</th><th></th></tr></thead>
+      <tbody>
+        {% for c in classes %}
+          <tr>
+            <td><strong>{{ c.nom }}</strong></td>
+            <td>{{ c.annee_scolaire }}</td>
+            <td><a href="{{ url_for(endpoint, classe_id=c.id) }}">{{ libelle }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucune classe à afficher.") }}
+  {% endif %}
+{% endblock %}

@@ -21,12 +21,19 @@ ROLES_SUPPRESSION = ["fondateur", "administrateur_general"]
 @login_required
 @roles_required(*ROLES_GESTION, module="finances")
 def liste():
-    eleves = Eleve.query.filter_by(actif=True).order_by(Eleve.nom_complet).all()
+    from app.services.pagination import paginer
+
+    terme = request.args.get("q", "").strip()
+    requete = Eleve.query.filter_by(actif=True)
+    if terme:
+        motif = f"%{terme}%"
+        requete = requete.filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
+    page = paginer(requete.order_by(Eleve.nom_complet))
     lignes = []
-    for e in eleves:
+    for e in page:
         r = resume_paiements(e)
         lignes.append({"eleve": e, "du": r["du"], "paye": r["paye"], "solde": r["solde"], "statut": r["statut"]})
-    return render_template("finances/liste.html", lignes=lignes)
+    return render_template("finances/liste.html", lignes=lignes, page=page, terme=terme)
 
 
 @finances_bp.route("/<int:eleve_id>/relancer", methods=["POST"])

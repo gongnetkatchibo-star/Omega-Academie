@@ -1298,8 +1298,31 @@ textarea {
   font-weight: 600;
   font-size: 16px;
   text-align: center;
-  padding: 14px 20px;
+  padding: 10px 20px;
   letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 30px;
+}
+
+.barre-devise-texte {
+  flex: 1;
+}
+
+.recherche-globale {
+  margin: 0;
+  flex: 0 0 240px;
+  max-width: 40%;
+}
+
+.recherche-globale input[type=search] {
+  margin: 0;
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 15px;
 }
 
 /* Tableau de bord : uniquement le logo de l'école */
@@ -1553,3 +1576,84 @@ textarea {
 .guide-bouton:hover {
   background: #0c4d87;
 }
+
+/* Onglets de période (bulletins) */
+.onglets-periode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px 0;
+}
+
+.onglets-periode a {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #cfd8e0;
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.onglets-periode a.actif {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* Pagination et recherche */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.pagination a, .pagination-inactif {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #cfd8e0;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.pagination-inactif {
+  color: #9aa5b1;
+  background: transparent;
+}
+
+.pagination-resume {
+  color: #4a5563;
+  font-size: 15px;
+}
+
+.barre-recherche {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px;
+  align-items: center;
+  max-width: 520px;
+  margin: 0 0 16px 0;
+}
+
+.barre-recherche input[type=search] {
+  flex: 1;
+  margin: 0;
+}
+
+.barre-recherche button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.barre-recherche-large { max-width: 760px; }
+.barre-recherche select { margin: 0; width: auto; }
+
+.table-bulletin th:first-child, .table-bulletin td:first-child { width: 20%; }
+.table-bulletin th:nth-child(3), .table-bulletin td:nth-child(3),
+.table-bulletin th:nth-child(5), .table-bulletin td:nth-child(5) { width: 8%; }

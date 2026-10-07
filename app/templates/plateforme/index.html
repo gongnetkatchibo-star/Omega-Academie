@@ -27,6 +27,7 @@
                   <button type="submit">Entrer</button>
                 </form>
                 <a href="{{ url_for('plateforme.modifier', ecole_id=e.id) }}">Modifier</a>
+                <a href="{{ url_for('plateforme.restaurer', ecole_id=e.id) }}">Restaurer</a>
                 <form method="post" action="{{ url_for('plateforme.basculer', ecole_id=e.id) }}" onsubmit="return confirm({{ ((('Suspendre ' if e.actif else 'Réactiver ') ~ e.nom ~ ' ?'))|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="{{ 'bouton-danger' if e.actif else '' }}">{{ "Suspendre" if e.actif else "Réactiver" }}</button>

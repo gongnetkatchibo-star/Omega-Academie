@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Recherche{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Recherche", None)) }}
+  <h1>Recherche</h1>
+  <form method="get" class="barre-recherche" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="Nom, matricule ou email" aria-label="Recherche" minlength="2" required autofocus>
+    <button type="submit">Chercher</button>
+  </form>
+
+  {% if terme|length >= 2 %}
+    {% if not (eleves or enseignants or comptes) %}
+      {{ etat_vide("Aucun résultat pour « " ~ terme ~ " ».") }}
+    {% endif %}
+
+    {% if eleves %}
+      <h2>Élèves ({{ eleves|length }}{{ "+" if eleves|length == 30 }})</h2>
+      <table class="table">
+        <thead><tr><th>Élève</th><th>Matricule</th><th>Classe</th><th></th></tr></thead>
+        <tbody>
+          {% for e in eleves %}
+            <tr>
+              <td><a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">{{ e.nom_complet }}</a></td>
+              <td>{{ e.matricule }}</td>
+              <td>{{ e.classe.nom }}</td>
+              <td>
+                <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">Bulletin</a>
+                {% if voit_finances %} · <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">Scolarité</a>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if enseignants %}
+      <h2>Enseignants ({{ enseignants|length }})</h2>
+      <table class="table">
+        <thead><tr><th>Enseignant</th><th>Email</th></tr></thead>
+        <tbody>
+          {% for p in enseignants %}
+            <tr><td><a href="{{ url_for('enseignants.detail', enseignant_id=p.id) }}">{{ p.user.nom_complet }}</a></td><td>{{ p.user.email }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if comptes %}
+      <h2>Comptes ({{ comptes|length }})</h2>
+      <table class="table">
+        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for u in comptes %}
+            <tr><td><a href="{{ url_for('dev.utilisateurs', q=u.email) }}">{{ u.nom_complet }}</a></td><td>{{ u.email }}</td><td>{{ u.role }}</td><td>{{ u.statut }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endif %}
+{% endblock %}

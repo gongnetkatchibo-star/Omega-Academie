@@ -135,6 +135,52 @@ def index():
     )
 
 
+@main_bp.route("/recherche")
+@login_required
+def recherche():
+    """Recherche par nom dans tout ce que le compte a le droit de voir :
+    élèves, enseignants, comptes."""
+    from app.models.classe import Classe
+    from app.models.enseignant import Enseignant
+    from app.models.user import User
+    from app.services.cycles import cycle_du_role, filtrer_par_cycle
+    from app.services.permissions import role_a_acces
+
+    role = current_user.role
+    direction = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general"]
+    voit_eleves = role == "enseignant" or role_a_acces(role, "classes", ["secretaire"] + direction)
+    voit_enseignants = role_a_acces(role, "enseignants", direction + ["responsable_pedagogique"])
+    voit_comptes = role_a_acces(role, "gestion_roles", ["developpeur"])
+    if not (voit_eleves or voit_enseignants or voit_comptes):
+        abort(403)
+
+    terme = request.args.get("q", "").strip()
+    eleves = enseignants = comptes = []
+    if len(terme) >= 2:
+        motif = f"%{terme}%"
+        if voit_eleves:
+            du_cycle = [c.id for c in filtrer_par_cycle(Classe.query.all(), cycle_du_role(role))]
+            eleves = (
+                Eleve.query.filter(Eleve.actif.is_(True), Eleve.classe_id.in_(du_cycle))
+                .filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
+                .order_by(Eleve.nom_complet).limit(30).all()
+            )
+        if voit_enseignants:
+            enseignants = (
+                Enseignant.query.join(User, Enseignant.user_id == User.id)
+                .filter(User.nom_complet.ilike(motif)).order_by(User.nom_complet).limit(15).all()
+            )
+        if voit_comptes:
+            comptes = (
+                User.query.filter(db.or_(User.nom_complet.ilike(motif), User.email.ilike(motif)))
+                .order_by(User.nom_complet).limit(15).all()
+            )
+    return render_template(
+        "main/recherche.html", terme=terme, eleves=eleves, enseignants=enseignants, comptes=comptes,
+        voit_finances=role_a_acces(role, "finances", ["comptable", "fondateur", "administrateur_general"]),
+    )
+
+
 @main_bp.route("/guide/<cle>")
 @login_required
 def guide(cle):

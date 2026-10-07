@@ -29,6 +29,7 @@
         {% endfor %}
       </tbody>
     </table>
+    {{ pagination(entrees) }}
   {% else %}
     {{ etat_vide("Aucun email envoyé pour l'instant.") }}
   {% endif %}

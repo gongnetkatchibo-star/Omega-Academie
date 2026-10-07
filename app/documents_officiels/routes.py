@@ -55,6 +55,26 @@ def _generer(eleve_id, type_doc):
     return reponse
 
 
+@documents_officiels_bp.route("/")
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def index():
+    """Entrée du menu : retrouver un élève et éditer ses documents."""
+    from flask_login import current_user
+    from app.models.classe import Classe
+    from app.services.cycles import cycle_du_role, filtrer_par_cycle
+    from app.services.pagination import paginer
+
+    terme = request.args.get("q", "").strip()
+    classes = filtrer_par_cycle(Classe.query.all(), cycle_du_role(current_user.role))
+    requete = Eleve.query.filter(Eleve.actif.is_(True), Eleve.classe_id.in_([c.id for c in classes]))
+    if terme:
+        motif = f"%{terme}%"
+        requete = requete.filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
+    page = paginer(requete.order_by(Eleve.nom_complet))
+    return render_template("documents_officiels/index.html", page=page, terme=terme)
+
+
 @documents_officiels_bp.route("/eleve/<int:eleve_id>/certificat", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")

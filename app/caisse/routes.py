@@ -46,10 +46,12 @@ def liste():
         lignes.append({"mouvement": m, "solde": solde})
 
     lignes.reverse()
+    from app.services.pagination import paginer_liste
+    page = paginer_liste(lignes)
 
     return render_template(
         "caisse/liste.html",
-        lignes=lignes,
+        lignes=page, page=page,
         solde_actuel=solde,
         total_recettes=total_recettes,
         total_depenses=total_depenses,

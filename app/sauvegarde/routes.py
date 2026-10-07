@@ -4,6 +4,7 @@ import zipfile
 from datetime import datetime
 
 from flask import send_file
+from sqlalchemy import LargeBinary
 from flask_login import login_required
 
 from app.extensions import db
@@ -42,14 +43,18 @@ def _modeles_a_exporter():
 @login_required
 @roles_required("developpeur", module="sauvegarde")
 def exporter():
-    """Sauvegarde manuelle, indépendante de l'hébergeur — un filet de
-    sécurité que la direction peut déclencher à tout moment, en plus des
-    sauvegardes automatiques éventuelles de la base gérée (sept. 2026).
-    Exclut volontairement le mot de passe (haché) des comptes."""
+    """Sauvegarde manuelle, indépendante de l'hébergeur. L'archive
+    contient un fichier complet pour la restauration (donnees.json) et
+    un CSV par table, lisible dans un tableur. Les CSV excluent le mot
+    de passe (haché) des comptes ; le fichier de restauration le garde,
+    sinon personne ne pourrait se reconnecter après restauration."""
     tampon = io.BytesIO()
     with zipfile.ZipFile(tampon, "w", zipfile.ZIP_DEFLATED) as archive:
         for modele in _modeles_a_exporter():
-            colonnes = [c.name for c in modele.__table__.columns if c.name != "mot_de_passe_hash"]
+            colonnes = [
+                c.name for c in modele.__table__.columns
+                if c.name != "mot_de_passe_hash" and not isinstance(c.type, LargeBinary)
+            ]
             lignes = modele.query.all()
 
             sortie = io.StringIO()
@@ -60,9 +65,15 @@ def exporter():
 
             archive.writestr(f"{modele.__tablename__}.csv", sortie.getvalue())
 
+        from app.services.tenant import ecole_courante
+        from app.services.sauvegarde import exporter_ecole, NOM_FICHIER_DONNEES
+        import json
+        ecole = ecole_courante()
+        if ecole is not None:
+            # Fichier complet, celui que la restauration relit.
+            archive.writestr(NOM_FICHIER_DONNEES, json.dumps(exporter_ecole(ecole), ensure_ascii=False))
+
     tampon.seek(0)
-    from app.services.tenant import ecole_courante
-    ecole = ecole_courante()
     sigle = (ecole.sigle if ecole and ecole.sigle else "ecole").lower()
     nom_fichier = f"sauvegarde_{sigle}_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.zip"
 

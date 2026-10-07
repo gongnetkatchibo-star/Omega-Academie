@@ -21,19 +21,77 @@ ROLES_LECTURE = ROLES_GESTION + ["enseignant"]
 @login_required
 @roles_required(*ROLES_LECTURE)
 def liste():
+    from app.services.pagination import paginer
+
     classe_id = request.args.get("classe_id", type=int)
+    terme = request.args.get("q", "").strip()
     requete = Eleve.query.filter_by(actif=True)
     if classe_id:
         requete = requete.filter_by(classe_id=classe_id)
-    eleves = requete.order_by(Eleve.nom_complet).all()
+    if terme:
+        motif = f"%{terme}%"
+        requete = requete.filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
     classes = Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau).all()
 
     cycle = cycle_du_role(current_user.role)
     if cycle:
-        eleves = [e for e in eleves if classe_dans_le_cycle(e.classe, cycle)]
+        du_cycle = [c.id for c in filtrer_par_cycle(Classe.query.all(), cycle)]
+        requete = requete.filter(Eleve.classe_id.in_(du_cycle))
         classes = filtrer_par_cycle(classes, cycle)
 
-    return render_template("eleves/liste.html", eleves=eleves, classes=classes, classe_id=classe_id)
+    page = paginer(requete.order_by(Eleve.nom_complet))
+    return render_template("eleves/liste.html", page=page, classes=classes, classe_id=classe_id, terme=terme)
+
+
+def _classes_importables():
+    return filtrer_par_cycle(
+        Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau, Classe.nom).all(),
+        cycle_du_role(current_user.role),
+    )
+
+
+@eleves_bp.route("/importer/modele")
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def importer_modele():
+    from flask import send_file
+    from app.services.import_eleves import modele_excel
+
+    return send_file(
+        modele_excel(_classes_importables()), as_attachment=True, download_name="modele_import_eleves.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@eleves_bp.route("/importer", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def importer():
+    """Import Excel : tout le fichier est contrôlé avant d'écrire quoi
+    que ce soit ; à la moindre erreur, rien n'est importé."""
+    from app.services.import_eleves import lire_fichier, importer as importer_lignes
+    from app.services.journal import journaliser
+
+    classes = _classes_importables()
+    erreurs = []
+    if request.method == "POST":
+        fichier = request.files.get("fichier")
+        if not fichier or not fichier.filename:
+            erreurs = ["Choisis le fichier Excel à importer."]
+        elif not fichier.filename.lower().endswith(".xlsx"):
+            erreurs = ["Le fichier doit être au format Excel (.xlsx)."]
+        else:
+            lignes, erreurs = lire_fichier(fichier.stream, classes)
+            if not erreurs:
+                crees, deja = importer_lignes(lignes)
+                journaliser("import_eleves", details=f"{crees} élève(s) importé(s), {deja} déjà présent(s)")
+                db.session.commit()
+                message = f"{crees} élève(s) importé(s)."
+                if deja:
+                    message += f" {deja} déjà présent(s) dans leur classe, laissé(s) tel(s) quel(s)."
+                flash(message, "info")
+                return redirect(url_for("eleves.liste"))
+    return render_template("eleves/importer.html", classes=classes, erreurs=erreurs)
 
 
 def _lignes_export_eleves(classe_id=None, cycle=None):

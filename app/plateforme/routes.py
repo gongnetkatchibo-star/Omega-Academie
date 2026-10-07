@@ -151,6 +151,45 @@ def basculer(ecole_id):
     return redirect(url_for("plateforme.index"))
 
 
+@plateforme_bp.route("/<int:ecole_id>/restaurer", methods=["GET", "POST"])
+@login_required
+@super_admin_requis
+def restaurer(ecole_id):
+    """Remet en place une sauvegarde : les données actuelles de l'école
+    sont remplacées. Le sigle doit être retapé pour confirmer."""
+    import zipfile
+    from app.services.sauvegarde import lire_archive, restaurer_ecole, ErreurRestauration
+
+    ecole = db.session.get(Ecole, ecole_id) or abort(404)
+    if request.method == "POST":
+        fichier = request.files.get("archive")
+        attendu = (ecole.sigle or ecole.nom).strip().lower()
+        if request.form.get("confirmation", "").strip().lower() != attendu:
+            flash("Confirmation incorrecte : rien n'a été modifié.", "error")
+        elif not fichier or not fichier.filename:
+            flash("Choisis le fichier de sauvegarde (.zip).", "error")
+        else:
+            try:
+                with zipfile.ZipFile(fichier.stream) as archive:
+                    donnees = lire_archive(archive)
+                bilan = restaurer_ecole(ecole, donnees)
+            except zipfile.BadZipFile:
+                flash("Ce fichier n'est pas une archive .zip valide.", "error")
+            except ErreurRestauration as erreur:
+                flash(str(erreur), "error")
+            else:
+                _journaliser(ecole.id, "restauration_sauvegarde",
+                             f"{ecole.nom} — sauvegarde du {donnees.get('date', '?')}, {sum(bilan.values())} lignes")
+                db.session.commit()
+                flash(
+                    f"« {ecole.nom} » restauré depuis la sauvegarde du {donnees.get('date', '?')[:10]} : "
+                    f"{bilan.get('users', 0)} comptes, {bilan.get('eleves', 0)} élèves, "
+                    f"{sum(bilan.values())} lignes au total.", "info",
+                )
+                return redirect(url_for("plateforme.index"))
+    return render_template("plateforme/restaurer.html", etab=ecole)
+
+
 @plateforme_bp.route("/<int:ecole_id>/entrer", methods=["POST"])
 @login_required
 @super_admin_requis

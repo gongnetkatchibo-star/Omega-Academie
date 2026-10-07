@@ -25,9 +25,10 @@ def utilisateurs():
         requete = requete.filter(
             db.or_(User.nom_complet.ilike(f"%{q}%"), User.email.ilike(f"%{q}%"))
         )
-    utilisateurs = requete.order_by(User.date_creation.desc()).all()
+    from app.services.pagination import paginer
+    page = paginer(requete.order_by(User.date_creation.desc()))
     return render_template(
-        "dev/utilisateurs.html", utilisateurs=utilisateurs, roles=ROLES, statuts=STATUTS, q=q
+        "dev/utilisateurs.html", utilisateurs=page, page=page, roles=ROLES, statuts=STATUTS, q=q
     )
 
 
@@ -197,7 +198,8 @@ def journal():
     if action:
         requete = requete.filter(JournalAction.action == action)
 
-    entrees = requete.order_by(JournalAction.date_action.desc()).limit(500).all()
+    from app.services.pagination import paginer
+    entrees = paginer(requete.order_by(JournalAction.date_action.desc()))
     actions_disponibles = sorted({a for (a,) in db.session.query(JournalAction.action).distinct()})
     utilisateurs_disponibles = User.query.order_by(User.nom_complet).all()
 
@@ -262,7 +264,8 @@ def journal_emails():
     elif statut == "echec":
         requete = requete.filter_by(reussi=False)
 
-    entrees = requete.order_by(JournalEmail.date_envoi.desc()).limit(500).all()
+    from app.services.pagination import paginer
+    entrees = paginer(requete.order_by(JournalEmail.date_envoi.desc()))
     return render_template("dev/journal_emails.html", entrees=entrees, filtre_statut=statut)
 
 

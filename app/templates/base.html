@@ -26,6 +26,7 @@
         <span>{{ current_user.nom_complet }}</span>
       </div>
       <nav class="sidebar-liens">
+        <a href="{{ url_for('main.index') }}" {% if request.endpoint == "main.index" %}class="lien-actif"{% endif %}>{{ icone("tableau_de_bord") }} Tableau de bord</a>
         {% if current_user.role == "developpeur" %}
           <a href="{{ url_for('plateforme.index') }}" class="sidebar-lien-plateforme">🌐 Plateforme</a>
         {% endif %}
@@ -48,64 +49,96 @@
             </details>
           {% endif %}
         {% endif %}
-        {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") or current_user.role == "enseignant" %}
-          <a href="{{ url_for('classes.liste') }}">{{ icone("classes") }} Classes</a>
-          <a href="{{ url_for('eleves.liste') }}">{{ icone("eleves") }} Élèves</a>
+        {% set module_actif = request.endpoint.split('.')[0] if request.endpoint else "" %}
+        {% set direction = ("directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+        {% set est_enseignant = current_user.role == "enseignant" %}
+
+        {% set peut_classes = acces("secretaire", *direction, module="classes") or est_enseignant %}
+        {% set peut_tests = acces("secretaire", *direction, module="tests_niveau") %}
+        {% set peut_documents = acces("secretaire", *direction, module="eleves") %}
+        {% if peut_classes or peut_tests or peut_documents %}
+          <details class="sidebar-deroulant" {% if module_actif in ["classes", "eleves", "tests_niveau", "documents_officiels"] %}open{% endif %}>
+            <summary>{{ icone("scolarite") }} Scolarité</summary>
+            {% if peut_classes %}
+              <a href="{{ url_for('classes.liste') }}">Classes</a>
+              <a href="{{ url_for('eleves.liste') }}">Élèves</a>
+            {% endif %}
+            {% if peut_tests %}<a href="{{ url_for('tests_niveau.liste') }}">Tests de niveau</a>{% endif %}
+            {% if peut_documents %}<a href="{{ url_for('documents_officiels.index') }}">Documents officiels</a>{% endif %}
+          </details>
         {% endif %}
-        {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="tests_niveau") %}
-          <a href="{{ url_for('tests_niveau.liste') }}">{{ icone("tests_niveau") }} Tests de niveau</a>
+
+        {% set peut_notes = est_enseignant or acces("responsable_pedagogique", *direction, module="notes_supervision") %}
+        {% set peut_edt = acces("responsable_pedagogique", *direction) %}
+        {% set peut_enseignants = acces("responsable_pedagogique", *direction, module="enseignants") %}
+        {% set peut_suivi = acces("responsable_pedagogique", *direction, module="suivi_cours") %}
+        {% set peut_alertes = acces("responsable_pedagogique", "secretaire", *direction, module="alertes") %}
+        {% if peut_notes or peut_edt or peut_enseignants or peut_suivi or peut_alertes %}
+          <details class="sidebar-deroulant" {% if module_actif in ["notes", "absences", "emploi_du_temps", "enseignants", "suivi_cours", "alertes"] %}open{% endif %}>
+            <summary>{{ icone("pedagogie") }} Pédagogie</summary>
+            {% if peut_notes %}<a href="{{ url_for('notes.index') }}">Notes et bulletins</a>{% endif %}
+            {% if est_enseignant %}
+              <a href="{{ url_for('absences.index') }}">Absences</a>
+              <a href="{{ url_for('emploi_du_temps.moi') }}">Mon emploi du temps</a>
+              {% if current_user.profil_enseignant %}
+                <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">Mes classes</a>
+              {% endif %}
+            {% endif %}
+            {% if peut_edt %}<a href="{{ url_for('emploi_du_temps.index') }}">Emplois du temps</a>{% endif %}
+            {% if peut_enseignants %}<a href="{{ url_for('enseignants.liste') }}">Enseignants</a>{% endif %}
+            {% if peut_suivi %}<a href="{{ url_for('suivi_cours.tableau') }}">Suivi des cours</a>{% endif %}
+            {% if peut_alertes %}<a href="{{ url_for('alertes.tableau') }}">Alertes</a>{% endif %}
+          </details>
         {% endif %}
-        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="enseignants") %}
-          <a href="{{ url_for('enseignants.liste') }}">{{ icone("enseignants") }} Enseignants</a>
-        {% endif %}
-        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="suivi_cours") %}
-          <a href="{{ url_for('suivi_cours.tableau') }}">{{ icone("suivi_cours") }} Suivi cours</a>
-        {% endif %}
-        {% if current_user.role == "enseignant" %}
-          <a href="{{ url_for('emploi_du_temps.moi') }}">🗓️ Mon EDT</a>
-          {% if current_user.profil_enseignant %}
-            <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">👥 Mes classes</a>
-          {% endif %}
-        {% endif %}
+
         {% set peut_scolarite = acces("comptable", "fondateur", "administrateur_general", module="finances") %}
         {% set peut_caisse = acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
         {% set peut_salaires = acces("comptable", "fondateur", "administrateur_general", module="salaires") %}
-        {% if peut_scolarite or peut_caisse or peut_salaires %}
-          <details class="sidebar-deroulant" {% if request.endpoint and request.endpoint.split('.')[0] in ["finances", "caisse", "salaires"] %}open{% endif %}>
+        {% set peut_stats = acces("comptable", *direction, module="statistiques") %}
+        {% if peut_scolarite or peut_caisse or peut_salaires or peut_stats %}
+          <details class="sidebar-deroulant" {% if module_actif in ["finances", "caisse", "salaires", "statistiques"] %}open{% endif %}>
             <summary>{{ icone("finances") }} Finances</summary>
             {% if peut_scolarite %}<a href="{{ url_for('finances.liste') }}">Scolarité</a>{% endif %}
             {% if peut_caisse %}<a href="{{ url_for('caisse.liste') }}">Caisse</a>{% endif %}
             {% if peut_salaires %}<a href="{{ url_for('salaires.liste') }}">Salaires</a>{% endif %}
+            {% if peut_stats %}<a href="{{ url_for('statistiques.tableau') }}">Statistiques</a>{% endif %}
           </details>
         {% endif %}
-        {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
-          <a href="{{ url_for('statistiques.tableau') }}">{{ icone("statistiques") }} Statistiques</a>
-        {% endif %}
-        {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire", module="alertes") %}
-          <a href="{{ url_for('alertes.tableau') }}">{{ icone("alertes") }} Alertes</a>
-        {% endif %}
-        {% if current_user.role == "parent" or acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="messagerie") %}
+
+        {% if current_user.role == "parent" or acces("secretaire", *direction, module="messagerie") %}
           <a href="{{ url_for('messagerie.index') }}">{{ icone("messagerie") }} Messages</a>
         {% endif %}
-        <a href="{{ url_for('bibliotheque.liste') }}">{{ icone("bibliotheque") }} Bibliothèque</a>
         <a href="{{ url_for('communication.liste') }}">{{ icone("annonces") }} Annonces</a>
+        <a href="{{ url_for('bibliotheque.liste') }}">{{ icone("bibliotheque") }} Bibliothèque</a>
         <a href="{{ url_for('assistant.index') }}">{{ icone("assistant") }} Assistant</a>
-        {% if acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
-          <a href="{{ url_for('secretariat.demandes') }}">{{ icone("demandes") }} Demandes</a>
+
+        {% set peut_demandes = acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
+        {% set peut_roles = acces("developpeur", module="gestion_roles") %}
+        {% set peut_etablissement = acces("developpeur", "fondateur", module="gestion_roles") %}
+        {% set peut_sauvegarde = acces("developpeur", module="sauvegarde") %}
+        {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde %}
+          <details class="sidebar-deroulant" {% if module_actif in ["secretariat", "dev", "sauvegarde"] %}open{% endif %}>
+            <summary>{{ icone("administration") }} Administration</summary>
+            {% if peut_demandes %}<a href="{{ url_for('secretariat.demandes') }}">Demandes de comptes</a>{% endif %}
+            {% if peut_roles %}<a href="{{ url_for('dev.utilisateurs') }}">{{ "Comptes et rôles" }}</a>{% endif %}
+            {% if peut_etablissement %}<a href="{{ url_for('dev.parametres') }}">Établissement</a>{% endif %}
+            {% if peut_sauvegarde %}<a href="{{ url_for('sauvegarde.exporter') }}">Télécharger une sauvegarde</a>{% endif %}
+          </details>
         {% endif %}
-        {% if acces("developpeur", module="gestion_roles") %}
-          <a href="{{ url_for('dev.utilisateurs') }}">{{ icone("dev") }} {{ "Développeur" if current_user.role == "developpeur" else "Rôles" }}</a>
-        {% endif %}
-        {% if acces("developpeur", "fondateur", module="gestion_roles") %}
-          <a href="{{ url_for('dev.parametres') }}">🏛️ Établissement</a>
-        {% endif %}
-        <a href="{{ url_for('main.index') }}">{{ icone("tableau_de_bord") }} Tableau de bord</a>
+
         <a href="{{ url_for('main.profil') }}">{{ icone("profil") }} Mon profil</a>
         <a href="{{ url_for('auth.deconnexion') }}">{{ icone("deconnexion") }} Déconnexion</a>
       </nav>
     </aside>
     <div class="contenu-principal">
-      <div class="barre-devise">{{ (ecole_active.devise or ecole_active.nom) if ecole_active else nom_plateforme() }}</div>
+      <div class="barre-devise">
+        <span class="barre-devise-texte">{{ (ecole_active.devise or ecole_active.nom) if ecole_active else nom_plateforme() }}</span>
+        {% if peut_classes or peut_enseignants or peut_roles %}
+          <form method="get" action="{{ url_for('main.recherche') }}" class="recherche-globale" role="search">
+            <input type="search" name="q" placeholder="Rechercher un nom…" aria-label="Rechercher un élève, un enseignant ou un compte" minlength="2" required>
+          </form>
+        {% endif %}
+      </div>
       <div class="container">
 {% else %}
   <div class="navbar">

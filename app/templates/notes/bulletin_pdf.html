@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 595pt 842pt; margin: 36pt 40pt 36pt 40pt; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #000; }
+  .titre { text-align:center; font-weight:bold; font-size:14pt; margin: 0 0 4pt 0; }
+  .sous-titre { text-align:center; font-size:10pt; margin: 0 0 12pt 0; }
+  table.notes { width:100%; border-collapse: collapse; }
+  table.notes th { background:#0F5FA6; color:#fff; font-size:9pt; padding:4pt 3pt; border:0.5pt solid #0F5FA6; }
+  table.notes td { padding:4pt 3pt; border:0.5pt solid #888; font-size:9.5pt; }
+  .c { text-align:center; }
+  table.identite td, table.synthese td { border:none; padding:2pt 0; font-size:10pt; }
+  .cadre { border:0.5pt solid #888; padding:6pt 8pt; margin-top:10pt; }
+</style>
+</head>
+<body>
+{% for eleve, b in pages %}
+  {% if not loop.first %}<pdf:nextpage />{% endif %}
+  {% include "documents_officiels/_entete.html" %}
+  <p class="titre">BULLETIN DE NOTES</p>
+  <p class="sous-titre">{{ calcul.libelle_periode }} — Année scolaire {{ calcul.annee }}</p>
+
+  <table class="identite" style="width:100%; margin-bottom:10pt;">
+    <tr>
+      <td style="width:60%;"><strong>Nom et prénom(s) :</strong> {{ eleve.nom_complet }}</td>
+      <td style="width:40%;"><strong>Classe :</strong> {{ classe.nom }}</td>
+    </tr>
+    <tr>
+      <td><strong>Matricule :</strong> {{ eleve.matricule }}</td>
+      <td><strong>Genre :</strong> {{ "Féminin" if eleve.sexe == "F" else ("Masculin" if eleve.sexe == "M" else "—") }}</td>
+    </tr>
+    <tr>
+      <td>{% if eleve.date_naissance %}<strong>Date de naissance :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}{% else %}&nbsp;{% endif %}</td>
+      <td><strong>Effectif :</strong> {{ calcul.effectif_classe }}</td>
+    </tr>
+  </table>
+
+  {% if b.lignes %}
+    <table class="notes">
+      <tr>
+        <th style="width:23%;">Matière</th><th style="width:11%;">Moy. /{{ calcul.bareme }}</th><th style="width:8%;">Coef.</th>
+        <th style="width:10%;">Points</th><th style="width:8%;">Rang</th><th style="width:11%;">Moy. classe</th>
+        <th style="width:13%;">Min – Max</th><th style="width:16%;">Appréciation</th>
+      </tr>
+      {% for l in b.lignes %}
+        <tr>
+          <td>{{ l.matiere }}</td><td class="c">{{ "%.2f"|format(l.moyenne) }}</td><td class="c">{{ "%g"|format(l.coefficient) }}</td>
+          <td class="c">{{ "%.2f"|format(l.points) }}</td><td class="c">{{ l.rang }}</td><td class="c">{{ "%.2f"|format(l.classe) }}</td>
+          <td class="c">{{ "%.1f"|format(l.min) }} – {{ "%.1f"|format(l.max) }}</td><td>{{ l.mention }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Total</strong></td><td class="c">&nbsp;</td><td class="c"><strong>{{ "%g"|format(b.total_coefficients) }}</strong></td>
+        <td class="c"><strong>{{ "%.2f"|format(b.total_points) }}</strong></td><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </table>
+  {% else %}
+    <table class="notes">
+      <tr><th style="width:60%;">Période</th><th style="width:40%;">Moyenne /{{ calcul.bareme }}</th></tr>
+      {% for t, m in b.trimestres.items() %}
+        <tr><td>{{ {"T1": "1er trimestre", "T2": "2e trimestre", "T3": "3e trimestre"}[t] }}</td><td class="c">{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  <table class="synthese" style="width:100%; margin-top:10pt;">
+    <tr>
+      <td style="width:50%;"><strong>Moyenne générale :</strong> {{ "%.2f"|format(b.moyenne) }} / {{ calcul.bareme }}</td>
+      <td style="width:50%;"><strong>Rang :</strong> {{ b.rang }}{{ "er" if b.rang == 1 else "e" }} sur {{ calcul.effectif_classe }}</td>
+    </tr>
+    <tr>
+      <td><strong>Moyenne de la classe :</strong> {{ "%.2f"|format(calcul.moyenne_classe) }}</td>
+      <td><strong>Plus forte :</strong> {{ "%.2f"|format(calcul.plus_forte) }} &nbsp; <strong>Plus faible :</strong> {{ "%.2f"|format(calcul.plus_faible) }}</td>
+    </tr>
+    <tr>
+      <td><strong>Mention :</strong> {{ b.mention }}</td>
+      <td><strong>Absences :</strong> {{ b.absences.non_justifiees }} non justifiée(s), {{ b.absences.justifiees }} justifiée(s)</td>
+    </tr>
+    {% if b.decision %}<tr><td colspan="2"><strong>Décision :</strong> {{ b.decision }}</td></tr>{% endif %}
+  </table>
+
+  <div class="cadre">
+    <strong>Appréciation du conseil de classe :</strong> {{ b.appreciation or "&nbsp;"|safe }}
+    {% if not b.appreciation %}<br>&nbsp;<br>&nbsp;{% endif %}
+  </div>
+
+  {% include "documents_officiels/_signature.html" %}
+{% endfor %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Documents officiels{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Documents officiels", None)) }}
+  {{ banniere("documents", "Documents officiels") }}
+  <form method="get" class="barre-recherche" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule de l'élève">
+    <button type="submit">Chercher</button>
+  </form>
+  {% if page.total %}
+    <table class="table">
+      <thead><tr><th>Élève</th><th>Matricule</th><th>Classe</th><th>Documents</th></tr></thead>
+      <tbody>
+        {% for e in page %}
+          <tr>
+            <td><a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">{{ e.nom_complet }}</a></td>
+            <td>{{ e.matricule }}</td>
+            <td>{{ e.classe.nom }}</td>
+            <td>
+              <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=e.id) }}">Certificat de scolarité</a>
+              · <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=e.id) }}">Attestation de fréquentation</a>
+              · <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">Bulletin</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucun élève ne correspond.") }}
+  {% endif %}
+{% endblock %}

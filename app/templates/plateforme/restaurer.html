@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Restaurer {{ etab.nom }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Restaurer " ~ etab.nom, None)) }}
+  <h1>Restaurer « {{ etab.nom }} »</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <div class="carte-attente" style="border-left: 4px solid #a32d2d;">
+    <p><strong>Les données actuelles de cet établissement seront remplacées</strong> par celles de la sauvegarde : comptes, élèves, notes, paiements, caisse, salaires, bibliothèque.</p>
+  </div>
+  <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Fichier de sauvegarde (.zip)
+      <input type="file" name="archive" accept=".zip" required>
+    </label>
+    <label>Pour confirmer, retape « {{ etab.sigle or etab.nom }} »
+      <input type="text" name="confirmation" autocomplete="off" required>
+    </label>
+    <button type="submit" class="bouton-danger">Restaurer</button>
+  </form>
+{% endblock %}

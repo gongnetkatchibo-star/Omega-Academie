@@ -122,6 +122,7 @@ def create_app(config_name=None):
         "annonces": "📣", "communication": "📣", "assistant": "🤖", "demandes": "📥",
         "secretariat": "📥", "tableau_de_bord": "🏠", "profil": "👤", "deconnexion": "🚪",
         "dev": "🛠️", "emploi_du_temps": "🗓️", "notes": "📋", "etablissement": "🏛️",
+        "documents": "📄", "sauvegarde": "💾", "scolarite": "🎒", "pedagogie": "📘", "administration": "⚙️",
         "plateforme": "🌐",
     }
 
@@ -130,6 +131,9 @@ def create_app(config_name=None):
         """Icône (emoji) associée à un module — pas de police d'icônes
         externe à charger, ce qui respecterait mal notre CSP (sept. 2026)."""
         return ICONES_MODULES.get(cle, "")
+
+    from app.services.pagination import liens_pagination
+    app.add_template_global(liens_pagination, "pagination")
 
     @app.template_global()
     def mon_dossier_eleve():
@@ -370,10 +374,13 @@ def create_app(config_name=None):
         # JournalEmail, jamais importé au niveau module).
         from app.models.journal_email import JournalEmail  # noqa: F401
         from app.models.parametre import ParametreEtablissement  # noqa: F401
+        from app.models.bulletin import CoefficientMatiere, AppreciationBulletin  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes
         ajouter_colonnes_manquantes(app, db)
+        from app.services.auto_migration import creer_index_manquants
+        creer_index_manquants(app, db)
         from app.services.migration_saas import migrer_vers_multi_etablissements
         migrer_vers_multi_etablissements(app, db)
 

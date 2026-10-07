@@ -74,6 +74,7 @@
         {% endfor %}
       </tbody>
     </table>
+    {{ pagination(page) }}
   {% else %}
     {{ etat_vide("Aucun mouvement de caisse pour l'instant.") }}
   {% endif %}

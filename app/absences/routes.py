@@ -14,6 +14,22 @@ from app.services.cycles import cycle_du_role, classe_dans_le_cycle
 ROLES_SUPERVISION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"]
 
 
+@absences_bp.route("/")
+@login_required
+@roles_required("enseignant")
+def index():
+    """Entrée du menu de l'enseignant : ses classes, pour faire l'appel."""
+    profil = current_user.profil_enseignant
+    ids = {a.classe_id for a in profil.affectations} if profil else set()
+    classes = [c for c in Classe.query.order_by(Classe.niveau, Classe.nom).all() if c.id in ids] if ids else (
+        Classe.query.order_by(Classe.niveau, Classe.nom).all() if current_user.role == "developpeur" else []
+    )
+    return render_template(
+        "classes/choisir.html", classes=classes, titre="Absences", icone_cle="alertes",
+        endpoint="absences.saisie", libelle="Faire l'appel",
+    )
+
+
 @absences_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
 @login_required
 @roles_required("enseignant")
@@ -68,7 +84,22 @@ def saisie(classe_id):
         from app.services.notifications import notifier
         for eleve in eleves_nouvellement_absents:
             nb = Absence.query.filter_by(eleve_id=eleve.id, justifiee=False).count()
-            if nb == SEUIL_ABSENCES_INJUSTIFIEES and eleve.parents:
+            if not eleve.parents:
+                continue
+            if nb != SEUIL_ABSENCES_INJUSTIFIEES:
+                # Chaque absence non justifiée est signalée le jour même.
+                notifier(
+                    [p.email for p in eleve.parents],
+                    f"Absence — {eleve.nom_complet}",
+                    (
+                        f"Bonjour,\n\n"
+                        f"{eleve.nom_complet} a été noté(e) absent(e) le "
+                        f"{date_selectionnee.strftime('%d/%m/%Y')} ({classe_obj.nom}), sans justification.\n"
+                        f"Merci de contacter l'école pour justifier cette absence.\n\n"
+                        f"Ceci est une notification automatique."
+                    ),
+                )
+            else:
                 notifier(
                     [p.email for p in eleve.parents],
                     f"Absences répétées — {eleve.nom_complet}",

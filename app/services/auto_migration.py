@@ -76,3 +76,41 @@ def ajouter_colonnes_manquantes(app, db):
                     "Échec de l'ajout automatique de %s.%s — à faire manuellement si besoin.",
                     table.name, colonne.name,
                 )
+
+
+# Index ajoutés après coup sur les colonnes les plus interrogées (listes,
+# recherches, bulletins). `IF NOT EXISTS` : sans effet s'ils existent déjà.
+INDEX_A_CREER = [
+    ("ix_eleves_classe", "eleves", "classe_id"),
+    ("ix_eleves_nom", "eleves", "nom_complet"),
+    ("ix_notes_classe", "notes", "classe_id"),
+    ("ix_notes_eleve", "notes", "eleve_id"),
+    ("ix_absences_classe", "absences", "classe_id"),
+    ("ix_absences_eleve", "absences", "eleve_id"),
+    ("ix_paiements_eleve", "paiements", "eleve_id"),
+    ("ix_mouvements_caisse_date", "mouvements_caisse", "date"),
+    ("ix_mouvements_caisse_origine", "mouvements_caisse", "origine_id"),
+    ("ix_journal_actions_date", "journal_actions", "date_action"),
+    ("ix_journal_emails_date", "journal_emails", "date_envoi"),
+    ("ix_messages_parent", "messages", "parent_id"),
+    ("ix_historique_eleve", "historique_scolaire", "eleve_id"),
+    ("ix_affectations_classe", "affectations", "classe_id"),
+    ("ix_creneaux_classe", "creneaux", "classe_id"),
+]
+
+
+def creer_index_manquants(app, db):
+    tables = set(inspect(db.engine).get_table_names())
+    # Chaque requête filtre sur l'école : toutes les tables rattachées
+    # à une école ont un index sur cette colonne.
+    par_ecole = [
+        (f"ix_{t.name}_ecole_id", t.name, "ecole_id") for t in db.metadata.sorted_tables if "ecole_id" in t.c
+    ]
+    with db.engine.begin() as connexion:
+        for nom, table, colonne in INDEX_A_CREER + par_ecole:
+            if table not in tables:
+                continue
+            try:
+                connexion.execute(text(f'CREATE INDEX IF NOT EXISTS {nom} ON {table} ("{colonne}")'))
+            except Exception as erreur:  # ne doit jamais empêcher le démarrage
+                app.logger.warning("Index %s non créé : %s", nom, erreur)

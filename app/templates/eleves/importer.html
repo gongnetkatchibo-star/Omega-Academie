@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Importer des élèves{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Importer depuis Excel", None)) }}
+  <h1>Importer des élèves depuis Excel</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if erreurs %}
+    <div class="carte-attente" style="border-left: 4px solid #a32d2d;">
+      <p><strong>Rien n'a été importé.</strong> Corrige le fichier puis renvoie-le :</p>
+      <ul>{% for e in erreurs[:50] %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% if erreurs|length > 50 %}<p>… et {{ erreurs|length - 50 }} autre(s) erreur(s).</p>{% endif %}
+    </div>
+  {% endif %}
+
+  {% if classes %}
+    <p class="lien-secondaire"><a href="{{ url_for('eleves.importer_modele') }}">Télécharger le modèle Excel</a></p>
+    <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Fichier Excel (.xlsx)
+        <input type="file" name="fichier" accept=".xlsx" required>
+      </label>
+      <button type="submit">Importer</button>
+    </form>
+  {% else %}
+    {{ etat_vide("Crée d'abord les classes de l'année : l'import range chaque élève dans sa classe.") }}
+  {% endif %}
+{% endblock %}

@@ -8,11 +8,37 @@ from app.models.note import Note
 from app.notes import notes_bp
 from app.utils import roles_required
 from app.services.moyennes import bareme_pour_classe
+from app.models.bulletin import AppreciationBulletin, CoefficientMatiere
+from app.services.bulletins import bulletins_de_la_classe, matieres_de_la_classe, ANNUEL, LIBELLES_PERIODE
 
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle
 
 ROLES_SUPERVISION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"]
 TRIMESTRES = ["T1", "T2", "T3"]
+PERIODES = TRIMESTRES + [ANNUEL]
+
+
+@notes_bp.route("/")
+@login_required
+def index():
+    """Entrée du menu « Notes » : les classes de l'année, avec la saisie
+    pour l'enseignant et les bulletins pour la supervision."""
+    from app.services.permissions import role_a_acces
+    from app.services.cycles import filtrer_par_cycle
+
+    supervision = current_user.role == "developpeur" or role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION)
+    if current_user.role == "enseignant":
+        profil = current_user.profil_enseignant
+        ids = {a.classe_id for a in profil.affectations} if profil else set()
+        classes = [c for c in Classe.query.order_by(Classe.niveau, Classe.nom).all() if c.id in ids]
+    elif supervision:
+        classes = filtrer_par_cycle(
+            Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau, Classe.nom).all(),
+            cycle_du_role(current_user.role),
+        )
+    else:
+        abort(403)
+    return render_template("notes/index.html", classes=classes, supervision=supervision)
 
 
 @notes_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
@@ -91,59 +117,157 @@ def saisie(classe_id):
     )
 
 
-@notes_bp.route("/bulletin/<int:eleve_id>")
-@login_required
-def bulletin(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
-    # Accès basé sur la relation, pas sur le rôle : n'importe quel compte
-    # lié comme parent peut voir le bulletin, en plus de l'enseignant et
-    # de la supervision.
+def _acces_bulletin(eleve):
+    """Accès basé sur la relation, pas seulement sur le rôle : un parent
+    lié à l'élève et l'élève lui-même voient le bulletin, en plus des
+    enseignants et de la supervision. Retourne True si le compte peut
+    aussi rédiger l'appréciation du conseil."""
+    from app.services.permissions import role_a_acces
+
     est_lie_comme_parent = current_user in eleve.parents
     est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id
-    from app.services.permissions import role_a_acces
-    a_droit_supervision = role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION)
-    if current_user.role not in ["enseignant", "developpeur"] and not a_droit_supervision and not est_lie_comme_parent and not est_soi_meme:
+    supervision = current_user.role == "developpeur" or role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION)
+    if current_user.role != "enseignant" and not supervision and not est_lie_comme_parent and not est_soi_meme:
         abort(403)
     cycle = cycle_du_role(current_user.role)
     if cycle and not classe_dans_le_cycle(eleve.classe, cycle):
         abort(403)
-    trimestre = request.args.get("trimestre", "T1")
-    annee = Eleve.annee_scolaire_courante()
+    return supervision
 
-    notes = Note.query.filter_by(eleve_id=eleve_id, trimestre=trimestre, annee_scolaire=annee).all()
 
-    par_matiere = {}
-    for n in notes:
-        par_matiere.setdefault(n.matiere, []).append(n)
+def _periode_demandee():
+    periode = request.values.get("trimestre", "T1")
+    return periode if periode in PERIODES else "T1"
 
-    lignes = []
-    for matiere, notes_matiere in par_matiere.items():
-        moyenne = sum(n.valeur_sur_20 for n in notes_matiere) / len(notes_matiere)
-        lignes.append({"matiere": matiere, "moyenne": round(moyenne, 2)})
 
-    moyenne_generale = round(sum(l["moyenne"] for l in lignes) / len(lignes), 2) if lignes else None
+def _supervision_de_la_classe(classe_id):
+    from app.services.permissions import role_a_acces
 
-    classement = None
-    if moyenne_generale is not None:
-        camarades = Eleve.query.filter_by(classe_id=eleve.classe_id, actif=True).all()
-        moyennes_classe = []
-        for camarade in camarades:
-            notes_c = Note.query.filter_by(eleve_id=camarade.id, trimestre=trimestre, annee_scolaire=annee).all()
-            if not notes_c:
+    classe = Classe.query.get_or_404(classe_id)
+    if current_user.role != "developpeur" and not role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION):
+        abort(403)
+    if not classe_dans_le_cycle(classe, cycle_du_role(current_user.role)):
+        abort(403)
+    return classe
+
+
+def _pdf_bulletins(classe, periode, eleves, nom_fichier):
+    from flask import make_response
+    from app.utils import html_vers_pdf
+    from app.services.documents_officiels import contexte_entete_officiel
+
+    calcul = bulletins_de_la_classe(classe, periode, classe.annee_scolaire)
+    pages = [(e, calcul["bulletins"][e.id]) for e in eleves if e.id in calcul["bulletins"]]
+    if not pages:
+        return None
+    html = render_template("notes/bulletin_pdf.html", classe=classe, calcul=calcul, pages=pages, **contexte_entete_officiel())
+    reponse = make_response(html_vers_pdf(html))
+    reponse.headers["Content-Type"] = "application/pdf"
+    reponse.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}.pdf"
+    return reponse
+
+
+@notes_bp.route("/bulletin/<int:eleve_id>")
+@login_required
+def bulletin(eleve_id):
+    eleve = Eleve.query.get_or_404(eleve_id)
+    peut_apprecier = _acces_bulletin(eleve)
+    periode = _periode_demandee()
+    calcul = bulletins_de_la_classe(eleve.classe, periode, eleve.classe.annee_scolaire)
+    return render_template(
+        "notes/bulletin.html", eleve=eleve, periode=periode, periodes=PERIODES, libelles=LIBELLES_PERIODE,
+        calcul=calcul, bulletin=calcul["bulletins"].get(eleve.id), peut_apprecier=peut_apprecier,
+    )
+
+
+@notes_bp.route("/bulletin/<int:eleve_id>/pdf")
+@login_required
+def bulletin_pdf(eleve_id):
+    eleve = Eleve.query.get_or_404(eleve_id)
+    _acces_bulletin(eleve)
+    periode = _periode_demandee()
+    reponse = _pdf_bulletins(eleve.classe, periode, [eleve], f"bulletin_{eleve.matricule}_{periode}")
+    if reponse is None:
+        flash("Aucune note enregistrée pour cette période.", "error")
+        return redirect(url_for("notes.bulletin", eleve_id=eleve.id, trimestre=periode))
+    return reponse
+
+
+@notes_bp.route("/bulletin/<int:eleve_id>/appreciation", methods=["POST"])
+@login_required
+def appreciation(eleve_id):
+    eleve = Eleve.query.get_or_404(eleve_id)
+    if not _acces_bulletin(eleve):
+        abort(403)
+    periode = _periode_demandee()
+    annee = eleve.classe.annee_scolaire
+    texte = request.form.get("appreciation", "").strip()[:400]
+    existante = AppreciationBulletin.query.filter_by(eleve_id=eleve.id, periode=periode, annee_scolaire=annee).first()
+    if not texte:
+        if existante:
+            db.session.delete(existante)
+    elif existante:
+        existante.texte = texte
+    else:
+        db.session.add(AppreciationBulletin(eleve_id=eleve.id, periode=periode, annee_scolaire=annee, texte=texte))
+    db.session.commit()
+    flash("Appréciation enregistrée.", "info")
+    return redirect(url_for("notes.bulletin", eleve_id=eleve.id, trimestre=periode))
+
+
+@notes_bp.route("/classe/<int:classe_id>/coefficients", methods=["GET", "POST"])
+@login_required
+def coefficients(classe_id):
+    classe = _supervision_de_la_classe(classe_id)
+    matieres = matieres_de_la_classe(classe)
+    actuels = {c.matiere: c for c in CoefficientMatiere.query.filter_by(classe_id=classe.id).all()}
+
+    if request.method == "POST":
+        for position, matiere in enumerate(matieres):
+            valeur = request.form.get(f"coefficient_{position}", type=float)
+            if valeur is None or not 0 < valeur <= 20:
                 continue
-            par_matiere_c = {}
-            for n in notes_c:
-                par_matiere_c.setdefault(n.matiere, []).append(n)
-            moy_c = sum(
-                sum(nm.valeur_sur_20 for nm in notes_m) / len(notes_m)
-                for notes_m in par_matiere_c.values()
-            ) / len(par_matiere_c)
-            moyennes_classe.append((camarade.id, round(moy_c, 2)))
-        moyennes_classe.sort(key=lambda x: x[1], reverse=True)
-        rang = next((i + 1 for i, (eid, _) in enumerate(moyennes_classe) if eid == eleve.id), None)
-        classement = f"{rang} / {len(moyennes_classe)}" if rang else None
+            if matiere in actuels:
+                actuels[matiere].coefficient = valeur
+            else:
+                db.session.add(CoefficientMatiere(classe_id=classe.id, matiere=matiere, coefficient=valeur))
+        db.session.commit()
+        flash("Coefficients enregistrés.", "info")
+        return redirect(url_for("notes.coefficients", classe_id=classe.id))
 
     return render_template(
-        "notes/bulletin.html", eleve=eleve, trimestre=trimestre, trimestres=TRIMESTRES,
-        lignes=lignes, moyenne_generale=moyenne_generale, classement=classement,
+        "notes/coefficients.html", classe=classe, matieres=matieres,
+        coefficients={m: (actuels[m].coefficient if m in actuels else 1) for m in matieres},
     )
+
+
+@notes_bp.route("/classe/<int:classe_id>/bulletins")
+@login_required
+def bulletins_classe(classe_id):
+    """Tableau de la classe pour une période : moyenne, rang et mention
+    de chaque élève, avec le lien vers son bulletin."""
+    classe = _supervision_de_la_classe(classe_id)
+    periode = _periode_demandee()
+    calcul = bulletins_de_la_classe(classe, periode, classe.annee_scolaire)
+    eleves = Eleve.query.filter_by(classe_id=classe.id, actif=True).order_by(Eleve.nom_complet).all()
+    lignes = sorted(
+        ((e, calcul["bulletins"].get(e.id)) for e in eleves),
+        key=lambda paire: (paire[1] is None, paire[1]["rang"] if paire[1] else 0, paire[0].nom_complet),
+    )
+    return render_template(
+        "notes/bulletins_classe.html", classe=classe, periode=periode, periodes=PERIODES,
+        libelles=LIBELLES_PERIODE, calcul=calcul, lignes=lignes,
+    )
+
+
+@notes_bp.route("/classe/<int:classe_id>/bulletins/pdf")
+@login_required
+def bulletins_classe_pdf(classe_id):
+    classe = _supervision_de_la_classe(classe_id)
+    periode = _periode_demandee()
+    eleves = Eleve.query.filter_by(classe_id=classe.id, actif=True).order_by(Eleve.nom_complet).all()
+    reponse = _pdf_bulletins(classe, periode, eleves, f"bulletins_{classe.nom}_{periode}")
+    if reponse is None:
+        flash("Aucune note enregistrée pour cette période.", "error")
+        return redirect(url_for("notes.bulletins_classe", classe_id=classe.id, trimestre=periode))
+    return reponse

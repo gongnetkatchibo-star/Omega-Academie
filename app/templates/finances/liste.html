@@ -3,6 +3,10 @@
 {% block content %}
   {{ fil_ariane(("Finances", None)) }}
   {{ banniere("finances", "Finances") }}
+  <form method="get" class="barre-recherche" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule de l'élève">
+    <button type="submit">Chercher</button>
+  </form>
   {% if lignes %}
     <table class="table">
       <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>Statut</th><th></th></tr></thead>
@@ -20,6 +24,7 @@
         {% endfor %}
       </tbody>
     </table>
+    {{ pagination(page) }}
   {% else %}
     {{ etat_vide("Aucun élève pour l'instant.") }}
   {% endif %}

@@ -15,21 +15,24 @@
   {% endwith %}
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
-    <p class="lien-secondaire"><a href="{{ url_for('eleves.nouveau') }}">+ Inscrire un élève</a></p>
+    <p class="lien-secondaire">
+      <a href="{{ url_for('eleves.nouveau') }}">+ Inscrire un élève</a>
+      · <a href="{{ url_for('eleves.importer') }}">Importer depuis Excel</a>
+    </p>
   {% endif %}
 
-  {% if classes %}
-    <form method="get">
-      <label>Filtrer par classe
-        <select name="classe_id" onchange="this.form.submit()">
-          <option value="">Toutes les classes</option>
-          {% for c in classes %}
-            <option value="{{ c.id }}" {% if classe_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
-          {% endfor %}
-        </select>
-      </label>
-    </form>
-  {% endif %}
+  <form method="get" class="barre-recherche barre-recherche-large" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule">
+    {% if classes %}
+      <select name="classe_id" aria-label="Classe">
+        <option value="">Toutes les classes</option>
+        {% for c in classes %}
+          <option value="{{ c.id }}" {% if classe_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+    <button type="submit">Chercher</button>
+  </form>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p class="lien-secondaire">
@@ -40,9 +43,9 @@
     </p>
   {% endif %}
 
-  {% if eleves %}
+  {% if page.total %}
     <ul class="liste-demandes">
-      {% for e in eleves %}
+      {% for e in page %}
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ e.nom_complet }}</strong>
@@ -54,7 +57,8 @@
         </li>
       {% endfor %}
     </ul>
+    {{ pagination(page) }}
   {% else %}
-    {{ etat_vide("Aucun élève pour l'instant.") }}
+    {{ etat_vide("Aucun élève ne correspond." if terme or classe_id else "Aucun élève pour l'instant.") }}
   {% endif %}
 {% endblock %}
