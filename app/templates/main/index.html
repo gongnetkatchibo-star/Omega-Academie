@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Tableau de bord{% endblock %}
 {% block content %}
+  <section class="accueil-carte-ecole">
+    {% if ecole() and ecole().logo %}
+      <span class="accueil-carte-ecole-logo"><img src="{{ url_for('main.image_ecole', image='logo') }}" alt=""></span>
+    {% endif %}
+    <div>
+      <h1>{{ ecole().nom if ecole() else nom_plateforme() }}</h1>
+      <p>{{ description_plateforme }}</p>
+    </div>
+  </section>
+
   {% if alerte_sauvegarde %}
     <div class="carte-attente" style="border-left: 4px solid #a32d2d;">
       <p><strong>⚠ Sauvegarde recommandée.</strong> {{ alerte_sauvegarde }}
@@ -15,11 +25,19 @@
     {{ etat_vide("Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
   {% endif %}
 
-  <div class="accueil-logo-central">
-    {% if ecole() and ecole().logo %}
-      <img src="{{ url_for('main.image_ecole', image='logo') }}" alt="{{ ecole().nom }}">
-    {% elif ecole() %}
-      <p class="nom-plateforme">{{ ecole().nom }}</p>
-    {% endif %}
-  </div>
+  {% if guides %}
+    <h2 class="accueil-titre-guides">Guides d'utilisation</h2>
+    <div class="grille-guides">
+      {% for g in guides %}
+        <a class="carte-guide" href="{{ url_for('main.guide', cle=g.cle) }}">
+          <span class="carte-guide-icone">{{ icone(g.icone) }}</span>
+          <span class="carte-guide-texte">
+            <strong>{{ g.titre }}</strong>
+            <span>{{ g.apercu }}</span>
+          </span>
+          <span class="carte-guide-lien">Lire le guide →</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endblock %}

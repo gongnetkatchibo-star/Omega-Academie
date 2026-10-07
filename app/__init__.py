@@ -121,7 +121,8 @@ def create_app(config_name=None):
         "statistiques": "📊", "alertes": "⚠️", "messagerie": "💬", "bibliotheque": "📚",
         "annonces": "📣", "communication": "📣", "assistant": "🤖", "demandes": "📥",
         "secretariat": "📥", "tableau_de_bord": "🏠", "profil": "👤", "deconnexion": "🚪",
-        "dev": "🛠️", "emploi_du_temps": "🗓️",
+        "dev": "🛠️", "emploi_du_temps": "🗓️", "notes": "📋", "etablissement": "🏛️",
+        "plateforme": "🌐",
     }
 
     @app.template_global()

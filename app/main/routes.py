@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from datetime import datetime
 
@@ -8,6 +8,7 @@ from app.models.user import ROLES_DIRECTION, ROLES_PERSONNEL
 from app.models.eleve import Eleve
 from app.models.telephone import NumeroTelephone, OPERATEURS_TCHAD
 from app.utils import normaliser_numero_tchad
+from app.services.guides import guides_pour, guide_pour, DESCRIPTION_PLATEFORME
 
 
 def _modules_pour(role):
@@ -129,7 +130,20 @@ def index():
         est_personnel=user.role in ROLES_PERSONNEL,
         est_direction=user.role in ROLES_DIRECTION,
         alerte_sauvegarde=alerte_sauvegarde,
+        guides=guides_pour(user),
+        description_plateforme=DESCRIPTION_PLATEFORME,
     )
+
+
+@main_bp.route("/guide/<cle>")
+@login_required
+def guide(cle):
+    """Guide d'utilisation d'un module — seulement ceux des modules
+    auxquels le compte a accès."""
+    fiche = guide_pour(current_user, cle)
+    if fiche is None:
+        abort(404)
+    return render_template("main/guide.html", guide=fiche)
 
 
 @main_bp.route("/profil")
