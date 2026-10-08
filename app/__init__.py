@@ -185,6 +185,7 @@ def create_app(config_name=None):
         "administration": "reglages", "plateforme": "globe", "mes_enfants": "eleves", "mon_espace": "chapeau",
         "mon_edt": "calendrier", "roles": "outil", "absences": "calendrier", "relances": "whatsapp",
         "cahier_textes": "crayon", "discipline": "bouclier", "calendrier": "calendrier", "anciens": "dossier",
+        "preinscriptions": "document", "prets": "livre",
     }
 
     @app.template_global()
@@ -498,6 +499,12 @@ def create_app(config_name=None):
     from app.calendrier import calendrier_bp
     app.register_blueprint(calendrier_bp)
 
+    from app.preinscriptions import preinscriptions_bp
+    app.register_blueprint(preinscriptions_bp)
+
+    from app.prets import prets_bp
+    app.register_blueprint(prets_bp)
+
     @app.cli.command("creer-compte-initial")
     @click.option("--nom", prompt="Nom complet")
     @click.option("--email", prompt="Email")
@@ -537,6 +544,8 @@ def create_app(config_name=None):
         from app.models.cahier_textes import SeanceCahier  # noqa: F401
         from app.models.discipline import Incident  # noqa: F401
         from app.models.calendrier import EvenementCalendrier  # noqa: F401
+        from app.models.preinscription import PreInscription  # noqa: F401
+        from app.models.livre import Livre, Pret  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes

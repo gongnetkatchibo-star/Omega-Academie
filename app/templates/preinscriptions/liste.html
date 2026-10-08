@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Pré-inscriptions") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Pré-inscriptions", None)) }}
+  {{ banniere("preinscriptions", "Pré-inscriptions", "Demandes déposées en ligne par les familles.") }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p class="lien-secondaire">{{ _("Adresse à partager avec les familles :") }} <a href="{{ url_for('preinscriptions.demande', ecole_id=ecole().id, _external=True) if ecole() else '#' }}">{{ url_for('preinscriptions.demande', ecole_id=ecole().id, _external=True) if ecole() else '' }}</a></p>
+  <div class="onglets-statut barre-actions">
+    {% for cle, libelle in statuts %}
+      <a class="bouton {% if statut == cle %}bouton-plein{% endif %}" href="{{ url_for('preinscriptions.liste', statut=cle) }}">{{ _(libelle) }}</a>
+    {% endfor %}
+    <a class="bouton {% if statut == 'toutes' %}bouton-plein{% endif %}" href="{{ url_for('preinscriptions.liste', statut='toutes') }}">{{ _("Toutes") }}</a>
+  </div>
+  {% if page.elements %}
+    <table class="table">
+      <thead><tr><th>{{ _("Reçue le") }}</th><th>{{ _("Candidat") }}</th><th>{{ _("Classe demandée") }}</th><th>{{ _("Parent") }}</th><th>{{ _("Statut") }}</th></tr></thead>
+      <tbody>
+        {% for d in page.elements %}
+          <tr>
+            <td>{{ d.date_creation.strftime("%d/%m/%Y")|ltr }}</td>
+            <td><a href="{{ url_for('preinscriptions.detail', demande_id=d.id) }}">{{ d.nom_candidat }}</a></td>
+            <td>{{ d.classe_demandee.nom if d.classe_demandee else "—" }}</td>
+            <td>{{ d.nom_parent }}<br><span class="lien-secondaire">{{ d.telephone_parent|ltr }}</span></td>
+            <td>{{ _(d.libelle_statut) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucune pré-inscription ici.") }}
+  {% endif %}
+{% endblock %}

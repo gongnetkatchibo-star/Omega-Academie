@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Pré-inscription en ligne") }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Pré-inscription en ligne") }}</h1>
+  <p>{{ _("Choisis l'école où tu souhaites inscrire ton enfant.") }}</p>
+  {% if ecoles %}
+    <ul class="liste-demandes">
+      {% for e in ecoles %}
+        <li class="carte-demande"><div class="infos"><strong><a href="{{ url_for('preinscriptions.demande', ecole_id=e.id) }}">{{ e.nom }}</a></strong>{% if e.ville %}<span>{{ e.ville }}</span>{% endif %}</div></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ etat_vide("Aucune école n'accepte de pré-inscription pour l'instant.") }}
+  {% endif %}
+{% endblock %}

@@ -99,6 +99,20 @@ GUIDES = [
         endpoint="tests_niveau.liste", roles=("secretaire",) + DIRECTION, module="tests_niveau",
     ),
     _guide(
+        "preinscriptions", "Pré-inscriptions", "preinscriptions",
+        "Les demandes déposées en ligne par les familles, à convoquer au test.",
+        "Les familles pré-inscrivent leur enfant depuis la page d'accueil, sans compte.",
+        [
+            ("Partager l'adresse", "L'adresse de la page de pré-inscription s'affiche en haut de la liste : à envoyer aux familles."),
+            ("Traiter une demande", "Ouvre-la : coordonnées, classe souhaitée, message de la famille."),
+            ("Convoquer", "Choisis la classe et la date : le test de niveau est créé, la famille reçoit l'email s'il y en a un."),
+            ("Refuser", "Avec un motif, envoyé à la famille par email."),
+        ],
+        ["Le tableau de bord signale les nouvelles demandes.",
+         "Sans email, préviens la famille avec le bouton WhatsApp de la demande."],
+        endpoint="preinscriptions.liste", roles=("secretaire",) + DIRECTION, module="tests_niveau",
+    ),
+    _guide(
         "notes", "Notes et bulletins", "notes",
         "Saisir les notes, régler les coefficients, éditer les bulletins en PDF.",
         "Les notes se saisissent par classe ; moyennes, rangs et bulletins se calculent tout seuls.",
@@ -183,6 +197,19 @@ GUIDES = [
             ("Détail d'une classe", "Par matière : le chapitre en cours, la progression en pourcentage et les difficultés rencontrées."),
         ],
         endpoint="suivi_cours.tableau", roles=DIRECTION + ("responsable_pedagogique",), module="suivi_cours",
+    ),
+    _guide(
+        "prets", "Livres et prêts", "prets",
+        "Tenir le catalogue des livres papier et suivre les prêts.",
+        "Chaque livre de la bibliothèque, ses exemplaires et qui les a empruntés.",
+        [
+            ("Ajouter un livre", "Titre, auteur, cote (le numéro collé sur le livre) et nombre d'exemplaires."),
+            ("Prêter", "Sur la page du livre : l'élève ou le membre du personnel, et la date de retour (deux semaines par défaut)."),
+            ("Retour", "Un clic quand le livre revient."),
+            ("Retards", "La liste des livres non rendus à temps ; « Relancer » envoie un email aux parents."),
+        ],
+        ["Les livres empruntés par un élève apparaissent aussi sur sa fiche."],
+        endpoint="prets.catalogue", roles=("bibliothecaire",) + DIRECTION, module="prets",
     ),
     _guide(
         "scolarite", "Scolarité", "finances",

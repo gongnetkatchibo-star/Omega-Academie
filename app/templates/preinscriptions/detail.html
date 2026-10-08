@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Pré-inscription") }} — {{ d.nom_candidat }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Pré-inscriptions", url_for('preinscriptions.liste')), (d.nom_candidat, None)) }}
+  <h1>{{ d.nom_candidat }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <dl class="fiche-eleve-champs">
+    <dt>{{ _("Référence") }}</dt><dd>{{ d.reference|ltr }}</dd>
+    <dt>{{ _("Statut") }}</dt><dd>{{ _(d.libelle_statut) }}{% if d.motif_refus %} — {{ d.motif_refus }}{% endif %}</dd>
+    <dt>{{ _("Reçue le") }}</dt><dd>{{ d.date_creation.strftime("%d/%m/%Y %H:%M")|ltr }}</dd>
+    <dt>{{ _("Genre") }}</dt><dd>{{ _(d.sexe|genre_libelle) if d.sexe else "—" }}</dd>
+    <dt>{{ _("Naissance") }}</dt><dd>{{ d.date_naissance.strftime("%d/%m/%Y") if d.date_naissance else "—" }}{% if d.lieu_naissance %} {{ _("à") }} {{ d.lieu_naissance }}{% endif %}</dd>
+    <dt>{{ _("Classe demandée") }}</dt><dd>{{ d.classe_demandee.nom if d.classe_demandee else "—" }}</dd>
+    {% if d.ecole_origine %}<dt>{{ _("École d'origine") }}</dt><dd>{{ d.ecole_origine }}</dd>{% endif %}
+    <dt>{{ _("Parent") }}</dt><dd>{{ d.nom_parent }}</dd>
+    <dt>{{ _("Téléphone") }}</dt><dd>{{ d.telephone_parent|ltr }} · <a href="https://wa.me/{{ d.telephone_parent.lstrip('+') }}" target="_blank" rel="noopener">{{ icone("whatsapp") }} WhatsApp</a></dd>
+    {% if d.email_parent %}<dt>{{ _("Email") }}</dt><dd>{{ d.email_parent }}</dd>{% endif %}
+    {% if d.message %}<dt>{{ _("Message") }}</dt><dd>{{ d.message }}</dd>{% endif %}
+    {% if d.test_niveau %}<dt>{{ _("Test de niveau") }}</dt><dd><a href="{{ url_for('tests_niveau.liste') }}">{{ d.test_niveau.date_test.strftime("%d/%m/%Y") }} — {{ d.test_niveau.classe_demandee.nom }}</a></dd>{% endif %}
+  </dl>
+
+  {% if d.statut == "nouvelle" %}
+    <section class="panneau">
+      <div class="panneau-tete"><h2>{{ _("Convoquer au test de niveau") }}</h2></div>
+      {% if classes %}
+        <form method="post" action="{{ url_for('preinscriptions.convoquer', demande_id=d.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label>{{ _("Classe du test") }}
+            <select name="classe_id" required>
+              {% for c in classes %}<option value="{{ c.id }}" {% if c.id == d.classe_demandee_id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>{{ _("Date du test") }}<input type="date" name="date_test" value="{{ aujourd_hui.isoformat() }}" required></label>
+          <label>{{ _("Heure (facultatif)") }}<input type="time" name="heure"></label>
+          <p class="lien-secondaire">{{ _("Le test est créé dans « Tests de niveau ». La famille reçoit la convocation par email si elle en a donné un ; sinon, préviens-la sur WhatsApp.") }}</p>
+          <button type="submit" class="bouton bouton-plein">{{ _("Convoquer") }}</button>
+        </form>
+      {% else %}
+        <p class="lien-secondaire">{{ _("Crée d'abord les classes de l'année en cours.") }}</p>
+      {% endif %}
+    </section>
+    <details class="panneau">
+      <summary><strong>{{ _("Refuser la demande") }}</strong></summary>
+      <form method="post" action="{{ url_for('preinscriptions.refuser', demande_id=d.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ _("Motif (envoyé à la famille)") }}<input type="text" name="motif_refus" maxlength="250"></label>
+        <button type="submit">{{ _("Refuser") }}</button>
+      </form>
+    </details>
+  {% endif %}
+{% endblock %}

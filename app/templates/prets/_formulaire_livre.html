@@ -1,0 +1,6 @@
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>{{ _("Titre") }}<input type="text" name="titre" maxlength="200" value="{{ livre.titre if livre else '' }}" required></label>
+<label>{{ _("Auteur") }}<input type="text" name="auteur" maxlength="150" value="{{ livre.auteur or '' if livre else '' }}"></label>
+<label>{{ _("Cote (numéro sur le livre)") }}<input type="text" name="cote" maxlength="40" value="{{ livre.cote or '' if livre else '' }}"></label>
+<label>{{ _("Catégorie") }}<input type="text" name="categorie" maxlength="80" value="{{ livre.categorie or '' if livre else '' }}" placeholder="{{ _('Roman, manuel de CM2…') }}"></label>
+<label>{{ _("Nombre d'exemplaires") }}<input type="number" name="exemplaires" min="1" max="999" value="{{ livre.exemplaires if livre else 1 }}" required></label>

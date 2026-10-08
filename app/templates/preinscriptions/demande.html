@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Pré-inscription en ligne") }} — {{ etab.nom }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Pré-inscription en ligne") }}</h1>
+  <p><strong>{{ etab.nom }}</strong>{% if etab.ville %} · {{ etab.ville }}{% endif %}</p>
+  <p class="lien-secondaire">{{ _("Remplis ce formulaire : le secrétariat te contactera pour fixer la date du test de niveau. La pré-inscription ne vaut pas inscription.") }}</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="champ-piege" aria-hidden="true"><label>Site web <input type="text" name="site_web" tabindex="-1" autocomplete="off"></label></div>
+    <h2>{{ _("L'enfant") }}</h2>
+    <label>{{ _("Nom complet") }}<input type="text" name="nom_candidat" maxlength="120" value="{{ form.get('nom_candidat', '') }}" required></label>
+    <label>{{ _("Genre") }}
+      <select name="sexe">
+        <option value="">—</option>
+        <option value="M" {% if form.get('sexe') == 'M' %}selected{% endif %}>{{ _("Masculin") }}</option>
+        <option value="F" {% if form.get('sexe') == 'F' %}selected{% endif %}>{{ _("Féminin") }}</option>
+      </select>
+    </label>
+    <label>{{ _("Date de naissance") }}<input type="date" name="date_naissance" value="{{ form.get('date_naissance', '') }}"></label>
+    <label>{{ _("Lieu de naissance") }}<input type="text" name="lieu_naissance" maxlength="120" value="{{ form.get('lieu_naissance', '') }}"></label>
+    <label>{{ _("Classe demandée") }}
+      <select name="classe_demandee_id">
+        <option value="">{{ _("Je ne sais pas encore") }}</option>
+        {% for c in classes %}<option value="{{ c.id }}" {% if form.get('classe_demandee_id')|int == c.id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ _("École fréquentée cette année") }}<input type="text" name="ecole_origine" maxlength="150" value="{{ form.get('ecole_origine', '') }}"></label>
+    <h2>{{ _("Le parent") }}</h2>
+    <label>{{ _("Nom complet") }}<input type="text" name="nom_parent" maxlength="120" value="{{ form.get('nom_parent', '') }}" required></label>
+    <label>{{ _("Téléphone (WhatsApp de préférence)") }}<input type="tel" name="telephone_parent" maxlength="30" value="{{ form.get('telephone_parent', '') }}" required></label>
+    <label>{{ _("Email (facultatif)") }}<input type="email" name="email_parent" maxlength="150" value="{{ form.get('email_parent', '') }}"></label>
+    <label>{{ _("Message (facultatif)") }}<textarea name="message" rows="3" maxlength="1000">{{ form.get('message', '') }}</textarea></label>
+    <button type="submit" class="bouton bouton-plein">{{ _("Envoyer la pré-inscription") }}</button>
+  </form>
+{% endblock %}

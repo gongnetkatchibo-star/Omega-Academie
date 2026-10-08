@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ livre.titre }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Livres et prêts", url_for('prets.catalogue')), (livre.titre, None)) }}
+  <h1>{{ livre.titre }}</h1>
+  <p class="lien-secondaire">{{ livre.auteur or "" }}{% if livre.cote %} · {{ _("cote") }} {{ livre.cote }}{% endif %} · <strong class="{% if livre.disponibles %}solde-ok{% else %}solde-du{% endif %}">{{ livre.disponibles }} / {{ livre.exemplaires }} {{ _("disponible(s)") }}</strong></p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if livre.disponibles %}
+    <section class="panneau">
+      <div class="panneau-tete"><h2>{{ _("Prêter un exemplaire") }}</h2></div>
+      <form method="post" action="{{ url_for('prets.preter', livre_id=livre.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ _("Emprunteur") }}
+          <select name="emprunteur" class="recherche-nom" required>
+            <option value="">{{ _("— Choisir —") }}</option>
+            <optgroup label="{{ _('Élèves') }}">
+              {% for e in eleves %}<option value="e{{ e.id }}">{{ e.nom_complet }} ({{ e.classe.nom }})</option>{% endfor %}
+            </optgroup>
+            <optgroup label="{{ _('Personnel') }}">
+              {% for u in personnel %}<option value="u{{ u.id }}">{{ u.nom_complet }}</option>{% endfor %}
+            </optgroup>
+          </select>
+        </label>
+        <label>{{ _("Date du prêt") }}<input type="date" name="date_pret" value="{{ aujourd_hui.isoformat() }}" required></label>
+        <label>{{ _("À rendre le") }}<input type="date" name="date_retour_prevue" value="{{ retour_prevu.isoformat() }}" required></label>
+        <label>{{ _("Remarque (état du livre…)") }}<input type="text" name="remarque" maxlength="200"></label>
+        <button type="submit" class="bouton bouton-plein">{{ _("Enregistrer le prêt") }}</button>
+      </form>
+    </section>
+  {% endif %}
+
+  <h2>{{ _("Prêts") }}</h2>
+  {% if livre.prets %}
+    <table class="table">
+      <thead><tr><th>{{ _("Emprunteur") }}</th><th>{{ _("Prêté le") }}</th><th>{{ _("À rendre le") }}</th><th>{{ _("Rendu le") }}</th><th></th></tr></thead>
+      <tbody>
+        {% for p in livre.prets %}
+          <tr>
+            <td>{{ p.nom_emprunteur }}</td>
+            <td>{{ p.date_pret.strftime("%d/%m/%Y")|ltr }}</td>
+            <td class="{% if p.en_retard %}solde-du{% endif %}">{{ p.date_retour_prevue.strftime("%d/%m/%Y")|ltr }}</td>
+            <td>{{ p.date_retour.strftime("%d/%m/%Y")|ltr if p.date_retour else "—" }}</td>
+            <td>
+              {% if not p.date_retour %}
+                <form method="post" action="{{ url_for('prets.retour', pret_id=p.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit">{{ _("Retour") }}</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Ce livre n'a pas encore été prêté.") }}
+  {% endif %}
+
+  <details class="panneau">
+    <summary><strong>{{ _("Modifier le livre") }}</strong></summary>
+    <form method="post">
+      {% include "prets/_formulaire_livre.html" %}
+      <button type="submit">{{ _("Enregistrer") }}</button>
+    </form>
+    {% if not livre.prets_en_cours %}
+      <form method="post" action="{{ url_for('prets.supprimer', livre_id=livre.id) }}" onsubmit="return confirm({{ _('Retirer ce livre du catalogue ?')|tojson|forceescape }});">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="bouton-danger">{{ _("Retirer du catalogue") }}</button>
+      </form>
+    {% endif %}
+  </details>
+{% endblock %}

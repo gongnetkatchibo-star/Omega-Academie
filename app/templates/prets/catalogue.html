@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Livres et prêts") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Livres et prêts", None)) }}
+  {{ banniere("prets", "Livres et prêts", "Les livres papier de la bibliothèque, prêtés aux élèves et au personnel.") }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <div class="barre-actions">
+    <a class="bouton" href="{{ url_for('prets.prets') }}">{{ icone("liste") }} {{ _("Livres prêtés") }}</a>
+    <a class="bouton" href="{{ url_for('prets.prets', retard=1) }}">{{ icone("alerte") }} {{ _("Retards") }}</a>
+  </div>
+  <details class="panneau">
+    <summary><strong>{{ icone("plus") }} {{ _("Ajouter un livre") }}</strong></summary>
+    <form method="post" action="{{ url_for('prets.nouveau') }}">
+      {% set livre = none %}
+      {% include "prets/_formulaire_livre.html" %}
+      <button type="submit" class="bouton bouton-plein">{{ _("Ajouter") }}</button>
+    </form>
+  </details>
+  <form method="get" class="barre-recherche barre-recherche-large" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="{{ _('Titre, auteur ou cote') }}" aria-label="{{ _('Titre, auteur ou cote') }}">
+    <button type="submit">{{ _("Chercher") }}</button>
+  </form>
+  {% if page.elements %}
+    <table class="table">
+      <thead><tr><th>{{ _("Titre") }}</th><th>{{ _("Auteur") }}</th><th>{{ _("Cote") }}</th><th>{{ _("Disponibles") }}</th></tr></thead>
+      <tbody>
+        {% for l in page.elements %}
+          <tr>
+            <td><a href="{{ url_for('prets.livre', livre_id=l.id) }}">{{ l.titre }}</a>{% if l.categorie %}<br><span class="lien-secondaire">{{ l.categorie }}</span>{% endif %}</td>
+            <td>{{ l.auteur or "—" }}</td>
+            <td>{{ l.cote or "—" }}</td>
+            <td class="{% if l.disponibles %}solde-ok{% else %}solde-du{% endif %}">{{ l.disponibles }} / {{ l.exemplaires }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucun livre dans le catalogue.") }}
+  {% endif %}
+{% endblock %}

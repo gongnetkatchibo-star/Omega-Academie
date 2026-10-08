@@ -318,8 +318,10 @@ def detail(eleve_id):
                           cycle_du_role(current_user.role))
         if not eleve.actif and role_a_acces(current_user.role, "eleves", ROLES_GESTION) else []
     )
+    from app.models.livre import Pret
+    livres_empruntes = Pret.query.filter_by(eleve_id=eleve.id, date_retour=None).all()
     return render_template(
-        "eleves/detail.html", motifs_depart=MOTIFS_DEPART, classes_reintegration=classes_reintegration,
+        "eleves/detail.html", motifs_depart=MOTIFS_DEPART, livres_empruntes=livres_empruntes, classes_reintegration=classes_reintegration,
         aujourd_hui=maintenant().date(), eleve=eleve, classe_superieure=classe_superieure,
         parents_disponibles=parents_disponibles, statuts_dossier=STATUTS_DOSSIER,
         max_parents=MAX_PARENTS_PAR_ELEVE, moyenne=moyenne,

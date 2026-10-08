@@ -193,6 +193,23 @@ def _taches(role, eleves, finances):
                 "nombre": nb, "niveau": "attention", "titre": "Comptes à valider",
                 "detail": "Demandes d'inscription en attente", "endpoint": "secretariat.demandes", "params": {},
             })
+    if _a_acces(role, "tests_niveau"):
+        from app.models.preinscription import PreInscription
+        nb = PreInscription.query.filter_by(statut="nouvelle").count()
+        if nb:
+            taches.append({
+                "nombre": nb, "niveau": "attention", "titre": "Pré-inscriptions à traiter",
+                "detail": "Demandes déposées en ligne par des familles", "endpoint": "preinscriptions.liste", "params": {},
+            })
+    if _a_acces(role, "prets"):
+        from app.models.livre import Pret
+        from app.services.temps import aujourd_hui
+        nb = Pret.query.filter(Pret.date_retour.is_(None), Pret.date_retour_prevue < aujourd_hui()).count()
+        if nb:
+            taches.append({
+                "nombre": nb, "niveau": "info", "titre": "Livres non rendus",
+                "detail": "Prêts dont la date de retour est passée", "endpoint": "prets.prets", "params": {"retard": 1},
+            })
     if _a_acces(role, "messagerie"):
         from app.models.message import Message
         nb = (

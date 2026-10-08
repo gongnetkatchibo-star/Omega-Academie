@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Livres prêtés") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Livres et prêts", url_for('prets.catalogue')), ("Livres prêtés", None)) }}
+  <h1>{{ _("Retards") if retard else _("Livres prêtés") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <div class="barre-actions">
+    <a class="bouton {% if not retard %}bouton-plein{% endif %}" href="{{ url_for('prets.prets') }}">{{ _("Tous") }}</a>
+    <a class="bouton {% if retard %}bouton-plein{% endif %}" href="{{ url_for('prets.prets', retard=1) }}">{{ _("Retards") }}</a>
+  </div>
+  {% if page.elements %}
+    <table class="table">
+      <thead><tr><th>{{ _("Livre") }}</th><th>{{ _("Emprunteur") }}</th><th>{{ _("À rendre le") }}</th><th></th></tr></thead>
+      <tbody>
+        {% for p in page.elements %}
+          <tr>
+            <td><a href="{{ url_for('prets.livre', livre_id=p.livre_id) }}">{{ p.livre.titre }}</a></td>
+            <td>{{ p.nom_emprunteur }}{% if p.eleve %} <span class="lien-secondaire">({{ p.eleve.classe.nom }})</span>{% endif %}</td>
+            <td class="{% if p.en_retard %}solde-du{% endif %}">{{ p.date_retour_prevue.strftime("%d/%m/%Y")|ltr }}</td>
+            <td>
+              <div class="actions-tableau">
+                <form method="post" action="{{ url_for('prets.retour', pret_id=p.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="retour" value="prets">
+                  <button type="submit">{{ _("Retour") }}</button>
+                </form>
+                {% if p.en_retard %}
+                  <form method="post" action="{{ url_for('prets.relancer', pret_id=p.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit">{{ _("Relancer") }}</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucun livre en retard." if retard else "Aucun livre prêté en ce moment.") }}
+  {% endif %}
+{% endblock %}

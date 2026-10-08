@@ -190,6 +190,15 @@
     </details>
   {% endif %}
 
+  {% if livres_empruntes %}
+    <h2>{{ _("Livres empruntés") }}</h2>
+    <ul>
+      {% for p in livres_empruntes %}
+        <li>{{ p.livre.titre }} — {{ _("à rendre le") }} <span class="{% if p.en_retard %}solde-du{% endif %}">{{ p.date_retour_prevue.strftime("%d/%m/%Y")|ltr }}</span></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
   <h2>{{ _("Historique scolaire") }}</h2>
   {% if eleve.historique %}
     <ul class="liste-demandes">

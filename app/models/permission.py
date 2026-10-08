@@ -25,6 +25,7 @@ MODULES = [
     ("cahier_textes", "Cahier de textes (consultation)"),
     ("discipline", "Retards et discipline"),
     ("calendrier", "Calendrier scolaire (modification)"),
+    ("prets", "Prêt de livres"),
     # Zones d'administration technique — réservées au développeur par
     # défaut, à accorder explicitement s'il le décide (sept. 2026).
     ("gestion_roles", "Attribution des rôles"),

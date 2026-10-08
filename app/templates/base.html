@@ -74,12 +74,13 @@
         {% set peut_tests = acces("secretaire", *direction, module="tests_niveau") %}
         {% set peut_documents = acces("secretaire", *direction, module="eleves") %}
         {% if peut_classes or peut_tests or peut_documents %}
-          <details class="sidebar-deroulant" {% if module_actif in ["classes", "eleves", "tests_niveau", "documents_officiels"] %}open{% endif %}>
+          <details class="sidebar-deroulant" {% if module_actif in ["classes", "eleves", "tests_niveau", "documents_officiels", "preinscriptions"] %}open{% endif %}>
             <summary>{{ icone("scolarite") }} {{ _("Scolarité") }}</summary>
             {% if peut_classes %}
               <a href="{{ url_for('classes.liste') }}">{{ _("Classes") }}</a>
               <a href="{{ url_for('eleves.liste') }}">{{ _("Élèves") }}</a>
             {% endif %}
+            {% if peut_tests %}<a href="{{ url_for('preinscriptions.liste') }}">{{ _("Pré-inscriptions") }}</a>{% endif %}
             {% if peut_tests %}<a href="{{ url_for('tests_niveau.liste') }}">{{ _("Tests de niveau") }}</a>{% endif %}
             {% if peut_documents %}<a href="{{ url_for('documents_officiels.index') }}">{{ _("Documents officiels") }}</a>{% endif %}
           </details>
@@ -135,6 +136,9 @@
         <a href="{{ url_for('communication.liste') }}">{{ icone("annonces") }} {{ _("Annonces") }}</a>
         <a href="{{ url_for('calendrier.index') }}" {% if module_actif == "calendrier" %}class="lien-actif"{% endif %}>{{ icone("calendrier") }} {{ _("Calendrier scolaire") }}</a>
         <a href="{{ url_for('bibliotheque.liste') }}">{{ icone("bibliotheque") }} {{ _("Bibliothèque") }}</a>
+        {% if acces("bibliothecaire", *direction, module="prets") %}
+          <a href="{{ url_for('prets.catalogue') }}" {% if module_actif == "prets" %}class="lien-actif"{% endif %}>{{ icone("livre") }} {{ _("Livres et prêts") }}</a>
+        {% endif %}
         <a href="{{ url_for('assistant.index') }}">{{ icone("assistant") }} {{ _("Assistant") }}</a>
 
         {% set peut_demandes = acces("secretaire", "fondateur", "administrateur_general", module="secretariat") %}
