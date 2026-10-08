@@ -44,6 +44,6 @@
       <button type="submit">Inscrire l'élève</button>
     </form>
   {% else %}
-    <div class="etat-vide"><span class="etat-vide-icone">🗂️</span><p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p></div>
+    <div class="etat-vide"><span class="etat-vide-icone">{{ icone("dossier") }}</span><p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p></div>
   {% endif %}
 {% endblock %}

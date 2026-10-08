@@ -191,7 +191,7 @@ def nouveau_paiement():
         echeance = request.form.get("echeance")
         reference = request.form.get("reference", "").strip()
 
-        eleve = Eleve.query.get(eleve_id) if eleve_id else None
+        eleve = db.session.get(Eleve, eleve_id) if eleve_id else None
 
         if not eleve or not montant or montant <= 0 or mode not in MODES_PAIEMENT or echeance not in ECHEANCES:
             flash("Merci de choisir un élève, un montant valide, un mode et une échéance.", "error")

@@ -7,9 +7,9 @@
   {% endwith %}
 
   {% if vue_enseignant %}
-    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.moi_classe_pdf', classe_id=classe.id) }}">📄 Télécharger en PDF</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.moi_classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} Télécharger en PDF</a></p>
   {% else %}
-    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">📄 Télécharger en PDF</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} Télécharger en PDF</a></p>
   {% endif %}
 
   {% if grille %}

@@ -13,7 +13,7 @@
     {% endif %}
   {% endwith %}
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant") %}
-    <p class="lien-secondaire"><a href="{{ url_for('communication.nouvelle') }}">+ Nouvelle annonce</a></p>
+    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('communication.nouvelle') }}">{{ icone("plus") }} Nouvelle annonce</a></div>
   {% endif %}
 
   <form method="get" class="formulaire-filtre">
@@ -50,7 +50,7 @@
             <strong>{{ a.titre }}</strong>
             <span>{{ a.contenu }}</span>
             {% if a.nom_fichier %}
-              <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">📎 Télécharger la pièce jointe</a></span>
+              <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">{{ icone("trombone") }} Télécharger la pièce jointe</a></span>
             {% endif %}
             <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }}</span>
           </div>

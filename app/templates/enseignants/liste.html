@@ -8,7 +8,7 @@
   {% endwith %}
 
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
-    <p class="lien-secondaire"><a href="{{ url_for('enseignants.nouveau') }}">+ Créer un profil enseignant</a></p>
+    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('enseignants.nouveau') }}">{{ icone("plus") }} Créer un profil enseignant</a></div>
     <p class="lien-secondaire">
       Exporter :
       <a href="{{ url_for('enseignants.export', fmt='csv') }}">CSV</a> ·

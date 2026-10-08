@@ -194,14 +194,14 @@ def create_app(config_name=None):
         return {"M": "Masculin", "F": "Féminin"}.get(valeur, "—")
 
     @app.template_global()
-    def etat_vide(texte, icone="🗂️"):
+    def etat_vide(texte, cle_icone="dossier"):
         """Écran vide (liste sans résultat) — un composant cohérent
         partout, plutôt qu'un simple texte gris différent d'une page à
         l'autre (sept. 2026). `texte` est échappé (pas de HTML actif) :
         pour un texte contenant un lien, garder le <p> manuel dans le
         template plutôt que ce raccourci."""
         return Markup(
-            f'<div class="etat-vide"><span class="etat-vide-icone">{escape(icone)}</span>'
+            f'<div class="etat-vide"><span class="etat-vide-icone">{icone(cle_icone)}</span>'
             f'<p>{escape(texte)}</p></div>'
         )
 

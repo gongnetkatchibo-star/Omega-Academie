@@ -91,8 +91,8 @@
 
     <div class="tdb-grille">
       {% if f %}
-        <section class="tdb-panneau" aria-labelledby="titre-echeancier">
-          <div class="tdb-panneau-tete">
+        <section class="panneau" aria-labelledby="titre-echeancier">
+          <div class="panneau-tete">
             <h2 id="titre-echeancier">Échéancier de la scolarité</h2>
             <a href="{{ url_for('finances.liste', retard=1) }}">Voir les retards</a>
           </div>
@@ -118,8 +118,8 @@
         </section>
       {% endif %}
 
-      <section class="tdb-panneau" aria-labelledby="titre-taches">
-        <div class="tdb-panneau-tete"><h2 id="titre-taches">À traiter</h2></div>
+      <section class="panneau" aria-labelledby="titre-taches">
+        <div class="panneau-tete"><h2 id="titre-taches">À traiter</h2></div>
         {% if tableau.taches %}
           <ul class="tdb-taches">
             {% for t in tableau.taches %}
@@ -139,8 +139,8 @@
     {% if f or a %}
       <div class="tdb-grille">
         {% if f %}
-          <section class="tdb-panneau" aria-labelledby="titre-classes">
-            <div class="tdb-panneau-tete">
+          <section class="panneau" aria-labelledby="titre-classes">
+            <div class="panneau-tete">
               <h2 id="titre-classes">Recouvrement par classe</h2>
               {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
                 <a href="{{ url_for('statistiques.tableau') }}">Toutes les statistiques</a>
@@ -148,8 +148,8 @@
             </div>
             <p class="tdb-sous-titre">Part du total dû déjà payée. Les classes les plus en retard en premier.</p>
             {% if f.classes %}
-              <div class="tdb-defile">
-                <table class="tdb-table">
+              <div class="defile-horizontal">
+                <table class="tableau-compact">
                   <thead><tr><th>Classe</th><th class="nombre">Élèves</th><th>Taux</th><th class="nombre">Reste dû</th><th>État</th></tr></thead>
                   <tbody>
                     {% for l in f.classes %}
@@ -172,8 +172,8 @@
         {% endif %}
 
         {% if a %}
-          <section class="tdb-panneau" aria-labelledby="titre-absences">
-            <div class="tdb-panneau-tete">
+          <section class="panneau" aria-labelledby="titre-absences">
+            <div class="panneau-tete">
               <h2 id="titre-absences">Absences du jour</h2>
               <a href="{{ url_for('absences.index') }}">Faire l'appel</a>
             </div>
@@ -192,29 +192,29 @@
     {% endif %}
 
     {% if f %}
-      <section class="tdb-panneau" aria-labelledby="titre-paiements">
-        <div class="tdb-panneau-tete">
+      <section class="panneau" aria-labelledby="titre-paiements">
+        <div class="panneau-tete">
           <h2 id="titre-paiements">Derniers paiements</h2>
           {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
             <a href="{{ url_for('caisse.liste') }}">Journal de caisse</a>
           {% endif %}
         </div>
         {% if f.derniers_paiements %}
-          <div class="tdb-defile">
-            <table class="tdb-table">
+          <div class="defile-horizontal">
+            <table class="tableau-compact">
               <thead><tr><th>Élève</th><th>Objet</th><th>Mode</th><th class="nombre">Montant</th><th>Reçu</th><th>Date</th></tr></thead>
               <tbody>
                 {% for p in f.derniers_paiements %}
                   <tr>
-                    <td><a class="tdb-eleve" href="{{ url_for('finances.detail', eleve_id=p.eleve_id) }}">
-                      <span class="tdb-initiales">{{ p.eleve.nom_complet|initiales }}</span>
+                    <td><a class="lien-eleve" href="{{ url_for('finances.detail', eleve_id=p.eleve_id) }}">
+                      <span class="initiales-rondes">{{ p.eleve.nom_complet|initiales }}</span>
                       <span>{{ p.eleve.nom_complet }}<small>{{ p.eleve.classe.nom if p.eleve.classe }}</small></span>
                     </a></td>
                     <td>{{ p.libelle_echeance }}</td>
                     <td><span class="tdb-mode tdb-mode-{{ p.mode }}">{{ tableau.libelles_mode.get(p.mode, p.mode) }}</span></td>
                     <td class="nombre"><strong>{{ p.montant|fcfa }}</strong></td>
-                    <td class="tdb-cellule-discrete">{{ p.numero_recu or "—" }}</td>
-                    <td class="tdb-cellule-discrete">{{ p.date_paiement.strftime("%d/%m à %H:%M") if p.date_paiement }}</td>
+                    <td class="cellule-discrete">{{ p.numero_recu or "—" }}</td>
+                    <td class="cellule-discrete">{{ p.date_paiement.strftime("%d/%m à %H:%M") if p.date_paiement }}</td>
                   </tr>
                 {% endfor %}
               </tbody>

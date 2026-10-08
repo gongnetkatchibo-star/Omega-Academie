@@ -19,12 +19,12 @@
 {% macro champ_mot_de_passe(name, autocomplete="new-password", required=True) %}
   <div class="champ-mdp-conteneur">
     <input type="password" name="{{ name }}" id="mdp-{{ name }}" autocomplete="{{ autocomplete }}" {% if required %}required{% endif %}>
-    <button type="button" class="mdp-toggle" onclick="
+    <button type="button" class="mdp-toggle" aria-pressed="false" onclick="
         var champ = document.getElementById('mdp-{{ name }}');
         var visible = champ.type === 'text';
         champ.type = visible ? 'password' : 'text';
-        this.textContent = visible ? '👁' : '🙈';
-      " aria-label="Afficher ou masquer le mot de passe">👁</button>
+        this.setAttribute('aria-pressed', visible ? 'false' : 'true');
+      " aria-label="Afficher ou masquer le mot de passe">{{ icone("oeil") }}{{ icone("oeil-barre") }}</button>
   </div>
 {% endmacro %}
 

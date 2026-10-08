@@ -215,7 +215,7 @@ def test_fondateur_ne_peut_pas_se_donner_le_role_developpeur(client, db, deux_ec
     client.post(f"/developpeur/utilisateur/{moi_id}", data={"role": "developpeur", "statut": "actif"})
     db.session.remove()
     g.ecole_id = None
-    moi = db.session.query(User).execution_options(tous_etablissements=True).get(moi_id)
+    moi = db.session.get(User, moi_id, execution_options={"tous_etablissements": True})
     assert moi.role != "developpeur"
 
 

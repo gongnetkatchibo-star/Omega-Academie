@@ -118,7 +118,7 @@ def _lignes_export_eleves(classe_id=None, cycle=None):
 @roles_required(*ROLES_GESTION, module="eleves")
 def export(fmt):
     classe_id = request.args.get("classe_id", type=int)
-    classe_obj = Classe.query.get(classe_id) if classe_id else None
+    classe_obj = db.session.get(Classe, classe_id) if classe_id else None
     sous_titre = f"Classe : {classe_obj.nom}" if classe_obj else "Toutes classes"
     nom_fichier = f"eleves_{classe_obj.nom}" if classe_obj else "eleves_toutes_classes"
     entetes, lignes = _lignes_export_eleves(classe_id, cycle=cycle_du_role(current_user.role))
@@ -245,7 +245,7 @@ def nouveau():
             except ValueError:
                 pass
 
-        classe = Classe.query.get(classe_id)
+        classe = db.session.get(Classe, classe_id)
         if classe is None:
             flash("Classe introuvable.", "error")
             return render_template("eleves/nouveau.html", classes=classes)

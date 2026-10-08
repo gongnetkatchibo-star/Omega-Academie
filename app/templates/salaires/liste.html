@@ -3,7 +3,7 @@
 {% block content %}
   {{ fil_ariane(("Salaires", None)) }}
   {{ banniere("salaires", "Salaires du personnel") }}
-  <p class="lien-secondaire"><a href="{{ url_for('salaires.nouveau') }}">+ Nouveau salaire</a></p>
+  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('salaires.nouveau') }}">{{ icone("plus") }} Nouveau salaire</a></div>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}

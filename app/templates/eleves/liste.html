@@ -14,12 +14,13 @@
     {% endif %}
   {% endwith %}
 
-  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
-    <p class="lien-secondaire">
-      <a href="{{ url_for('eleves.nouveau') }}">+ Inscrire un élève</a>
-      · <a href="{{ url_for('eleves.importer') }}">Importer depuis Excel</a>
-      · <a href="{{ url_for('eleves.passage_en_masse') }}">Passage de classe</a>
-    </p>
+  {% set gestion = acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+  {% if gestion %}
+    <div class="barre-actions">
+      <a class="bouton bouton-plein" href="{{ url_for('eleves.nouveau') }}">{{ icone("plus") }} Inscrire un élève</a>
+      <a class="bouton" href="{{ url_for('eleves.importer') }}">{{ icone("importer") }} Importer depuis Excel</a>
+      <a class="bouton" href="{{ url_for('eleves.passage_en_masse') }}">{{ icone("chapeau") }} Passage de classe</a>
+    </div>
   {% endif %}
 
   <form method="get" class="barre-recherche barre-recherche-large" role="search">
@@ -35,29 +36,43 @@
     <button type="submit">Chercher</button>
   </form>
 
-  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
-    <p class="lien-secondaire">
-      Exporter {% if classe_id %}cette classe{% else %}toutes les classes{% endif %} :
-      <a href="{{ url_for('eleves.export', fmt='csv', classe_id=classe_id) }}">CSV</a> ·
-      <a href="{{ url_for('eleves.export', fmt='xlsx', classe_id=classe_id) }}">Excel</a> ·
-      <a href="{{ url_for('eleves.export', fmt='pdf', classe_id=classe_id) }}">PDF</a>
-    </p>
-  {% endif %}
-
   {% if page.total %}
-    <ul class="liste-demandes">
-      {% for e in page %}
-        <li class="carte-demande">
-          <div class="infos">
-            <strong>{{ e.nom_complet }}</strong>
-            <span>{{ e.matricule }} — {{ e.classe.nom }} — {{ e.sexe|genre_libelle }}</span>
-          </div>
-          <div class="actions">
-            <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">Voir le dossier</a>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
+    <section class="panneau">
+      <div class="panneau-tete">
+        <h2>{{ page.total }} élève{{ "s" if page.total > 1 }}</h2>
+        {% if gestion %}
+          <span class="liens-export">
+            Exporter {% if classe_id %}cette classe{% else %}toutes les classes{% endif %} :
+            <a href="{{ url_for('eleves.export', fmt='csv', classe_id=classe_id) }}">CSV</a>
+            <a href="{{ url_for('eleves.export', fmt='xlsx', classe_id=classe_id) }}">Excel</a>
+            <a href="{{ url_for('eleves.export', fmt='pdf', classe_id=classe_id) }}">PDF</a>
+          </span>
+        {% endif %}
+      </div>
+      <div class="defile-horizontal">
+        <table class="tableau-compact">
+          <thead><tr><th>Élève</th><th>Matricule</th><th>Classe</th><th>Sexe</th><th>Dossier</th></tr></thead>
+          <tbody>
+            {% for e in page %}
+              <tr>
+                <td><a class="lien-eleve" href="{{ url_for('eleves.detail', eleve_id=e.id) }}">
+                  {% if e.photo_mime %}
+                    <img class="initiales-rondes" src="{{ url_for('eleves.photo', eleve_id=e.id) }}" alt="" loading="lazy">
+                  {% else %}
+                    <span class="initiales-rondes">{{ e.nom_complet|initiales }}</span>
+                  {% endif %}
+                  <span>{{ e.nom_complet }}</span>
+                </a></td>
+                <td class="cellule-discrete">{{ e.matricule }}</td>
+                <td>{{ e.classe.nom }}</td>
+                <td>{{ e.sexe|genre_libelle }}</td>
+                <td>{% if e.statut_dossier == "complet" %}<span class="badge badge-ok">Complet</span>{% else %}<span class="badge badge-attention">Incomplet</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
     {{ pagination(page) }}
   {% else %}
     {{ etat_vide("Aucun élève ne correspond." if terme or classe_id else "Aucun élève pour l'instant.") }}

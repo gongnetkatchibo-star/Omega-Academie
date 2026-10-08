@@ -8,11 +8,11 @@
   {% endwith %}
 
   {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
-    <p class="lien-secondaire">
-      <a href="{{ url_for('bibliotheque.nouvelle') }}">+ Ajouter une ressource</a>
-      · <a href="{{ url_for('bibliotheque.importer') }}">Importer plusieurs fichiers</a>
-      · <a href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">Exporter {{ "cette sélection" if type_filtre else "tout" }} (.zip)</a>
-    </p>
+    <div class="barre-actions">
+      <a class="bouton bouton-plein" href="{{ url_for('bibliotheque.nouvelle') }}">{{ icone("plus") }} Ajouter une ressource</a>
+      <a class="bouton" href="{{ url_for('bibliotheque.importer') }}">{{ icone("importer") }} Importer plusieurs fichiers</a>
+      <a class="bouton" href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">{{ icone("telecharger") }} Exporter {{ "cette sélection" if type_filtre else "tout" }} (.zip)</a>
+    </div>
   {% endif %}
 
   <form method="get">
@@ -30,7 +30,7 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ r.titre }}</strong>
-            {% if r.consultation_sur_place %}<span class="badge-retard">🔒 Consultation sur place</span>{% endif %}
+            {% if r.consultation_sur_place %}<span class="badge-retard">{{ icone("cadenas") }} Consultation sur place</span>{% endif %}
             <span>{{ r.type }}{% if r.matiere %} · {{ r.matiere }}{% endif %}</span>
           </div>
           <div class="actions">

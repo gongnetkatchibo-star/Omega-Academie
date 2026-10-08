@@ -2285,11 +2285,11 @@ button:hover {
   align-items: start;
 }
 
-.tdb-grille > .tdb-panneau:only-child {
+.tdb-grille > .panneau:only-child {
   grid-column: 1 / -1;
 }
 
-.tdb-panneau {
+.panneau {
   background: var(--surface);
   border: 1px solid var(--trait);
   border-radius: 10px;
@@ -2300,7 +2300,7 @@ button:hover {
   min-width: 0;
 }
 
-.tdb-panneau-tete {
+.panneau-tete {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -2308,20 +2308,20 @@ button:hover {
   flex-wrap: wrap;
 }
 
-.tdb-panneau h2 {
+.panneau h2 {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
 }
 
-.tdb-panneau-tete a {
+.panneau-tete a {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--navy);
   text-decoration: none;
 }
 
-.tdb-panneau-tete a:hover {
+.panneau-tete a:hover {
   text-decoration: underline;
 }
 
@@ -2464,18 +2464,18 @@ button:hover {
 .tdb-pastille-info { background: var(--piste); color: var(--navy); }
 
 /* Tableaux du tableau de bord */
-.tdb-defile {
+.defile-horizontal {
   overflow-x: auto;
   margin: 0 -4px;
 }
 
-.tdb-table {
+.tableau-compact {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.tdb-table th {
+.tableau-compact th {
   text-align: left;
   font-size: 11.5px;
   font-weight: 600;
@@ -2487,22 +2487,22 @@ button:hover {
   white-space: nowrap;
 }
 
-.tdb-table td {
+.tableau-compact td {
   padding: 10px 8px;
   border-bottom: 1px solid var(--trait);
   white-space: nowrap;
 }
 
-.tdb-table .tdb-cellule-discrete {
+.tableau-compact .cellule-discrete {
   font-size: 13px;
   color: var(--encre-3);
 }
 
-.tdb-table tr:last-child td {
+.tableau-compact tr:last-child td {
   border-bottom: 0;
 }
 
-.tdb-table .nombre {
+.tableau-compact .nombre {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -2529,7 +2529,7 @@ button:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.tdb-eleve {
+.lien-eleve {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2537,17 +2537,17 @@ button:hover {
   text-decoration: none;
 }
 
-.tdb-eleve:hover > span:last-child {
+.lien-eleve:hover > span:last-child {
   text-decoration: underline;
 }
 
-.tdb-eleve small {
+.lien-eleve small {
   display: block;
   font-size: 12px;
   color: var(--encre-3);
 }
 
-.tdb-initiales {
+.initiales-rondes {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -2621,4 +2621,89 @@ button:hover {
   .tdb-actions { width: 100%; }
   .tdb-actions .bouton { flex: 1 1 auto; justify-content: center; }
   .tdb-indicateurs { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Bouton « afficher le mot de passe » : un œil, barré quand le mot de
+   passe est visible. */
+.mdp-toggle svg.icone {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+.mdp-toggle .icone:last-child,
+.mdp-toggle[aria-pressed="true"] .icone:first-child {
+  display: none;
+}
+
+.mdp-toggle[aria-pressed="true"] .icone:last-child {
+  display: inline-block;
+}
+
+.etat-vide-icone {
+  color: var(--gold);
+  opacity: 1;
+}
+
+.etat-vide-icone svg.icone {
+  width: 34px;
+  height: 34px;
+  stroke-width: 1.5;
+}
+
+.badge-retard svg.icone {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+.mdp-toggle,
+.mdp-toggle:hover {
+  background: none;
+  color: var(--encre-2);
+}
+
+.mdp-toggle:hover {
+  color: var(--navy);
+}
+
+/* Rangée de boutons d'action en haut d'une page de liste */
+.barre-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+/* Recherche : le menu des classes passe à la ligne au lieu de
+   déborder de l'écran sur téléphone. */
+.barre-recherche {
+  flex-wrap: wrap;
+}
+
+.barre-recherche input[type=search] {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.barre-recherche select {
+  max-width: 100%;
+}
+
+.liens-export {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--encre-2);
+}
+
+.liens-export a {
+  font-weight: 600;
+  color: var(--navy);
+}
+
+img.initiales-rondes {
+  object-fit: cover;
+  padding: 0;
 }

@@ -117,7 +117,7 @@ def nouveau():
         email_contact = request.form.get("email_contact", "").strip()
         telephone_contact = request.form.get("telephone_contact", "").strip()
 
-        employe = User.query.get(personnel_id) if personnel_id else None
+        employe = db.session.get(User, personnel_id) if personnel_id else None
         erreur = None
         if not employe or not mois or not annee or not montant or montant <= 0:
             erreur = "Merci de remplir tous les champs avec des valeurs valides."

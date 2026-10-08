@@ -124,7 +124,7 @@ def analyser_echeance(valeur, eleve):
     if valeur in ECHEANCES:
         return valeur, None
     if valeur and valeur.startswith("annexe_") and valeur[7:].isdigit():
-        frais = FraisAnnexe.query.get(int(valeur[7:]))
+        frais = db.session.get(FraisAnnexe, int(valeur[7:]))
         if frais and frais.classe_id in (None, eleve.classe_id):
             return ECHEANCE_ANNEXE, frais
     return None

@@ -29,10 +29,10 @@
   {% endwith %}
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
-    <p class="lien-secondaire">
-      <a href="{{ url_for('classes.nouvelle') }}">+ Nouvelle classe</a>
-      · <a href="{{ url_for('classes.demarrer_annee') }}">Démarrer une nouvelle année scolaire</a>
-    </p>
+    <div class="barre-actions">
+      <a class="bouton bouton-plein" href="{{ url_for('classes.nouvelle') }}">{{ icone("plus") }} Nouvelle classe</a>
+      <a class="bouton" href="{{ url_for('classes.demarrer_annee') }}">{{ icone("calendrier") }} Démarrer une nouvelle année scolaire</a>
+    </div>
   {% endif %}
 
   {% if classes %}

@@ -3,11 +3,10 @@
 {% block content %}
   {{ fil_ariane(("Caisse", None)) }}
   {{ banniere("caisse", "Caisse générale") }}
-  <p class="lien-secondaire">
-    <a href="{{ url_for('caisse.nouveau_paiement') }}">+ Nouveau paiement officiel (scolarité)</a>
-    ·
-    <a href="{{ url_for('caisse.nouveau') }}">+ Autre mouvement (recette/dépense)</a>
-  </p>
+  <div class="barre-actions">
+    <a class="bouton bouton-plein" href="{{ url_for('caisse.nouveau_paiement') }}">{{ icone("plus") }} Paiement de scolarité</a>
+    <a class="bouton" href="{{ url_for('caisse.nouveau') }}">{{ icone("plus") }} Autre recette ou dépense</a>
+  </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
