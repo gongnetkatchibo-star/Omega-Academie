@@ -24,7 +24,7 @@
         var visible = champ.type === 'text';
         champ.type = visible ? 'password' : 'text';
         this.setAttribute('aria-pressed', visible ? 'false' : 'true');
-      " aria-label="Afficher ou masquer le mot de passe">{{ icone("oeil") }}{{ icone("oeil-barre") }}</button>
+      " aria-label="{{ _('Afficher ou masquer le mot de passe') }}">{{ icone("oeil") }}{{ icone("oeil-barre") }}</button>
   </div>
 {% endmacro %}
 

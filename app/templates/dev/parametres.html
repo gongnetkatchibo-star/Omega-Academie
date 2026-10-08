@@ -30,6 +30,12 @@
       </select>
     </label>
 
+    <h2>Documents bilingues français · arabe</h2>
+    <label class="ligne-case"><input type="checkbox" name="documents_bilingues" {% if parametre.documents_bilingues %}checked{% endif %}>
+      Bulletins, certificats, attestations et reçus en français et en arabe</label>
+    <label>Nom de l'établissement en arabe<input type="text" name="nom_arabe" dir="rtl" lang="ar" value="{{ etab.nom_arabe or '' }}" placeholder="مثال: أكاديمية أوميغا"></label>
+    <label>Ville en arabe<input type="text" name="ville_arabe" dir="rtl" lang="ar" value="{{ etab.ville_arabe or '' }}" placeholder="مثال: انجامينا"></label>
+
     <h2>Dates limites de paiement</h2>
     <label>Inscription
       <input type="date" name="date_limite_inscription" value="{{ parametre.date_limite_inscription.isoformat() if parametre.date_limite_inscription else '' }}">

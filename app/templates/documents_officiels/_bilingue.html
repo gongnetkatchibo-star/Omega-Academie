@@ -1,0 +1,15 @@
+{# Documents bilingues (oct. 2026). À importer avec
+   {% from "documents_officiels/_bilingue.html" import bi, ar with context %}.
+   Sans l'option « documents bilingues », ces macros n'affichent que le
+   français : les documents restent identiques à avant. #}
+
+{# Libellé français suivi de son équivalent arabe (trouvé dans
+   traductions_ar.DOCUMENTS, ou donné en second argument). #}
+{% macro bi(fr, arabe=None, separateur=" / ") -%}
+{{ fr }}{% if bilingue %}{% set t = arabe or (fr|trad_doc) %}{% if t %}{{ separateur|safe }}<span class="ar">{{ t|arabe_pdf }}</span>{% endif %}{% endif %}
+{%- endmacro %}
+
+{# Une ligne arabe seule. Elle ne doit pas passer à la ligne (voir langues.py). #}
+{% macro ar(texte, style="") -%}
+{% if bilingue and texte %}<span class="ar" style="{{ style }}">{{ texte|arabe_pdf }}</span>{% endif %}
+{%- endmacro %}

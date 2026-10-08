@@ -13,14 +13,14 @@
           <input type="hidden" name="eleve_id" value="{{ eleve.id }}">
           <input type="hidden" name="numero" value="{{ c.numero }}">
           {% if jour %}<input type="hidden" name="date" value="{{ jour.isoformat() }}">{% endif %}
-          <button type="submit" class="bouton-whatsapp" title="Ouvrir WhatsApp avec le message prêt à envoyer">
+          <button type="submit" class="bouton-whatsapp" title="{{ _('Ouvrir WhatsApp avec le message prêt à envoyer') }}">
             {{ icone("whatsapp") }}
-            <span>{{ c.nom }}{% if c.libelle %} · {{ c.libelle }}{% endif %}<small>{{ c.numero|numero_lisible }}</small></span>
+            <span>{{ _(c.nom) }}{% if c.libelle %} · {{ _(c.libelle) }}{% endif %}<small>{{ c.numero|numero_lisible }}</small></span>
           </button>
         </form>
       {% endfor %}
     </div>
   {% else %}
-    <span class="whatsapp-sans-numero">Aucun numéro mobile valide dans le dossier</span>
+    <span class="whatsapp-sans-numero">{{ _("Aucun numéro mobile valide dans le dossier") }}</span>
   {% endif %}
 {% endmacro %}

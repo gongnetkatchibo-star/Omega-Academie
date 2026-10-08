@@ -75,6 +75,10 @@ def html_vers_pdf(html):
     from io import BytesIO
     from xhtml2pdf import pisa
 
+    # Marques d'isolement de l'interface arabe (voir le filtre fcfa) : inutiles
+    # dans un PDF, où la police pourrait les dessiner comme des carrés.
+    html = html.replace("\u2066", "").replace("\u2069", "")
+
     if 'class="ar' in html:
         # Document bilingue : polices arabes (voir services/langues.py).
         from app.services.langues import css_polices_arabes

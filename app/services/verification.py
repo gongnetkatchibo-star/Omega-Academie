@@ -51,7 +51,9 @@ def emettre(type_document, cle_objet, titre, nom_eleve=None, classe=None, refere
         type_document=type_document, cle_objet=cle_objet, titre=titre,
         nom_eleve=nom_eleve, classe=classe, reference=reference,
     )
-    nouveau.details = details
+    nouveau.details = [
+        tuple(str(v).replace("\u2066", "").replace("\u2069", "") for v in ligne) for ligne in details
+    ]
     existant = (
         DocumentVerifiable.query
         .filter_by(cle_objet=cle_objet, titre=titre, nom_eleve=nom_eleve, classe=classe,

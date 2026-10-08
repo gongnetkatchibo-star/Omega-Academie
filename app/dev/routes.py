@@ -306,6 +306,9 @@ def parametres():
         ecole.ville = request.form.get("ville", "").strip() or None
         ecole.pays = request.form.get("pays", "").strip() or None
         ecole.slogan = request.form.get("slogan", "").strip() or None
+        ecole.nom_arabe = request.form.get("nom_arabe", "").strip() or None
+        ecole.ville_arabe = request.form.get("ville_arabe", "").strip() or None
+        parametre.documents_bilingues = request.form.get("documents_bilingues") == "on"
         for champ, (contenu, mime) in images.items():
             setattr(ecole, champ, contenu)
             setattr(ecole, f"{champ}_mime", mime)

@@ -23,8 +23,10 @@
   --attention-pale: #FDF3E2;
   --critique: #A32D2D;
   --critique-pale: #FBECEB;
-  --police-titres: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --police-texte: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* Les polices latines n'ont pas de lettres arabes : le navigateur prend
+     alors Noto Sans Arabic, chargée seulement si la page en contient. */
+  --police-titres: "Bricolage Grotesque", "Noto Sans Arabic", "Segoe UI", system-ui, sans-serif;
+  --police-texte: "Figtree", "Noto Sans Arabic", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -2958,4 +2960,178 @@ form.relances-date input {
 
 form.relances-email {
   margin: 0;
+}
+
+/* ========== Arabe : police et écriture de droite à gauche (oct. 2026) ========== */
+
+@font-face {
+  font-family: "Noto Sans Arabic";
+  src: url("../fonts/noto-sans-arabic.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+200C-200E, U+FB50-FDFF, U+FE70-FEFC;
+}
+
+.choix-langue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--trait);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 14px;
+  font-style: normal;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.choix-langue:hover {
+  border-color: var(--navy);
+}
+
+.choix-langue[lang="ar"] {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.navbar .choix-langue {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+  margin-inline-end: 14px;
+}
+
+[dir="rtl"] body {
+  line-height: 1.7;
+}
+
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  letter-spacing: 0;
+}
+
+/* Les libellés en capitales espacées n'ont pas de sens en arabe. */
+[dir="rtl"] .tdb-indicateur-titre,
+[dir="rtl"] .tableau-compact th {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 13px;
+}
+
+/* Menu à droite */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .contenu-principal {
+  margin-left: 0;
+  margin-right: 240px;
+}
+
+[dir="rtl"] .sidebar-liens a.lien-actif,
+[dir="rtl"] .sidebar-lien-plateforme {
+  box-shadow: inset -3px 0 0 var(--accent-vif);
+}
+
+[dir="rtl"] .sidebar-deroulant summary::after {
+  right: auto;
+  left: 12px;
+  content: "◂";
+}
+
+[dir="rtl"] .sidebar-deroulant[open] summary::after {
+  transform: rotate(-90deg);
+}
+
+[dir="rtl"] .sidebar-deroulant a {
+  padding: 7px 39px 7px 10px !important;
+}
+
+[dir="rtl"] .barre-devise {
+  text-align: right;
+}
+
+@media (max-width: 800px) {
+  [dir="rtl"] .sidebar {
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] .sidebar.sidebar-ouverte {
+    transform: translateX(0);
+  }
+
+  [dir="rtl"] .sidebar-toggle-mobile {
+    left: auto;
+    right: 14px;
+  }
+
+  [dir="rtl"] .contenu-principal {
+    margin-right: 0;
+  }
+
+  [dir="rtl"] .barre-devise {
+    padding-left: 16px;
+    padding-right: 64px;
+  }
+}
+
+/* Alignements */
+[dir="rtl"] .table th,
+[dir="rtl"] .table td,
+[dir="rtl"] .tableau-compact th,
+[dir="rtl"] .tableau-compact td {
+  text-align: right;
+}
+
+[dir="rtl"] .tableau-compact .nombre {
+  text-align: left;
+}
+
+[dir="rtl"] .tdb-taux strong {
+  text-align: left;
+}
+
+[dir="rtl"] .carte-guide {
+  border-left: 1px solid #DFE6EC;
+  border-right: 4px solid var(--gold);
+}
+
+[dir="rtl"] .carte-demande {
+  border-left: 1px solid #e2ddcd;
+  border-right: 4px solid var(--gold);
+}
+
+[dir="rtl"] .bouton-whatsapp {
+  text-align: right;
+}
+
+/* Les flèches « suivant » pointent vers la gauche en arabe. */
+[dir="rtl"] .tdb-taches svg.icone,
+[dir="rtl"] svg.icone use[href="#i-chevron"] {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .mdp-toggle {
+  right: auto;
+  left: 4px;
+}
+
+/* Codes et numéros : toujours de gauche à droite. */
+.verification-code,
+.cellule-discrete {
+  unicode-bidi: isolate;
+}
+
+[dir="rtl"] .verification-formulaire input[type=text],
+[dir="rtl"] input[type=email],
+[dir="rtl"] input[name=email] {
+  direction: ltr;
+  text-align: right;
 }

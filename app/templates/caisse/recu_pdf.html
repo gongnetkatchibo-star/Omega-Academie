@@ -1,3 +1,4 @@
+{% from "documents_officiels/_bilingue.html" import ar with context %}
 <html>
 <head><meta charset="utf-8">
 <style>
@@ -6,29 +7,30 @@
   .sous { color: #555; font-size: 12px; margin-top: 2px; }
   table { width: 100%; border-collapse: collapse; margin-top: 24px; }
   td { padding: 8px; border-bottom: 1px solid #ddd; font-size: 13px; }
-  td.label { color: #555; width: 40%; }
+  td.label { color: #555; width: 32%; }
+  td.label-ar { color: #555; width: 26%; text-align: right; }
   .montant { font-size: 22px; font-weight: bold; margin-top: 24px; }
 </style>
 </head>
 <body>
   {% include "documents_officiels/_entete.html" %}
-  <p class="sous">Reçu de paiement</p>
+  <p class="sous">Reçu de paiement{% if bilingue %} &nbsp; {{ ar("وصل دفع", "font-size:13pt;") }}{% endif %}</p>
 
   <table>
-    <tr><td class="label">Référence</td><td>{{ m.reference or "—" }}</td></tr>
-    <tr><td class="label">Date</td><td>{{ m.date.strftime("%d/%m/%Y") }}</td></tr>
-    <tr><td class="label">Libellé</td><td>{{ m.libelle }}</td></tr>
+    <tr><td class="label">Référence</td><td>{{ m.reference or "—" }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Référence"|trad_doc) }}</td>{% endif %}</tr>
+    <tr><td class="label">Date</td><td>{{ m.date.strftime("%d/%m/%Y") }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Date"|trad_doc) }}</td>{% endif %}</tr>
+    <tr><td class="label">Libellé</td><td>{{ m.libelle }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Libellé"|trad_doc) }}</td>{% endif %}</tr>
     {% if m.eleve %}
-      <tr><td class="label">Élève</td><td>{{ m.eleve.nom_complet }} ({{ m.eleve.matricule }})</td></tr>
-      <tr><td class="label">Classe</td><td>{{ m.eleve.classe.nom }}</td></tr>
+      <tr><td class="label">Élève</td><td>{{ m.eleve.nom_complet }} ({{ m.eleve.matricule }})</td>{% if bilingue %}<td class="label-ar">{{ ar("Élève"|trad_doc) }}</td>{% endif %}</tr>
+      <tr><td class="label">Classe</td><td>{{ m.eleve.classe.nom }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Classe"|trad_doc) }}</td>{% endif %}</tr>
       {% if m.eleve.parents %}
-        <tr><td class="label">Parent(s)</td><td>{{ m.eleve.parents|map(attribute='nom_complet')|join(', ') }}</td></tr>
+        <tr><td class="label">Parent(s)</td><td>{{ m.eleve.parents|map(attribute='nom_complet')|join(', ') }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Parent(s)"|trad_doc) }}</td>{% endif %}</tr>
       {% endif %}
     {% endif %}
-    <tr><td class="label">Encaissé par</td><td>{{ m.responsable.nom_complet if m.responsable else "—" }}</td></tr>
+    <tr><td class="label">Encaissé par</td><td>{{ m.responsable.nom_complet if m.responsable else "—" }}</td>{% if bilingue %}<td class="label-ar">{{ ar("Encaissé par"|trad_doc) }}</td>{% endif %}</tr>
   </table>
 
-  <p class="montant">Montant : {{ (m.recette or m.depense)|fcfa }}</p>
+  <p class="montant">Montant : {{ (m.recette or m.depense)|fcfa }}{% if bilingue %} &nbsp; {{ ar("المبلغ", "font-size:18pt;") }}{% endif %}</p>
   {% include "documents_officiels/_signature.html" %}
 </body>
 </html>

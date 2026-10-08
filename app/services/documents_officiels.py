@@ -92,12 +92,36 @@ def contexte_entete_officiel():
     nom de l'établissement, lieu et date, signataire par défaut."""
     from app.utils import logo_officiel_data_uri
 
+    from app.models.parametre import ParametreEtablissement
+
     identite = identite_ecole()
-    return {
+    contexte = {
         "logo_officiel_uri": logo_officiel_data_uri(),
         "nom_etablissement": identite["nom"],
         "ville_etablissement": identite["ville"],
         "pays_etablissement": identite["pays"],
         "lieu_et_date": lieu_et_date_officiels(),
         "signataire": signataire_par_defaut(),
+        "bilingue": bool(ParametreEtablissement.get().documents_bilingues),
+    }
+    contexte.update(identite_arabe())
+    return contexte
+
+
+def identite_arabe():
+    """Nom, ville, pays et « lieu et date » en arabe, pour l'en-tête des
+    documents bilingues. Les nombres sont marqués ⟦ ⟧ (voir langues.py)."""
+    from app.services.langues import traduction_document, ltr
+    from app.services.tenant import ecole_courante
+    from app.services.traductions_ar import MOIS
+
+    ecole = ecole_courante()
+    jour = aujourd_hui()
+    ville = (ecole.ville_arabe if ecole else None) or ""
+    date_arabe = f"{ltr(jour.day)} {MOIS[jour.month - 1]} {ltr(jour.year)}"
+    return {
+        "nom_arabe": (ecole.nom_arabe if ecole else None) or "",
+        "ville_arabe": ville,
+        "pays_arabe": traduction_document(ecole.pays if ecole else "") or "",
+        "lieu_et_date_arabe": f"{ville} في {date_arabe}" if ville else f"بتاريخ {date_arabe}",
     }

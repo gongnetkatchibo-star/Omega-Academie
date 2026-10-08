@@ -15,6 +15,7 @@
   {% set f = eleve.sexe == "F" %}
   <p class="numero">N° {{ numero }}</p>
   <p class="titre">CERTIFICAT DE SCOLARITÉ</p>
+  {% if bilingue %}<p class="titre" style="text-decoration:none; margin-top:-18px;"><span class="ar-gras" style="font-size:16pt;">{{ "شهادة مدرسية"|arabe_pdf }}</span></p>{% endif %}
 
   <div class="corps">
     <p>
@@ -35,6 +36,8 @@
     <p>En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.</p>
   </div>
 
+  {% set type_document = "certificat" %}
+  {% include "documents_officiels/_corps_arabe.html" %}
   {% include "documents_officiels/_signature.html" %}
 </body>
 </html>

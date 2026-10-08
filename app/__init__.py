@@ -165,12 +165,20 @@ def create_app(config_name=None):
         except (TypeError, ValueError):
             return montant
         texte = f"{entier:,}".replace(",", "\u00a0")
-        return f"{texte}\u00a0FCFA" if unite else texte
+        texte = f"{texte}\u00a0FCFA" if unite else texte
+        from app.services.langues import langue_courante
+        if langue_courante() == "ar":
+            # Isolé de gauche à droite : sinon, dans une phrase arabe,
+            # « 145 000 » s'afficherait « 000 145 ».
+            texte = f"\u2066{texte}\u2069"
+        return texte
 
     @app.template_filter("numero_lisible")
     def numero_lisible(numero):
         from app.services.whatsapp import numero_lisible as formater
-        return formater(numero) if numero and numero.startswith("+235") and len(numero) == 12 else numero
+        texte = formater(numero) if numero and numero.startswith("+235") and len(numero) == 12 else numero
+        from app.services.langues import langue_courante
+        return f"\u2066{texte}\u2069" if texte and langue_courante() == "ar" else texte
 
     JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
     MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",

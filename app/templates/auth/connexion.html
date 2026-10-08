@@ -5,7 +5,7 @@
   <div class="carte-connexion">
     <div class="connexion-formulaire">
       <p class="nom-plateforme">{{ nom_plateforme() }}</p>
-      <h1>Connexion</h1>
+      <h1>{{ _("Connexion") }}</h1>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -20,21 +20,21 @@
       <form method="post" autocomplete="off">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
-        <label>Email ou matricule
+        <label>{{ _("Email ou matricule") }}
           <input type="text" name="email" autocomplete="username" required>
         </label>
-        <label>Mot de passe
+        <label>{{ _("Mot de passe") }}
           {{ champ_mot_de_passe("mot_de_passe") }}
         </label>
-        <button type="submit">Se connecter</button>
+        <button type="submit">{{ _("Se connecter") }}</button>
       </form>
 
-      <p class="lien-secondaire"><a href="{{ url_for('auth.mot_de_passe_oublie') }}">Mot de passe oublié ?</a></p>
+      <p class="lien-secondaire"><a href="{{ url_for('auth.mot_de_passe_oublie') }}">{{ _("Mot de passe oublié ?") }}</a></p>
     </div>
 
     <div class="connexion-info">
-      <h2>Nouveau ici ?</h2>
-      <a href="{{ url_for('auth.inscription') }}" class="bouton-secondaire-large">Créer un compte</a>
+      <h2>{{ _("Nouveau ici ?") }}</h2>
+      <a href="{{ url_for('auth.inscription') }}" class="bouton-secondaire-large">{{ _("Créer un compte") }}</a>
     </div>
   </div>
 {% endblock %}

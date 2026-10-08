@@ -1,0 +1,22 @@
+{# Texte arabe du certificat et de l'attestation (oct. 2026), en lignes
+   courtes : une ligne arabe d'un PDF ne doit pas passer à la ligne.
+   Variables : eleve, signataire, type_document ("certificat" ou "attestation"). #}
+{% if bilingue %}
+  {% set f = eleve.sexe == "F" %}
+  {% set qualite = (signataire.qualite|trad_doc) or ("المديرة" if signataire.genre == "F" else "المدير") %}
+  {% set annee = "⟦" ~ eleve.classe.annee_scolaire ~ "⟧" %}
+  <div style="border-top: 0.5pt solid #999; margin: 14pt 0 8pt 0;"></div>
+  <div class="ar" style="text-align:right; font-size:12.5pt; line-height:1.9;">
+    <p style="margin:0;">{{ ((("تشهد " ~ qualite ~ " الموقعة أدناه") if signataire.genre == "F" else ("يشهد " ~ qualite ~ " الموقع أدناه")) ~ " بأن " ~ ("التلميذة" if f else "التلميذ") ~ " :")|arabe_pdf }}</p>
+    <p style="margin:0;">{{ ("الاسم واللقب : ⟦" ~ eleve.nom_complet ~ "⟧")|arabe_pdf }}</p>
+    <p style="margin:0;">{{ ("رقم التسجيل : ⟦" ~ eleve.matricule ~ "⟧")|arabe_pdf }}</p>
+    {% if eleve.date_naissance %}<p style="margin:0;">{{ ("تاريخ الميلاد : ⟦" ~ eleve.date_naissance.strftime("%d/%m/%Y") ~ "⟧")|arabe_pdf }}</p>{% endif %}
+    <p style="margin:0;">{{ ("القسم : ⟦" ~ eleve.classe.nom ~ "⟧")|arabe_pdf }}</p>
+    {% if type_document == "certificat" %}
+      <p style="margin:0;">{{ (("مسجلة" if f else "مسجل") ~ " بانتظام في مؤسستنا خلال السنة الدراسية " ~ annee ~ ".")|arabe_pdf }}</p>
+    {% else %}
+      <p style="margin:0;">{{ (("تواظب" if f else "يواظب") ~ " بانتظام على الدراسة في مؤسستنا خلال السنة الدراسية " ~ annee ~ ".")|arabe_pdf }}</p>
+    {% endif %}
+    <p style="margin:0;">{{ ("سلمت هذه الشهادة " ~ ("للمعنية" if f else "للمعني") ~ " بالأمر للإدلاء بها عند الحاجة.")|arabe_pdf }}</p>
+  </div>
+{% endif %}

@@ -1,3 +1,4 @@
+{% from "documents_officiels/_bilingue.html" import bi, ar with context %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,70 +20,70 @@
 {% for eleve, b in pages %}
   {% if not loop.first %}<pdf:nextpage />{% endif %}
   {% include "documents_officiels/_entete.html" %}
-  <p class="titre">BULLETIN DE NOTES</p>
-  <p class="sous-titre">{{ calcul.libelle_periode }} — Année scolaire {{ calcul.annee }}</p>
+  <p class="titre">BULLETIN DE NOTES{% if bilingue %} &nbsp; <span class="ar-gras" style="font-size:15pt;">{{ "كشف الدرجات"|arabe_pdf }}</span>{% endif %}</p>
+  <p class="sous-titre">{{ calcul.libelle_periode }} — Année scolaire {{ calcul.annee }}{% if bilingue %}<br><span class="ar" style="font-size:11pt;">{{ ((calcul.libelle_periode|trad_doc or "") ~ " — السنة الدراسية ⟦" ~ calcul.annee ~ "⟧")|arabe_pdf }}</span>{% endif %}</p>
 
   <table class="identite" style="width:100%; margin-bottom:10pt;">
     <tr>
-      <td style="width:60%;"><strong>Nom et prénom(s) :</strong> {{ eleve.nom_complet }}</td>
-      <td style="width:40%;"><strong>Classe :</strong> {{ classe.nom }}</td>
+      <td style="width:60%;"><strong>{{ bi("Nom et prénom(s)") }} :</strong> {{ eleve.nom_complet }}</td>
+      <td style="width:40%;"><strong>{{ bi("Classe") }} :</strong> {{ classe.nom }}</td>
     </tr>
     <tr>
-      <td><strong>Matricule :</strong> {{ eleve.matricule }}</td>
-      <td><strong>Genre :</strong> {{ "Féminin" if eleve.sexe == "F" else ("Masculin" if eleve.sexe == "M" else "—") }}</td>
+      <td><strong>{{ bi("Matricule") }} :</strong> {{ eleve.matricule }}</td>
+      <td><strong>{{ bi("Genre") }} :</strong> {{ bi("Féminin") if eleve.sexe == "F" else (bi("Masculin") if eleve.sexe == "M" else "—") }}</td>
     </tr>
     <tr>
-      <td>{% if eleve.date_naissance %}<strong>Date de naissance :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}{% else %}&nbsp;{% endif %}</td>
-      <td><strong>Effectif :</strong> {{ calcul.effectif_classe }}</td>
+      <td>{% if eleve.date_naissance %}<strong>{{ bi("Date de naissance") }} :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}{% else %}&nbsp;{% endif %}</td>
+      <td><strong>{{ bi("Effectif") }} :</strong> {{ calcul.effectif_classe }}</td>
     </tr>
   </table>
 
   {% if b.lignes %}
     <table class="notes">
       <tr>
-        <th style="width:23%;">Matière</th><th style="width:11%;">Moy. /{{ calcul.bareme }}</th><th style="width:8%;">Coef.</th>
-        <th style="width:10%;">Points</th><th style="width:8%;">Rang</th><th style="width:11%;">Moy. classe</th>
-        <th style="width:13%;">Min – Max</th><th style="width:16%;">Appréciation</th>
+        <th style="width:23%;">{{ bi("Matière", separateur="<br>") }}</th><th style="width:11%;">{{ bi("Moy. /" ~ calcul.bareme, "المعدل", "<br>") }}</th><th style="width:8%;">{{ bi("Coef.", separateur="<br>") }}</th>
+        <th style="width:10%;">{{ bi("Points", separateur="<br>") }}</th><th style="width:8%;">{{ bi("Rang", separateur="<br>") }}</th><th style="width:11%;">{{ bi("Moy. classe", separateur="<br>") }}</th>
+        <th style="width:13%;">{{ bi("Min – Max", separateur="<br>") }}</th><th style="width:16%;">{{ bi("Appréciation", separateur="<br>") }}</th>
       </tr>
       {% for l in b.lignes %}
         <tr>
-          <td>{{ l.matiere }}</td><td class="c">{{ "%.2f"|format(l.moyenne) }}</td><td class="c">{{ "%g"|format(l.coefficient) }}</td>
+          <td>{{ bi(l.matiere, separateur="<br>") }}</td><td class="c">{{ "%.2f"|format(l.moyenne) }}</td><td class="c">{{ "%g"|format(l.coefficient) }}</td>
           <td class="c">{{ "%.2f"|format(l.points) }}</td><td class="c">{{ l.rang }}</td><td class="c">{{ "%.2f"|format(l.classe) }}</td>
-          <td class="c">{{ "%.1f"|format(l.min) }} – {{ "%.1f"|format(l.max) }}</td><td>{{ l.mention }}</td>
+          <td class="c">{{ "%.1f"|format(l.min) }} – {{ "%.1f"|format(l.max) }}</td><td>{{ bi(l.mention, separateur="<br>") }}</td>
         </tr>
       {% endfor %}
       <tr>
-        <td><strong>Total</strong></td><td class="c">&nbsp;</td><td class="c"><strong>{{ "%g"|format(b.total_coefficients) }}</strong></td>
+        <td><strong>{{ bi("Total") }}</strong></td><td class="c">&nbsp;</td><td class="c"><strong>{{ "%g"|format(b.total_coefficients) }}</strong></td>
         <td class="c"><strong>{{ "%.2f"|format(b.total_points) }}</strong></td><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td>&nbsp;</td>
       </tr>
     </table>
   {% else %}
     <table class="notes">
-      <tr><th style="width:60%;">Période</th><th style="width:40%;">Moyenne /{{ calcul.bareme }}</th></tr>
+      <tr><th style="width:60%;">{{ bi("Période") }}</th><th style="width:40%;">{{ bi("Moyenne") }} /{{ calcul.bareme }}</th></tr>
       {% for t, m in b.trimestres.items() %}
-        <tr><td>{{ {"T1": "1er trimestre", "T2": "2e trimestre", "T3": "3e trimestre"}[t] }}</td><td class="c">{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
+        <tr><td>{{ bi({"T1": "1er trimestre", "T2": "2e trimestre", "T3": "3e trimestre"}[t]) }}</td><td class="c">{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
       {% endfor %}
     </table>
   {% endif %}
 
   <table class="synthese" style="width:100%; margin-top:10pt;">
     <tr>
-      <td style="width:50%;"><strong>Moyenne générale :</strong> {{ "%.2f"|format(b.moyenne) }} / {{ calcul.bareme }}</td>
-      <td style="width:50%;"><strong>Rang :</strong> {{ b.rang }}{{ "er" if b.rang == 1 else "e" }} sur {{ calcul.effectif_classe }}</td>
+      <td style="width:50%;"><strong>{{ bi("Moyenne générale") }} :</strong> {{ "%.2f"|format(b.moyenne) }} / {{ calcul.bareme }}</td>
+      <td style="width:50%;"><strong>{{ bi("Rang") }} :</strong> {{ b.rang }}{{ "er" if b.rang == 1 else "e" }} sur {{ calcul.effectif_classe }}</td>
     </tr>
     <tr>
-      <td><strong>Moyenne de la classe :</strong> {{ "%.2f"|format(calcul.moyenne_classe) }}</td>
-      <td><strong>Plus forte :</strong> {{ "%.2f"|format(calcul.plus_forte) }} &nbsp; <strong>Plus faible :</strong> {{ "%.2f"|format(calcul.plus_faible) }}</td>
+      <td><strong>{{ bi("Moyenne de la classe") }} :</strong> {{ "%.2f"|format(calcul.moyenne_classe) }}</td>
+      <td><strong>{{ bi("Plus forte") }} :</strong> {{ "%.2f"|format(calcul.plus_forte) }} &nbsp; <strong>{{ bi("Plus faible") }} :</strong> {{ "%.2f"|format(calcul.plus_faible) }}</td>
     </tr>
     <tr>
-      <td><strong>Mention :</strong> {{ b.mention }}</td>
-      <td><strong>Absences :</strong> {{ b.absences.non_justifiees }} non justifiée(s), {{ b.absences.justifiees }} justifiée(s)</td>
+      <td><strong>{{ bi("Mention") }} :</strong> {{ bi(b.mention) }}</td>
+      <td><strong>{{ bi("Absences") }} :</strong> {{ b.absences.non_justifiees }} non justifiée(s), {{ b.absences.justifiees }} justifiée(s)</td>
     </tr>
-    {% if b.decision %}<tr><td colspan="2"><strong>Décision :</strong> {{ b.decision }}</td></tr>{% endif %}
+    {% if b.decision %}<tr><td colspan="2"><strong>{{ bi("Décision") }} :</strong> {{ bi(b.decision) }}</td></tr>{% endif %}
   </table>
 
   <div class="cadre">
-    <strong>Appréciation du conseil de classe :</strong> {{ b.appreciation or "&nbsp;"|safe }}
+    <strong>{{ bi("Appréciation du conseil de classe") }} :</strong> {{ b.appreciation or "&nbsp;"|safe }}
     {% if not b.appreciation %}<br>&nbsp;<br>&nbsp;{% endif %}
   </div>
 

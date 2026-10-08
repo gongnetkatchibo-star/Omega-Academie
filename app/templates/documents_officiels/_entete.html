@@ -1,3 +1,25 @@
+{% if bilingue %}
+{# En-tête bilingue : français à gauche, logo au centre, arabe à droite. #}
+<table style="width:100%; margin-bottom:6px;">
+  <tr>
+    <td style="width:40%; vertical-align:middle; text-align:left; border:none; background:none; color:#000;">
+      <div style="font-weight:bold; font-size:12pt;">{{ nom_etablissement }}</div>
+      {% if ville_etablissement or pays_etablissement %}
+        <div style="font-weight:bold; font-size:10pt;">{{ ville_etablissement|upper }}{% if ville_etablissement and pays_etablissement %} - {% endif %}{{ pays_etablissement|upper }}</div>
+      {% endif %}
+    </td>
+    <td style="width:20%; text-align:center; vertical-align:middle; border:none; background:none;">
+      {% if logo_officiel_uri %}<img src="{{ logo_officiel_uri }}" style="width:62px; height:auto;" alt="">{% endif %}
+    </td>
+    <td style="width:40%; vertical-align:middle; text-align:right; border:none; background:none; color:#000;">
+      {% if nom_arabe %}<div class="ar-gras" style="font-size:14pt;">{{ nom_arabe|arabe_pdf }}</div>{% endif %}
+      {% if ville_arabe or pays_arabe %}
+        <div class="ar-gras" style="font-size:11pt;">{{ (ville_arabe ~ (" - " if ville_arabe and pays_arabe else "") ~ pays_arabe)|arabe_pdf }}</div>
+      {% endif %}
+    </td>
+  </tr>
+</table>
+{% else %}
 {% if logo_officiel_uri %}
 <div style="text-align:center; margin-bottom: 6px;">
   <img src="{{ logo_officiel_uri }}" style="width:70px; height:auto;" alt="">
@@ -10,5 +32,6 @@
 <div style="text-align:center; font-weight:bold; font-size:11pt; margin-bottom:10px;">
   {{ ville_etablissement|upper }}{% if ville_etablissement and pays_etablissement %} - {% endif %}{{ pays_etablissement|upper }}
 </div>
+{% endif %}
 {% endif %}
 <div style="border-top: 2px solid #000; margin-bottom: 20px;"></div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Vérifier un document{% endblock %}
+{% block title %}{{ _("Vérifier un document") }}{% endblock %}
 {% block content %}
 <div class="verification">
   {% if document %}
@@ -7,16 +7,16 @@
       <div class="verification-statut verification-statut-annule">
         {{ icone("alerte") }}
         <div>
-          <strong>Document annulé par l'école</strong>
-          <span>Ce document a bien été émis, mais l'école l'a annulé depuis. Il n'est plus valable.</span>
+          <strong>{{ _("Document annulé par l'école") }}</strong>
+          <span>{{ _("Ce document a bien été émis, mais l'école l'a annulé depuis. Il n'est plus valable.") }}</span>
         </div>
       </div>
     {% else %}
       <div class="verification-statut verification-statut-ok">
         {{ icone("bouclier") }}
         <div>
-          <strong>Document authentique</strong>
-          <span>Il a été émis par {{ ecole_emettrice.nom if ecole_emettrice else "l'établissement" }} le {{ document.date_emission|date_longue(False) }}.</span>
+          <strong>{{ _("Document authentique") }}</strong>
+          <span>{{ _("Il a été émis par {ecole} le {date}.", ecole=(ecole_emettrice.nom if ecole_emettrice else "l'établissement"), date=document.date_emission|date_longue(False)) }}</span>
         </div>
       </div>
     {% endif %}
@@ -26,33 +26,33 @@
         <h2>{{ document.titre }}</h2>
         <span class="verification-code">{{ document.code }}</span>
       </div>
-      <p class="tdb-sous-titre">Comparez avec le papier. Si une seule information diffère, le document a été modifié après son émission.</p>
+      <p class="tdb-sous-titre">{{ _("Comparez avec le papier. Si une seule information diffère, le document a été modifié après son émission.") }}</p>
       <dl class="verification-champs">
         {% if ecole_emettrice %}
-          <dt>Établissement</dt>
+          <dt>{{ _("Établissement") }}</dt>
           <dd>{{ ecole_emettrice.nom }}{% if ecole_emettrice.ville %}, {{ ecole_emettrice.ville }}{% endif %}</dd>
         {% endif %}
-        {% if document.nom_eleve %}<dt>Élève</dt><dd>{{ document.nom_eleve }}</dd>{% endif %}
-        {% if document.classe %}<dt>Classe</dt><dd>{{ document.classe }}</dd>{% endif %}
-        {% if document.reference %}<dt>{{ "Matricule" if document.type_document == "bulletin" else "Référence" }}</dt><dd>{{ document.reference }}</dd>{% endif %}
+        {% if document.nom_eleve %}<dt>{{ _("Élève") }}</dt><dd>{{ document.nom_eleve }}</dd>{% endif %}
+        {% if document.classe %}<dt>{{ _("Classe") }}</dt><dd>{{ document.classe }}</dd>{% endif %}
+        {% if document.reference %}<dt>{{ _("Matricule" if document.type_document == "bulletin" else "Référence") }}</dt><dd>{{ document.reference }}</dd>{% endif %}
         {% for libelle, valeur in document.details %}
-          <dt>{{ libelle }}</dt><dd>{{ valeur }}</dd>
+          <dt>{{ (libelle|trad_doc or libelle) if langue_courante() == "ar" else libelle }}</dt><dd>{{ valeur }}</dd>
         {% endfor %}
-        <dt>Date d'émission</dt>
-        <dd>{{ document.date_emission|date_longue(False) }} à {{ document.date_emission.strftime("%H:%M") }}</dd>
+        <dt>{{ _("Date d'émission") }}</dt>
+        <dd>{{ document.date_emission|date_longue(False) }} {{ _("à") }} {{ document.date_emission.strftime("%H:%M") }}</dd>
       </dl>
     </section>
   {% elif recherche %}
     <div class="verification-statut verification-statut-inconnu">
       {{ icone("alerte") }}
       <div>
-        <strong>Aucun document ne porte ce code</strong>
-        <span>Vérifiez la saisie. Si le code est correct, ce document n'a pas été émis par une école de {{ nom_plateforme() }} : il peut s'agir d'un faux.</span>
+        <strong>{{ _("Aucun document ne porte ce code") }}</strong>
+        <span>{{ _("Vérifiez la saisie. Si le code est correct, ce document n'a pas été émis par une école de {plateforme} : il peut s'agir d'un faux.", plateforme=nom_plateforme()) }}</span>
       </div>
     </div>
   {% else %}
-    <h1>Vérifier un document</h1>
-    <p class="verification-intro">Chaque bulletin, certificat, attestation et reçu porte un QR code et un code de 12 caractères. Scannez le QR code avec l'appareil photo de votre téléphone, ou saisissez le code ci-dessous.</p>
+    <h1>{{ _("Vérifier un document") }}</h1>
+    <p class="verification-intro">{{ _("Chaque bulletin, certificat, attestation et reçu porte un QR code et un code de 12 caractères. Scannez le QR code avec l'appareil photo de votre téléphone, ou saisissez le code ci-dessous.") }}</p>
   {% endif %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,8 +65,8 @@
 
   <form method="post" action="{{ url_for('main.verifier_formulaire') }}" class="barre-recherche verification-formulaire">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="text" id="code" name="code" placeholder="Ex. K7QF-3M9X-PA2D" aria-label="Code du document" autocomplete="off" autocapitalize="characters" required>
-    <button type="submit">Vérifier</button>
+    <input type="text" id="code" name="code" placeholder="{{ _('Ex. K7QF-3M9X-PA2D') }}" aria-label="{{ _('Code du document') }}" autocomplete="off" autocapitalize="characters" required>
+    <button type="submit">{{ _("Vérifier") }}</button>
   </form>
 </div>
 {% endblock %}

@@ -15,6 +15,7 @@
   {% set f = eleve.sexe == "F" %}
   <p class="numero">N° {{ numero }}</p>
   <p class="titre">ATTESTATION DE FRÉQUENTATION</p>
+  {% if bilingue %}<p class="titre" style="text-decoration:none; margin-top:-18px;"><span class="ar-gras" style="font-size:16pt;">{{ "شهادة مواظبة"|arabe_pdf }}</span></p>{% endif %}
 
   <div class="corps">
     <p>
@@ -27,6 +28,8 @@
     <p>La présente attestation est délivrée {{ "à l'intéressée" if f else "à l'intéressé" }} pour servir et valoir ce que de droit.</p>
   </div>
 
+  {% set type_document = "attestation" %}
+  {% include "documents_officiels/_corps_arabe.html" %}
   {% include "documents_officiels/_signature.html" %}
 </body>
 </html>

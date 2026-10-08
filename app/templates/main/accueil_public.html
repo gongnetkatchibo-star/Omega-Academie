@@ -3,14 +3,14 @@
 {% block content %}
   <section class="hero">
     <h1>{{ nom_plateforme() }}</h1>
-    <p class="hero-texte">Gestion scolaire : inscriptions, notes, finances, emploi du temps et communication.</p>
+    <p class="hero-texte">{{ _("Gestion scolaire : inscriptions, notes, finances, emploi du temps et communication.") }}</p>
     <div class="hero-actions">
-      <a class="bouton-principal" href="{{ url_for('auth.connexion') }}">Se connecter</a>
-      <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">Créer un compte</a>
+      <a class="bouton-principal" href="{{ url_for('auth.connexion') }}">{{ _("Se connecter") }}</a>
+      <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">{{ _("Créer un compte") }}</a>
     </div>
     <p class="hero-verifier">
-      Vous avez reçu un bulletin, un certificat ou un reçu ?
-      <a href="{{ url_for('main.verifier_formulaire') }}">Vérifier qu'il est authentique</a>
+      {{ _("Vous avez reçu un bulletin, un certificat ou un reçu ?") }}
+      <a href="{{ url_for('main.verifier_formulaire') }}">{{ _("Vérifier qu'il est authentique") }}</a>
     </p>
   </section>
 
