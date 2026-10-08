@@ -10,11 +10,19 @@ def _page(client, url="/"):
 
 
 def test_tableau_de_bord_presente_la_plateforme_et_les_guides(client, creer_utilisateur):
-    creer_utilisateur("Fond", "f@t.com", "fondateur")
-    connecter(client, "f@t.com")
+    creer_utilisateur("Parent", "p@t.com", "parent")
+    connecter(client, "p@t.com")
     page = _page(client)
     assert "accueil-carte-ecole" in page and "École Test" in page
     assert "Toute la gestion de l&#39;école au même endroit" in page
+    assert "Guides d'utilisation" in page
+
+
+def test_la_direction_garde_les_guides_sous_ses_chiffres(client, creer_utilisateur):
+    creer_utilisateur("Fond", "f@t.com", "fondateur")
+    connecter(client, "f@t.com")
+    page = _page(client)
+    assert "Bonjour, Fond" in page and "accueil-carte-ecole" not in page
     assert "Guides d'utilisation" in page
     for cle in ("classes", "eleves", "tests_niveau", "scolarite", "caisse", "salaires", "etablissement"):
         assert f'href="/guide/{cle}"' in page

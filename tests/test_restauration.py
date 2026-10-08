@@ -101,7 +101,7 @@ def test_sauvegarde_puis_restauration_complete(client, db, creer_utilisateur, cr
     # Les comptes restaurés peuvent se reconnecter avec leur mot de passe.
     client.get("/auth/deconnexion")
     r = connecter(client, "f@t.com")
-    assert "accueil-carte-ecole" in r.get_data(as_text=True)
+    assert 'id="tableau-de-bord"' in r.get_data(as_text=True)
 
 
 def test_restauration_refusee_sans_confirmation(client, db, creer_utilisateur, creer_classe, creer_eleve):

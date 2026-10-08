@@ -26,7 +26,7 @@ def test_blocage_apres_cinq_echecs_puis_deblocage(client, db, creer_utilisateur)
 
     user.bloque_jusqua = maintenant() - timedelta(minutes=1)  # le délai est passé
     db.session.commit()
-    assert "accueil-carte-ecole" in _tenter(client, "p12345678")
+    assert 'id="tableau-de-bord"' in _tenter(client, "p12345678")
     db.session.expire_all()
     assert User.query.filter_by(email="u@t.com").one().bloque_jusqua is None
 
@@ -62,7 +62,7 @@ def test_changer_son_mot_de_passe(client, db, creer_utilisateur):
 
     client.get("/auth/deconnexion")
     assert "incorrect" in _tenter(client, "p12345678")
-    assert "accueil-carte-ecole" in _tenter(client, "nouveau12345")
+    assert 'id="tableau-de-bord"' in _tenter(client, "nouveau12345")
 
 
 def test_changement_de_mot_de_passe_reserve_au_compte_connecte(client):
