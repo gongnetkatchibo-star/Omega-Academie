@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Anciens élèves") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Anciens élèves", None)) }}
+  {{ banniere("eleves", "Anciens élèves", "Élèves partis : transfert, abandon, fin de scolarité…") }}
+  <form method="get" class="barre-recherche barre-recherche-large" role="search">
+    <input type="search" name="q" value="{{ terme }}" placeholder="{{ _('Nom ou matricule') }}" aria-label="{{ _('Nom ou matricule') }}">
+    <button type="submit">{{ _("Chercher") }}</button>
+  </form>
+  {% if page.elements %}
+    <table class="table">
+      <thead><tr><th>{{ _("Élève") }}</th><th>{{ _("Matricule") }}</th><th>{{ _("Dernière classe") }}</th><th>{{ _("Départ") }}</th><th>{{ _("Motif") }}</th></tr></thead>
+      <tbody>
+        {% for e in page.elements %}
+          <tr>
+            <td><a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">{{ e.nom_complet }}</a></td>
+            <td>{{ e.matricule|ltr }}</td>
+            <td>{{ e.classe.nom }} ({{ e.classe.annee_scolaire|ltr }})</td>
+            <td>{{ e.date_depart.strftime("%d/%m/%Y")|ltr if e.date_depart else "—" }}</td>
+            <td>{{ _(e.libelle_motif_depart) }}{% if e.ecole_destination %} · {{ e.ecole_destination }}{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucun ancien élève.") }}
+  {% endif %}
+{% endblock %}

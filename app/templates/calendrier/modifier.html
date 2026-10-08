@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Modifier une date") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Calendrier scolaire", url_for('calendrier.index')), (evenement.titre, None)) }}
+  <h1>{{ _("Modifier une date") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" class="formulaire-etroit">
+    {% include "calendrier/_formulaire.html" %}
+    <button type="submit" class="bouton bouton-plein">{{ _("Enregistrer") }}</button>
+  </form>
+{% endblock %}

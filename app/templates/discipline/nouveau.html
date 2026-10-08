@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Signaler un retard ou un incident") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Retards et discipline", url_for('discipline.registre')), ("Signaler un retard ou un incident", None)) }}
+  <h1>{{ _("Signaler un retard ou un incident") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% if eleves %}
+    <form method="post" class="formulaire-etroit">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>{{ _("Élève") }}
+        <select name="eleve_id" class="recherche-nom" required>
+          {% for e in eleves %}<option value="{{ e.id }}" {% if e.id == eleve_id %}selected{% endif %}>{{ e.nom_complet }} ({{ e.classe.nom }})</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ _("Type") }}
+        <select name="type" required>
+          {% for cle, libelle in types %}<option value="{{ cle }}">{{ _(libelle) }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ _("Date") }}
+        <input type="date" name="date" value="{{ request.args.get('date', '') }}">
+      </label>
+      <label>{{ _("Minutes de retard") }}
+        <input type="number" name="minutes" min="1" max="600">
+      </label>
+      <label>{{ _("Durée de l'exclusion (jours)") }}
+        <input type="number" name="duree_jours" min="1" max="60">
+      </label>
+      <label>{{ _("Motif") }}
+        <input type="text" name="motif" maxlength="250">
+      </label>
+      <p class="lien-secondaire">{{ _("Les parents sont prévenus par email de toute mesure de discipline, et au troisième retard du mois.") }}</p>
+      <button type="submit" class="bouton bouton-plein">{{ _("Enregistrer") }}</button>
+    </form>
+  {% else %}
+    {{ etat_vide("Aucun élève dans tes classes.") }}
+  {% endif %}
+{% endblock %}

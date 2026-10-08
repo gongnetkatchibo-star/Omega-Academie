@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Calendrier scolaire") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Calendrier scolaire", None)) }}
+  {{ banniere("calendrier", "Calendrier scolaire", "Rentrée, vacances, jours fériés, compositions et réunions.") }}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if peut_modifier %}
+    <details class="panneau">
+      <summary><strong>{{ icone("plus") }} {{ _("Ajouter une date") }}</strong></summary>
+      <form method="post" action="{{ url_for('calendrier.nouveau') }}">
+        {% include "calendrier/_formulaire.html" %}
+        <button type="submit" class="bouton bouton-plein">{{ _("Ajouter") }}</button>
+      </form>
+    </details>
+  {% endif %}
+
+  {% if par_mois %}
+    {% for mois, evenements in par_mois %}
+      <h2>{{ (mois|date_longue(False)).split(" ", 1)[1]|capitalize }}</h2>
+      <ul class="liste-demandes">
+        {% for e in evenements %}
+          <li class="carte-demande">
+            <div class="infos">
+              <strong>{{ e.titre }}{% if not e.visible_familles %} <span class="badge-retard">{{ _("Interne") }}</span>{% endif %}</strong>
+              <span>{{ _(e.libelle) }} · {% include "calendrier/_date.html" %}{% if e.date_debut <= aujourd_hui <= e.date_fin %} · <strong>{{ _("en cours") }}</strong>{% endif %}</span>
+              {% if e.description %}<span>{{ e.description }}</span>{% endif %}
+            </div>
+            {% if peut_modifier %}
+              <div class="barre-actions">
+                <a class="bouton" href="{{ url_for('calendrier.modifier', evenement_id=e.id) }}">{{ _("Modifier") }}</a>
+                <form method="post" action="{{ url_for('calendrier.supprimer', evenement_id=e.id) }}" onsubmit="return confirm({{ _('Retirer cette date du calendrier ?')|tojson|forceescape }});">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit">{{ _("Retirer") }}</button>
+                </form>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  {% else %}
+    {{ etat_vide("Aucune date à venir dans le calendrier.", "calendrier") }}
+  {% endif %}
+
+  {% if passes %}
+    <details>
+      <summary>{{ _("Dates passées de l'année") }} ({{ passes|length }})</summary>
+      <ul>
+        {% for e in passes %}<li>{{ e.titre }} — {% include "calendrier/_date.html" %}</li>{% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 595pt 842pt; margin: 50pt 60pt 50pt 60pt; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 12pt; color: #000; }
+  .numero { text-align:center; color:#c0392b; font-weight:bold; margin-bottom:2px; }
+  .titre { text-align:center; font-weight:bold; font-size:16pt; margin-bottom:26px; text-decoration: underline; }
+  .corps { line-height: 1.8; text-align: justify; }
+  {% if bilingue %}
+  @page { size: 595pt 842pt; margin: 34pt 56pt 30pt 56pt; }
+  .titre { margin-bottom: 4px; }
+  .corps { line-height: 1.45; }
+  {% endif %}
+</style>
+</head>
+<body>
+  {% include "documents_officiels/_entete.html" %}
+  {% set f = eleve.sexe == "F" %}
+  <p class="numero">N° {{ numero }}</p>
+  <p class="titre">CERTIFICAT DE RADIATION</p>
+  {% if bilingue %}<p class="titre" style="text-decoration:none; margin:0 0 14px 0;"><span class="ar-gras" style="font-size:16pt;">{{ "شهادة شطب"|arabe_pdf }}</span></p>{% endif %}
+
+  <div class="corps">
+    <p>
+      {{ "La" if signataire.genre == "F" else "Le" }} {{ "soussignée" if signataire.genre == "F" else "soussigné" }}{% if signataire.nom %}, {{ signataire.nom }},{% endif %}
+      {{ signataire.qualite }} du {{ nom_etablissement }}, certifie que :
+    </p>
+    <p style="margin-left: 30px;">
+      <strong>Nom et prénom(s) :</strong> {{ eleve.nom_complet }}<br>
+      <strong>Matricule :</strong> {{ eleve.matricule }}<br>
+      {% if eleve.date_naissance %}<strong>{{ "Née" if f else "Né" }} le :</strong> {{ eleve.date_naissance.strftime("%d/%m/%Y") }}{% if eleve.lieu_naissance %} à {{ eleve.lieu_naissance }}{% endif %}<br>{% endif %}
+      <strong>Dernière classe fréquentée :</strong> {{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})
+    </p>
+    <p>
+      a été {{ "radiée" if f else "radié" }} des registres de notre établissement
+      {% if eleve.date_depart %}le {{ eleve.date_depart.strftime("%d/%m/%Y") }}{% endif %}{% if eleve.motif_depart == "transfert" %}, pour être {{ "inscrite" if f else "inscrit" }}{% if eleve.ecole_destination %} au {{ eleve.ecole_destination }}{% else %} dans un autre établissement{% endif %}{% endif %}.
+    </p>
+    <p>{{ "L'intéressée" if f else "L'intéressé" }} est libre de tout engagement envers l'établissement. En foi de quoi, le présent certificat est délivré pour servir et valoir ce que de droit.</p>
+  </div>
+
+  {% set type_document = "radiation" %}
+  {% include "documents_officiels/_corps_arabe.html" %}
+  {% include "documents_officiels/_signature.html" %}
+</body>
+</html>

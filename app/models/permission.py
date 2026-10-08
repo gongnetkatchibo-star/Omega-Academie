@@ -22,6 +22,9 @@ MODULES = [
     ("absences", "Absences"),
     ("alertes", "Alertes (absences/moyennes)"),
     ("messagerie", "Messagerie parent-école"),
+    ("cahier_textes", "Cahier de textes (consultation)"),
+    ("discipline", "Retards et discipline"),
+    ("calendrier", "Calendrier scolaire (modification)"),
     # Zones d'administration technique — réservées au développeur par
     # défaut, à accorder explicitement s'il le décide (sept. 2026).
     ("gestion_roles", "Attribution des rôles"),

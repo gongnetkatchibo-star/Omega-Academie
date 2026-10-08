@@ -23,6 +23,33 @@
     {% endif %}
   {% endwith %}
 
+  {% if not eleve.actif %}
+    <div class="carte-attente carte-attente-critique">
+      <p><strong>{{ _("Élève parti de l'école") }}</strong>
+        {% if eleve.date_depart %} — {{ _("le") }} {{ eleve.date_depart|date_longue(False) }}{% endif %}
+        · {{ _(eleve.libelle_motif_depart) }}
+        {% if eleve.ecole_destination %} · {{ _("vers") }} {{ eleve.ecole_destination }}{% endif %}
+        {% if eleve.details_depart %}<br>{{ eleve.details_depart }}{% endif %}
+      </p>
+      {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="eleves") %}
+        <p class="lien-secondaire"><a href="{{ url_for('documents_officiels.certificat_radiation', eleve_id=eleve.id) }}">{{ _("Certificat de radiation (PDF)") }}</a></p>
+        {% if classes_reintegration %}
+          <form method="post" action="{{ url_for('eleves.reintegrer', eleve_id=eleve.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>{{ _("Réintégrer en") }}
+              <select name="classe_id" required>
+                {% for c in classes_reintegration %}<option value="{{ c.id }}" {% if c.id == eleve.classe_id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+              </select>
+            </label>
+            <button type="submit">{{ _("Réintégrer l'élève") }}</button>
+          </form>
+        {% else %}
+          <p class="lien-secondaire">{{ _("Pour le réintégrer, crée d'abord les classes de l'année en cours.") }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+
   <div class="fiche-eleve">
     {% if eleve.photo_mime %}<img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=eleve.id) }}" alt="Photo de {{ eleve.nom_complet }}">{% endif %}
     <dl class="fiche-eleve-champs">
@@ -109,7 +136,9 @@
     {% if acces("comptable", "fondateur", "administrateur_general") %}
       · <a href="{{ url_for('finances.detail', eleve_id=eleve.id) }}">{{ _("Finances") }}</a>
     {% endif %}
-    · <a href="{{ url_for('absences.historique', eleve_id=eleve.id) }}">{{ _("Absences") }}</a>
+    · <a href="{{ url_for('absences.historique', eleve_id=eleve.id) }}">{{ _("Absences et discipline") }}</a>
+    · <a href="{{ url_for('cahier_textes.eleve', eleve_id=eleve.id) }}">{{ _("Devoirs") }}</a>
+    · <a href="{{ url_for('emploi_du_temps.eleve', eleve_id=eleve.id) }}">{{ _("Emploi du temps") }}</a>
   </p>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
@@ -125,7 +154,8 @@
         {{ _("Aucune note enregistrée cette année — admission indéterminable.") }}
       {% endif %}
     </p>
-    {% if classe_superieure %}
+    {% if not eleve.actif %}
+    {% elif classe_superieure %}
       <form method="post" action="{{ url_for('eleves.passage', eleve_id=eleve.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit">{{ _("Évaluer et faire passer en") }} {{ classe_superieure.nom }}</button>
@@ -133,6 +163,31 @@
     {% else %}
       <p class="lien-secondaire">{{ _("Aucune classe supérieure définie après") }} {{ eleve.classe.nom }}.</p>
     {% endif %}
+  {% endif %}
+
+  {% if eleve.actif and acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="eleves") %}
+    <details class="panneau">
+      <summary><strong>{{ _("Départ de l'élève (radiation)") }}</strong></summary>
+      <p class="lien-secondaire">{{ _("L'élève quitte les listes de classe ; son dossier, ses notes et ses paiements sont conservés. Il peut être réintégré.") }}</p>
+      <form method="post" action="{{ url_for('eleves.radier', eleve_id=eleve.id) }}" onsubmit="return confirm({{ _('Enregistrer le départ de cet élève ?')|tojson|forceescape }});">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ _("Motif") }}
+          <select name="motif_depart" required>
+            {% for cle, libelle in motifs_depart %}<option value="{{ cle }}">{{ _(libelle) }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>{{ _("Date du départ") }}
+          <input type="date" name="date_depart" value="{{ aujourd_hui.isoformat() }}" required>
+        </label>
+        <label>{{ _("École d'accueil (en cas de transfert)") }}
+          <input type="text" name="ecole_destination" maxlength="150">
+        </label>
+        <label>{{ _("Précisions") }}
+          <input type="text" name="details_depart" maxlength="250">
+        </label>
+        <button type="submit">{{ _("Enregistrer le départ") }}</button>
+      </form>
+    </details>
   {% endif %}
 
   <h2>{{ _("Historique scolaire") }}</h2>

@@ -20,6 +20,7 @@
       <a class="bouton bouton-plein" href="{{ url_for('eleves.nouveau') }}">{{ icone("plus") }} {{ _("Inscrire un élève") }}</a>
       <a class="bouton" href="{{ url_for('eleves.importer') }}">{{ icone("importer") }} {{ _("Importer depuis Excel") }}</a>
       <a class="bouton" href="{{ url_for('eleves.passage_en_masse') }}">{{ icone("chapeau") }} {{ _("Passage de classe") }}</a>
+      <a class="bouton" href="{{ url_for('eleves.anciens') }}">{{ icone("dossier") }} {{ _("Anciens élèves") }}</a>
     </div>
   {% endif %}
 

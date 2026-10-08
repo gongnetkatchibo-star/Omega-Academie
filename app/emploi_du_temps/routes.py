@@ -19,6 +19,11 @@ def _verifier_cycle(classe_obj):
     cycle = cycle_du_role(current_user.role)
     if cycle and not classe_dans_le_cycle(classe_obj, cycle):
         abort(403)
+    if current_user.role == "eleve":
+        # Un élève ne voit que l'emploi du temps de sa propre classe.
+        from app.models.eleve import Eleve
+        if not Eleve.query.filter_by(user_id=current_user.id, classe_id=classe_obj.id, actif=True).first():
+            abort(403)
 
 
 def _construire_grille(creneaux):
@@ -130,6 +135,11 @@ def classe(classe_id):
 def classe_pdf(classe_id):
     classe_obj = db.get_or_404(Classe, classe_id)
     _verifier_cycle(classe_obj)
+    return _pdf_de_la_classe(classe_obj)
+
+
+def _pdf_de_la_classe(classe_obj):
+    classe_id = classe_obj.id
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()
     from app.services.documents_officiels import contexte_entete_officiel
     html = render_template(
@@ -142,6 +152,34 @@ def classe_pdf(classe_id):
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename=emploi_du_temps_{classe_obj.nom}.pdf"
     return reponse
+
+
+def _eleve_suivi(eleve_id):
+    from app.models.eleve import Eleve
+    from app.services.suivi_eleve import peut_suivre
+
+    eleve = db.get_or_404(Eleve, eleve_id)
+    if not peut_suivre(eleve, "emploi_du_temps", ROLES_GESTION):
+        abort(403)
+    return eleve
+
+
+@emploi_du_temps_bp.route("/eleve/<int:eleve_id>")
+@login_required
+def eleve(eleve_id):
+    """L'emploi du temps de la classe d'un enfant, pour ses parents."""
+    eleve_obj = _eleve_suivi(eleve_id)
+    creneaux = Creneau.query.filter_by(classe_id=eleve_obj.classe_id).order_by(Creneau.heure_debut).all()
+    return render_template(
+        "emploi_du_temps/classe.html", classe=eleve_obj.classe, jours=JOURS, grille=_construire_grille(creneaux),
+        enseignants=[], lien_pdf=url_for("emploi_du_temps.eleve_pdf", eleve_id=eleve_obj.id), lecture_seule=True,
+    )
+
+
+@emploi_du_temps_bp.route("/eleve/<int:eleve_id>/pdf")
+@login_required
+def eleve_pdf(eleve_id):
+    return _pdf_de_la_classe(_eleve_suivi(eleve_id).classe)
 
 
 @emploi_du_temps_bp.route("/moi")

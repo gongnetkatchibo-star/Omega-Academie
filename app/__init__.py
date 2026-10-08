@@ -184,6 +184,7 @@ def create_app(config_name=None):
         "documents": "document", "sauvegarde": "disque", "scolarite": "chapeau", "pedagogie": "livre",
         "administration": "reglages", "plateforme": "globe", "mes_enfants": "eleves", "mon_espace": "chapeau",
         "mon_edt": "calendrier", "roles": "outil", "absences": "calendrier", "relances": "whatsapp",
+        "cahier_textes": "crayon", "discipline": "bouclier", "calendrier": "calendrier", "anciens": "dossier",
     }
 
     @app.template_global()
@@ -470,6 +471,15 @@ def create_app(config_name=None):
     from app.dev import dev_bp
     app.register_blueprint(dev_bp)
 
+    from app.cahier_textes import cahier_textes_bp
+    app.register_blueprint(cahier_textes_bp)
+
+    from app.discipline import discipline_bp
+    app.register_blueprint(discipline_bp)
+
+    from app.calendrier import calendrier_bp
+    app.register_blueprint(calendrier_bp)
+
     @app.cli.command("creer-compte-initial")
     @click.option("--nom", prompt="Nom complet")
     @click.option("--email", prompt="Email")
@@ -506,6 +516,9 @@ def create_app(config_name=None):
         from app.models.bulletin import CoefficientMatiere, AppreciationBulletin  # noqa: F401
         from app.models.evaluation import Evaluation  # noqa: F401
         from app.models.frais_annexe import FraisAnnexe  # noqa: F401
+        from app.models.cahier_textes import SeanceCahier  # noqa: F401
+        from app.models.discipline import Incident  # noqa: F401
+        from app.models.calendrier import EvenementCalendrier  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes

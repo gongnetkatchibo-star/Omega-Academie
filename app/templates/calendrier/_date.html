@@ -1,0 +1,1 @@
+{% if e.sur_un_jour %}{{ e.date_debut|date_longue(False) }}{% else %}{{ _("du") }} {{ e.date_debut|date_longue(False) }} {{ _("au") }} {{ e.date_fin|date_longue(False) }}{% endif %}

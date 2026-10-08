@@ -1,0 +1,21 @@
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>{{ _("Titre") }}
+  <input type="text" name="titre" maxlength="150" value="{{ evenement.titre if evenement else '' }}" required>
+</label>
+<label>{{ _("Type") }}
+  <select name="type" required>
+    {% for cle, libelle in types %}<option value="{{ cle }}" {% if evenement and evenement.type == cle %}selected{% endif %}>{{ _(libelle) }}</option>{% endfor %}
+  </select>
+</label>
+<label>{{ _("Du") }}
+  <input type="date" name="date_debut" value="{{ evenement.date_debut.isoformat() if evenement else '' }}" required>
+</label>
+<label>{{ _("Au (facultatif)") }}
+  <input type="date" name="date_fin" value="{{ evenement.date_fin.isoformat() if evenement else '' }}">
+</label>
+<label>{{ _("Précisions") }}
+  <input type="text" name="description" maxlength="500" value="{{ evenement.description or '' if evenement else '' }}">
+</label>
+<label class="ligne-case">
+  <input type="checkbox" name="interne" {% if evenement and not evenement.visible_familles %}checked{% endif %}> {{ _("Réservé au personnel (invisible pour les familles)") }}
+</label>

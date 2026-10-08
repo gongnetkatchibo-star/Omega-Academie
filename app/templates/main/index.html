@@ -227,6 +227,23 @@
     {% endif %}
   {% endif %}
 
+  {% if prochains_evenements %}
+    <section class="panneau" aria-labelledby="titre-calendrier">
+      <div class="panneau-tete">
+        <h2 id="titre-calendrier">{{ _("Prochainement") }}</h2>
+        <a href="{{ url_for('calendrier.index') }}">{{ _("Calendrier scolaire") }}</a>
+      </div>
+      <ul class="tdb-taches">
+        {% for e in prochains_evenements %}
+          <li><a href="{{ url_for('calendrier.index') }}">
+            {{ icone("calendrier") }}
+            <span><strong>{{ e.titre }}</strong><span class="tdb-discret">{{ _(e.libelle) }} · {% include "calendrier/_date.html" %}</span></span>
+          </a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   {% if guides %}
     <h2 class="accueil-titre-guides">{{ _("Guides d'utilisation") }}</h2>
     <div class="grille-guides{% if tableau %} grille-guides-compacte{% endif %}">

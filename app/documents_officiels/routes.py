@@ -16,6 +16,7 @@ ROLES_GESTION = ["secretaire", "directeur_primaire", "directeur_college", "fonda
 DOCUMENTS = {
     "certificat": ("CERT", "Certificat de scolarité", "documents_officiels/certificat_scolarite.html", "certificat_scolarite"),
     "attestation": ("ATTEST", "Attestation de fréquentation", "documents_officiels/attestation_frequentation.html", "attestation_frequentation"),
+    "radiation": ("RAD", "Certificat de radiation", "documents_officiels/certificat_radiation.html", "certificat_radiation"),
 }
 
 
@@ -34,6 +35,15 @@ def signataire_depuis_formulaire():
 def _generer(eleve_id, type_doc):
     code, libelle, modele, prefixe_fichier = DOCUMENTS[type_doc]
     eleve = db.get_or_404(Eleve, eleve_id)
+    from flask import abort
+    from flask_login import current_user
+    from app.services.cycles import cycle_du_role, classe_dans_le_cycle
+    if not classe_dans_le_cycle(eleve.classe, cycle_du_role(current_user.role)):
+        abort(403)
+    # Le certificat de radiation ne concerne qu'un élève parti, le
+    # certificat de scolarité qu'un élève inscrit.
+    if (type_doc == "radiation" and eleve.actif) or (type_doc == "certificat" and not eleve.actif):
+        abort(404)
 
     if request.method == "GET":
         return render_template(
@@ -91,3 +101,10 @@ def certificat_scolarite(eleve_id):
 @roles_required(*ROLES_GESTION, module="eleves")
 def attestation_frequentation(eleve_id):
     return _generer(eleve_id, "attestation")
+
+
+@documents_officiels_bp.route("/eleve/<int:eleve_id>/radiation", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def certificat_radiation(eleve_id):
+    return _generer(eleve_id, "radiation")

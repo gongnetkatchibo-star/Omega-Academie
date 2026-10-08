@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 
 from app.extensions import db
 from app.models.classe import Classe
-from app.models.eleve import Eleve, STATUTS_DOSSIER, MAX_PARENTS_PAR_ELEVE
+from app.models.eleve import Eleve, STATUTS_DOSSIER, MAX_PARENTS_PAR_ELEVE, MOTIFS_DEPART, LIBELLES_MOTIF_DEPART
 from app.services.moyennes import moyenne_eleve, a_reussi, seuil_reussite_pour_classe
 from app.models.historique import HistoriqueScolaire
 from app.models.user import User
@@ -13,6 +13,7 @@ from app.eleves import eleves_bp
 from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
 from app.services.cycles import cycle_du_role, filtrer_par_cycle, classe_dans_le_cycle
 from app.services.whatsapp import contacts as contacts_whatsapp
+from app.services.temps import maintenant
 
 ROLES_GESTION = ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"]
 ROLES_LECTURE = ROLES_GESTION + ["enseignant"]
@@ -309,15 +310,94 @@ def detail(eleve_id):
         User.query.filter(User.statut == "actif", User.role != "eleve").order_by(User.nom_complet).all()
         if (current_user.role in ROLES_GESTION or current_user.role == "developpeur") else []
     )
+    from app.services.permissions import role_a_acces
     annee = Eleve.annee_scolaire_courante()
     moyenne = moyenne_eleve(eleve, annee)
+    classes_reintegration = (
+        filtrer_par_cycle(Classe.query.filter_by(annee_scolaire=annee).order_by(Classe.niveau, Classe.nom).all(),
+                          cycle_du_role(current_user.role))
+        if not eleve.actif and role_a_acces(current_user.role, "eleves", ROLES_GESTION) else []
+    )
     return render_template(
-        "eleves/detail.html", eleve=eleve, classe_superieure=classe_superieure,
+        "eleves/detail.html", motifs_depart=MOTIFS_DEPART, classes_reintegration=classes_reintegration,
+        aujourd_hui=maintenant().date(), eleve=eleve, classe_superieure=classe_superieure,
         parents_disponibles=parents_disponibles, statuts_dossier=STATUTS_DOSSIER,
         max_parents=MAX_PARENTS_PAR_ELEVE, moyenne=moyenne,
         reussite=a_reussi(eleve, annee), seuil=seuil_reussite_pour_classe(eleve.classe),
         contacts_whatsapp=contacts_whatsapp(eleve),
     )
+
+
+@eleves_bp.route("/anciens")
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def anciens():
+    """Élèves partis : radiés (transfert, abandon…) ou sortants en fin
+    d'année. Leur dossier reste consultable et réintégrable."""
+    from app.services.pagination import paginer
+
+    terme = request.args.get("q", "").strip()
+    requete = Eleve.query.filter_by(actif=False)
+    if terme:
+        motif = f"%{terme}%"
+        requete = requete.filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))
+    cycle = cycle_du_role(current_user.role)
+    if cycle:
+        requete = requete.filter(Eleve.classe_id.in_([c.id for c in filtrer_par_cycle(Classe.query.all(), cycle)]))
+    page = paginer(requete.order_by(Eleve.date_depart.desc().nulls_last(), Eleve.nom_complet))
+    return render_template("eleves/anciens.html", page=page, terme=terme)
+
+
+@eleves_bp.route("/<int:eleve_id>/radier", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def radier(eleve_id):
+    from app.services.suivi_eleve import date_du_formulaire
+    from app.services.journal import journaliser
+
+    eleve = db.get_or_404(Eleve, eleve_id)
+    if not classe_dans_le_cycle(eleve.classe, cycle_du_role(current_user.role)):
+        abort(403)
+    motif = request.form.get("motif_depart", "")
+    if not eleve.actif or motif not in LIBELLES_MOTIF_DEPART:
+        flash("Choisis le motif du départ.", "error")
+        return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+    eleve.actif = False
+    eleve.date_depart = date_du_formulaire("date_depart")
+    eleve.motif_depart = motif
+    eleve.details_depart = request.form.get("details_depart", "").strip()[:250] or None
+    eleve.ecole_destination = request.form.get("ecole_destination", "").strip()[:150] or None
+    journaliser("radiation_eleve", details=f"{eleve.nom_complet} — {LIBELLES_MOTIF_DEPART[motif]}",
+                cible_type="Eleve", cible_id=eleve.id)
+    db.session.commit()
+    flash("Départ enregistré. Le dossier reste dans « Anciens élèves ».", "info")
+    return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+
+
+@eleves_bp.route("/<int:eleve_id>/reintegrer", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def reintegrer(eleve_id):
+    from app.services.journal import journaliser
+
+    eleve = db.get_or_404(Eleve, eleve_id)
+    cycle = cycle_du_role(current_user.role)
+    if not classe_dans_le_cycle(eleve.classe, cycle):
+        abort(403)
+    annee = Eleve.annee_scolaire_courante()
+    classe = db.session.get(Classe, request.form.get("classe_id", type=int) or 0)
+    if eleve.actif or classe is None or classe.annee_scolaire != annee or not classe_dans_le_cycle(classe, cycle):
+        flash("Choisis une classe de l'année en cours.", "error")
+        return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+    if classe.id != eleve.classe_id or not any(h.annee_scolaire == annee for h in eleve.historique):
+        db.session.add(HistoriqueScolaire(eleve_id=eleve.id, classe_id=classe.id, annee_scolaire=annee, resultat="en_cours"))
+    eleve.classe_id = classe.id
+    eleve.actif = True
+    eleve.date_depart = eleve.motif_depart = eleve.details_depart = eleve.ecole_destination = None
+    journaliser("reintegration_eleve", details=f"{eleve.nom_complet} — {classe.nom}", cible_type="Eleve", cible_id=eleve.id)
+    db.session.commit()
+    flash("Élève réintégré.", "info")
+    return redirect(url_for("eleves.detail", eleve_id=eleve.id))
 
 
 @eleves_bp.route("/<int:eleve_id>/parent/ajouter", methods=["POST"])
@@ -418,6 +498,7 @@ def passage_en_masse():
                 historique.resultat = "echec" if decision == "redouble" else "admis"
             if decision == "sortant":
                 eleve.actif = False
+                eleve.date_depart = maintenant().date()
             else:
                 eleve.classe_id = destination.id
                 db.session.add(HistoriqueScolaire(

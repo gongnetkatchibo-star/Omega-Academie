@@ -1,16 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ _("Absences —") }} {{ eleve.nom_complet }}{% endblock %}
+{% block title %}{{ _("Absences et discipline") }} — {{ eleve.nom_complet }}{% endblock %}
 {% block content %}
-  <h1>{{ _("Absences —") }} {{ eleve.nom_complet }}</h1>
-  <p><strong>{{ _("Absences non justifiées :") }}</strong> <span class="{% if nb_injustifiees %}solde-du{% else %}solde-ok{% endif %}">{{ nb_injustifiees }}</span></p>
+  {% set supervise_discipline = acces("responsable_pedagogique", "secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="discipline") %}
+  {{ fil_ariane((eleve.nom_complet, url_for('eleves.detail', eleve_id=eleve.id)), ("Absences et discipline", None)) }}
+  <h1>{{ _("Absences et discipline") }} — {{ eleve.nom_complet }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p><strong>{{ _("Absences non justifiées :") }}</strong> <span class="{% if nb_injustifiees %}solde-du{% else %}solde-ok{% endif %}">{{ nb_injustifiees }}</span>
+    · <strong>{{ _("Retards :") }}</strong> <span class="{% if nb_retards %}solde-du{% else %}solde-ok{% endif %}">{{ nb_retards }}</span></p>
 
+  <h2>{{ _("Absences") }}</h2>
   {% if absences %}
     <table class="table">
       <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Justifiée") }}</th><th>{{ _("Motif") }}</th></tr></thead>
       <tbody>
         {% for a in absences %}
           <tr>
-            <td>{{ a.date.strftime("%d/%m/%Y") }}</td>
+            <td>{{ a.date.strftime("%d/%m/%Y")|ltr }}</td>
             <td class="{% if a.justifiee %}solde-ok{% else %}solde-du{% endif %}">{{ _("Oui" if a.justifiee else "Non") }}</td>
             <td>{{ a.motif or "—" }}</td>
           </tr>
@@ -19,5 +26,37 @@
     </table>
   {% else %}
     {{ etat_vide("Aucune absence enregistrée.") }}
+  {% endif %}
+
+  <h2>{{ _("Retards et discipline") }}</h2>
+  {% if peut_signaler %}
+    <p><a class="bouton" href="{{ url_for('discipline.nouveau', eleve_id=eleve.id) }}">{{ icone("plus") }} {{ _("Signaler un retard ou un incident") }}</a></p>
+  {% endif %}
+  {% if incidents %}
+    <table class="table">
+      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Type") }}</th><th>{{ _("Motif") }}</th>{% if peut_signaler %}<th></th>{% endif %}</tr></thead>
+      <tbody>
+        {% for i in incidents %}
+          <tr>
+            <td>{{ i.date.strftime("%d/%m/%Y")|ltr }}</td>
+            <td>{{ _(i.libelle) }}{% if i.minutes %} ({{ i.minutes }} min){% endif %}{% if i.duree_jours %} ({{ i.duree_jours }} {{ _("j") }}){% endif %}</td>
+            <td>{{ i.motif or "—" }}</td>
+            {% if peut_signaler %}
+              <td>
+                {% if i.auteur_id == current_user.id or supervise_discipline %}
+                  <form method="post" action="{{ url_for('discipline.supprimer', incident_id=i.id) }}" onsubmit="return confirm({{ _('Retirer cette ligne du registre ?')|tojson|forceescape }});">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="retour" value="eleve">
+                    <button type="submit">{{ _("Retirer") }}</button>
+                  </form>
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucun retard ni incident enregistré.") }}
   {% endif %}
 {% endblock %}

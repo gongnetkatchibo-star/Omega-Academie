@@ -140,6 +140,13 @@ def historique(eleve_id):
 
     absences = Absence.query.filter_by(eleve_id=eleve_id).order_by(Absence.date.desc()).all()
     nb_injustifiees = sum(1 for a in absences if not a.justifiee)
+    from app.models.discipline import Incident
+    from app.discipline.routes import ROLES_SUPERVISION as ROLES_DISCIPLINE
+    from app.services.suivi_eleve import supervise
+    incidents = Incident.query.filter_by(eleve_id=eleve_id).order_by(Incident.date.desc(), Incident.id.desc()).all()
+    peut_signaler = eleve.actif and (est_enseignant_de_la_classe or supervise(eleve.classe, "discipline", ROLES_DISCIPLINE))
     return render_template(
         "absences/historique.html", eleve=eleve, absences=absences, nb_injustifiees=nb_injustifiees,
+        incidents=incidents, nb_retards=sum(1 for i in incidents if i.type == "retard"),
+        peut_signaler=peut_signaler,
     )

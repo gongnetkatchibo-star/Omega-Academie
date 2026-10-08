@@ -8,6 +8,7 @@ TYPES_DOCUMENT = {
     "bulletin": "Bulletin de notes",
     "certificat": "Certificat de scolarité",
     "attestation": "Attestation de fréquentation",
+    "radiation": "Certificat de radiation",
     "recu": "Reçu de paiement",
 }
 

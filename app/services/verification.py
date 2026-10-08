@@ -136,6 +136,8 @@ def emettre_document_eleve(type_document, eleve, numero, signataire):
         ("Année scolaire", eleve.classe.annee_scolaire),
         ("Signataire", " ".join(x for x in (signataire.get("qualite"), signataire.get("nom")) if x)),
     ]
+    if type_document == "radiation" and eleve.date_depart:
+        details.insert(2, ("Date de départ", eleve.date_depart.strftime("%d/%m/%Y")))
     return emettre(
         type_document, f"{type_document}:{numero}", TYPES_DOCUMENT[type_document],
         nom_eleve=eleve.nom_complet, classe=eleve.classe.nom, reference=numero, details=details,

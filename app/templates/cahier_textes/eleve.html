@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Devoirs") }} — {{ eleve.nom_complet }}{% endblock %}
+{% block content %}
+  {{ fil_ariane((eleve.nom_complet, url_for('eleves.detail', eleve_id=eleve.id)), ("Devoirs", None)) }}
+  {{ banniere("cahier_textes", "Devoirs et cahier de textes") }}
+  <p class="lien-secondaire"><strong>{{ eleve.nom_complet }}</strong> · {{ eleve.classe.nom }}</p>
+
+  <h2>{{ _("Travail à faire") }}</h2>
+  {% if devoirs %}
+    <table class="table">
+      <thead><tr><th>{{ _("Pour le") }}</th><th>{{ _("Matière") }}</th><th>{{ _("Travail à faire") }}</th></tr></thead>
+      <tbody>
+        {% for d in devoirs %}
+          <tr>
+            <td class="{% if d.date_rendu == aujourd_hui %}solde-du{% endif %}">{{ d.date_rendu.strftime("%d/%m/%Y")|ltr }}</td>
+            <td>{{ _(d.matiere) }}</td>
+            <td>{{ d.devoir }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucun devoir à rendre pour l'instant.") }}
+  {% endif %}
+
+  <h2>{{ _("Dernières séances") }}</h2>
+  {% if seances %}
+    <ul class="liste-demandes">
+      {% for s in seances %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ s.date.strftime("%d/%m/%Y")|ltr }} · {{ _(s.matiere) }}</strong>
+            <span>{{ s.contenu }}</span>
+            {% if s.devoir %}<span><strong>{{ _("À faire") }} :</strong> {{ s.devoir }}</span>{% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ etat_vide("Le cahier de textes de cette classe est encore vide.") }}
+  {% endif %}
+{% endblock %}

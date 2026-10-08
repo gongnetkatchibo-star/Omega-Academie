@@ -47,6 +47,9 @@
             <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">{{ _("Fiche") }}</a>
             <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">{{ _("Scolarité", contexte="frais") }}</a>
             <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">{{ _("Bulletin") }}</a>
+            <a href="{{ url_for('cahier_textes.eleve', eleve_id=e.id) }}">{{ _("Devoirs") }}</a>
+            <a href="{{ url_for('emploi_du_temps.eleve', eleve_id=e.id) }}">{{ _("Emploi du temps") }}</a>
+            <a href="{{ url_for('absences.historique', eleve_id=e.id) }}">{{ _("Absences et discipline") }}</a>
           </details>
         {% endfor %}
         {% if current_user.role == "eleve" %}
@@ -56,7 +59,9 @@
               <summary>{{ icone("chapeau") }} {{ _("Mon espace") }}</summary>
               <a href="{{ url_for('eleves.detail', eleve_id=dossier.id) }}">{{ _("Ma fiche") }}</a>
               <a href="{{ url_for('notes.bulletin', eleve_id=dossier.id) }}">{{ _("Mon bulletin") }}</a>
-              {% if dossier.classe %}<a href="{{ url_for('emploi_du_temps.classe', classe_id=dossier.classe.id) }}">{{ _("Mon emploi du temps") }}</a>{% endif %}
+              <a href="{{ url_for('cahier_textes.eleve', eleve_id=dossier.id) }}">{{ _("Mes devoirs") }}</a>
+              <a href="{{ url_for('emploi_du_temps.eleve', eleve_id=dossier.id) }}">{{ _("Mon emploi du temps") }}</a>
+              <a href="{{ url_for('absences.historique', eleve_id=dossier.id) }}">{{ _("Mes absences") }}</a>
             </details>
           {% endif %}
         {% endif %}
@@ -84,8 +89,10 @@
         {% set peut_enseignants = acces("responsable_pedagogique", *direction, module="enseignants") %}
         {% set peut_suivi = acces("responsable_pedagogique", *direction, module="suivi_cours") %}
         {% set peut_alertes = acces("responsable_pedagogique", "secretaire", *direction, module="alertes") %}
-        {% if peut_notes or peut_edt or peut_enseignants or peut_suivi or peut_alertes %}
-          <details class="sidebar-deroulant" {% if module_actif in ["notes", "absences", "emploi_du_temps", "enseignants", "suivi_cours", "alertes"] %}open{% endif %}>
+        {% set peut_cahier = est_enseignant or acces("responsable_pedagogique", *direction, module="cahier_textes") %}
+        {% set peut_discipline = est_enseignant or acces("responsable_pedagogique", "secretaire", *direction, module="discipline") %}
+        {% if peut_notes or peut_edt or peut_enseignants or peut_suivi or peut_alertes or peut_cahier or peut_discipline %}
+          <details class="sidebar-deroulant" {% if module_actif in ["notes", "absences", "emploi_du_temps", "enseignants", "suivi_cours", "alertes", "cahier_textes", "discipline"] %}open{% endif %}>
             <summary>{{ icone("pedagogie") }} {{ _("Pédagogie") }}</summary>
             {% if peut_notes %}<a href="{{ url_for('notes.index') }}">{{ _("Notes et bulletins") }}</a>{% endif %}
             {% if est_enseignant %}
@@ -95,6 +102,8 @@
                 <a href="{{ url_for('enseignants.detail', enseignant_id=current_user.profil_enseignant.id) }}">{{ _("Mes classes") }}</a>
               {% endif %}
             {% endif %}
+            {% if peut_cahier %}<a href="{{ url_for('cahier_textes.index') }}">{{ _("Cahier de textes") }}</a>{% endif %}
+            {% if peut_discipline %}<a href="{{ url_for('discipline.registre') }}">{{ _("Retards et discipline") }}</a>{% endif %}
             {% if peut_edt %}<a href="{{ url_for('emploi_du_temps.index') }}">{{ _("Emplois du temps") }}</a>{% endif %}
             {% if peut_enseignants %}<a href="{{ url_for('enseignants.liste') }}">{{ _("Enseignants") }}</a>{% endif %}
             {% if peut_suivi %}<a href="{{ url_for('suivi_cours.tableau') }}">{{ _("Suivi des cours") }}</a>{% endif %}
@@ -123,6 +132,7 @@
           <a href="{{ url_for('relances.index') }}" {% if module_actif == "relances" %}class="lien-actif"{% endif %}>{{ icone("relances") }} {{ _("Relances WhatsApp") }}</a>
         {% endif %}
         <a href="{{ url_for('communication.liste') }}">{{ icone("annonces") }} {{ _("Annonces") }}</a>
+        <a href="{{ url_for('calendrier.index') }}" {% if module_actif == "calendrier" %}class="lien-actif"{% endif %}>{{ icone("calendrier") }} {{ _("Calendrier scolaire") }}</a>
         <a href="{{ url_for('bibliotheque.liste') }}">{{ icone("bibliotheque") }} {{ _("Bibliothèque") }}</a>
         <a href="{{ url_for('assistant.index') }}">{{ icone("assistant") }} {{ _("Assistant") }}</a>
 

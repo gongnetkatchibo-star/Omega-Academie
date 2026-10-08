@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Cahier de textes") }} — {{ classe.nom }}{% endblock %}
+{% block content %}
+  {% set supervise_cahier = acces("responsable_pedagogique", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="cahier_textes") %}
+  {% set mon_profil = current_user.profil_enseignant if current_user.role == "enseignant" else none %}
+  {{ fil_ariane(("Cahier de textes", url_for('cahier_textes.index')), (classe.nom, None)) }}
+  {{ banniere("cahier_textes", "Cahier de textes", "Ce qui a été fait en classe et le travail à faire.") }}
+  <p class="lien-secondaire"><strong>{{ classe.nom }}</strong> · {{ classe.annee_scolaire|ltr }}</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+
+  {% if matieres %}
+    <section class="panneau">
+      <div class="panneau-tete"><h2>{{ _("Nouvelle séance") }}</h2></div>
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ _("Matière") }}
+          <select name="matiere" required>
+            {% for m in matieres %}<option value="{{ m }}">{{ _(m) }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>{{ _("Date de la séance") }}
+          <input type="date" name="date" value="{{ aujourd_hui.isoformat() }}" required>
+        </label>
+        <label>{{ _("Ce qui a été fait") }}
+          <textarea name="contenu" rows="3" maxlength="4000" required></textarea>
+        </label>
+        <label>{{ _("Travail à faire (facultatif)") }}
+          <textarea name="devoir" rows="2" maxlength="2000"></textarea>
+        </label>
+        <label>{{ _("Pour le") }}
+          <input type="date" name="date_rendu">
+        </label>
+        <button type="submit" class="bouton bouton-plein">{{ _("Enregistrer") }}</button>
+      </form>
+    </section>
+  {% endif %}
+
+  <h2>{{ _("Séances") }}</h2>
+  {% if page.elements %}
+    <ul class="liste-demandes">
+      {% for s in page.elements %}
+        <li class="carte-demande">
+          <div class="infos">
+            <strong>{{ s.date.strftime("%d/%m/%Y")|ltr }} · {{ _(s.matiere) }}</strong>
+            <span>{{ s.contenu }}</span>
+            {% if s.devoir %}
+              <span><strong>{{ _("À faire") }}{% if s.date_rendu %} ({{ _("pour le") }} {{ s.date_rendu.strftime("%d/%m/%Y")|ltr }}){% endif %} :</strong> {{ s.devoir }}</span>
+            {% endif %}
+            {% if s.enseignant %}<span class="lien-secondaire">{{ s.enseignant.nom_complet }}</span>{% endif %}
+          </div>
+          {% if (mon_profil and s.enseignant_id == mon_profil.id) or supervise_cahier %}
+            <form method="post" action="{{ url_for('cahier_textes.supprimer', seance_id=s.id) }}" onsubmit="return confirm({{ _('Retirer cette séance du cahier ?')|tojson|forceescape }});">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">{{ _("Retirer") }}</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Le cahier de textes de cette classe est encore vide.") }}
+  {% endif %}
+{% endblock %}

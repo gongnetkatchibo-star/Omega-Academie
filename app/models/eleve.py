@@ -7,6 +7,18 @@ from app.services.temps import maintenant
 
 STATUTS_DOSSIER = ["complet", "incomplet"]
 
+# Raison du départ d'un élève (radiation). Un élève « sortant » au passage
+# de classe n'a pas de motif enregistré : il est affiché comme tel.
+MOTIFS_DEPART = [
+    ("transfert", "Transfert vers une autre école"),
+    ("abandon", "Abandon"),
+    ("demenagement", "Déménagement de la famille"),
+    ("exclusion", "Exclusion définitive"),
+    ("fin_etudes", "Fin de scolarité"),
+    ("autre", "Autre"),
+]
+LIBELLES_MOTIF_DEPART = dict(MOTIFS_DEPART)
+
 # 1 élève → 1 ou 2 parents maximum (règle de la direction, sept. 2026).
 MAX_PARENTS_PAR_ELEVE = 2
 
@@ -48,6 +60,11 @@ class Eleve(AppartientEcole, db.Model):
     statut_dossier = db.Column(db.String(20), default="incomplet")
     date_inscription = db.Column(db.DateTime, default=maintenant)
     actif = db.Column(db.Boolean, default=True, nullable=False)
+    # Départ de l'école (radiation) — vide tant que l'élève est inscrit.
+    date_depart = db.Column(db.Date)
+    motif_depart = db.Column(db.String(20))
+    details_depart = db.Column(db.String(250))
+    ecole_destination = db.Column(db.String(150))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), unique=True)
 
     classe = db.relationship("Classe", back_populates="eleves")
@@ -59,6 +76,12 @@ class Eleve(AppartientEcole, db.Model):
         "HistoriqueScolaire", back_populates="eleve", order_by="HistoriqueScolaire.id"
     )
     paiements = db.relationship("Paiement", back_populates="eleve")
+
+    @property
+    def libelle_motif_depart(self):
+        if not self.motif_depart:
+            return "Sortant (fin d'année)"
+        return LIBELLES_MOTIF_DEPART.get(self.motif_depart, self.motif_depart)
 
     @staticmethod
     def annee_scolaire_courante():

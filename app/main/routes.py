@@ -12,6 +12,7 @@ from app.utils import normaliser_numero_tchad
 from app.services.guides import guides_pour, guide_pour, DESCRIPTION_PLATEFORME
 from app.services.temps import maintenant
 from app.services.tableau_de_bord import donnees_tableau_de_bord
+from app.calendrier.routes import prochains_evenements
 
 
 def _modules_pour(role):
@@ -137,6 +138,7 @@ def index():
         description_plateforme=DESCRIPTION_PLATEFORME,
         tableau=donnees_tableau_de_bord(user),
         aujourd_hui=maintenant().date(),
+        prochains_evenements=prochains_evenements(),
     )
 
 

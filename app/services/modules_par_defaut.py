@@ -25,6 +25,11 @@ ROLES_PAR_DEFAUT = {
     "absences": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"],
     "alertes": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"],
     "messagerie": ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"],
+    # Les enseignants tiennent le cahier et le registre de leurs propres
+    # classes quoi qu'il arrive ; ces listes règlent la supervision.
+    "cahier_textes": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"],
+    "discipline": ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "secretaire"],
+    "calendrier": ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"],
     # Aucun rôle par défaut : seul le développeur y accède (il est
     # toujours autorisé, quelle que soit la matrice). Le fondateur ou un
     # autre rôle doit se voir accorder l'accès explicitement.
