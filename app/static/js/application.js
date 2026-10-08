@@ -29,6 +29,12 @@
   window.addEventListener("offline", mettreAJour);
   mettreAJour();
 
+  // Une copie enregistrée garde les messages du moment où elle a été
+  // prise (« Paiement enregistré »…) : sans connexion, ils sont périmés.
+  if (!navigator.onLine) {
+    document.querySelectorAll(".flashes").forEach(function (liste) { liste.hidden = true; });
+  }
+
   document.addEventListener("submit", function (evenement) {
     if (navigator.onLine) return;
     evenement.preventDefault();
