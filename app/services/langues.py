@@ -21,25 +21,28 @@ d'éventuels usages propres à un établissement."""
 
 import re
 
-from flask import g, has_request_context, session
+from flask import has_request_context, request, session
 
 LANGUES = {"fr": "Français", "ar": "العربية"}
 LANGUE_PAR_DEFAUT = "fr"
+CLE_REQUETE = "toumai.langue"
 
 
 def langue_courante():
     if not has_request_context():
         return LANGUE_PAR_DEFAUT
-    if "langue" in g:
-        return g.langue
+    # Retenue pour la durée de la requête (sur la requête elle-même).
+    if CLE_REQUETE in request.environ:
+        return request.environ[CLE_REQUETE]
     from flask_login import current_user
 
     langue = None
     if current_user and current_user.is_authenticated:
         langue = getattr(current_user, "langue", None)
     langue = langue or session.get("langue") or LANGUE_PAR_DEFAUT
-    g.langue = langue if langue in LANGUES else LANGUE_PAR_DEFAUT
-    return g.langue
+    langue = langue if langue in LANGUES else LANGUE_PAR_DEFAUT
+    request.environ[CLE_REQUETE] = langue
+    return langue
 
 
 def traduire(texte, **valeurs):

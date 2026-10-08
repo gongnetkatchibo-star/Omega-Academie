@@ -336,6 +336,7 @@ def changer_langue(code):
     if code not in LANGUES:
         abort(404)
     session["langue"] = code
+    request.environ.pop("toumai.langue", None)
     if current_user.is_authenticated and current_user.langue != code:
         current_user.langue = code
         db.session.commit()
