@@ -45,21 +45,39 @@ def langue_courante():
     return langue
 
 
-def traduire(texte, **valeurs):
+def traduire(texte, contexte=None, **valeurs):
     """Texte dans la langue de la personne connectée. Les {valeurs} sont
-    remplacées après traduction : _("Bonjour, {prenom}", prenom="Amina")."""
+    remplacées après traduction : _("Bonjour, {prenom}", prenom="Amina").
+    `contexte` distingue un même mot français aux sens différents :
+    _("Scolarité", contexte="frais") cherche d'abord « frais|Scolarité »."""
     from markupsafe import Markup, escape
 
     texte = str(texte)
     if langue_courante() == "ar":
         from app.services.traductions_ar import INTERFACE
-        texte = INTERFACE.get(texte, texte)
+        precise = INTERFACE.get(f"{contexte}|{texte}") if contexte else None
+        texte = precise or _en_arabe(texte)
     if valeurs:
         texte = texte.format(**{cle: str(valeur) for cle, valeur in valeurs.items()})
     # Échappé (le texte peut contenir un nom saisi par un utilisateur), mais
     # l'apostrophe reste telle quelle : elle ne présente aucun risque entre
     # balises ni dans un attribut entre guillemets doubles.
     return Markup(str(escape(texte)).replace("&#39;", "'"))
+
+
+def _en_arabe(texte):
+    from app.services.traductions_ar import DOCUMENTS, INTERFACE
+
+    if texte in INTERFACE:
+        return INTERFACE[texte]
+    # Libellés partagés avec les documents : mentions, décisions, matières.
+    if texte in DOCUMENTS:
+        return DOCUMENTS[texte]
+    # Titre composé « Bulletin — Awa Mahamat » : on traduit le début.
+    debut, separateur, fin = texte.partition(" — ")
+    if separateur and debut in INTERFACE:
+        return f"{INTERFACE[debut]} — {fin}"
+    return texte
 
 
 # --- Documents PDF ------------------------------------------------------------

@@ -22,7 +22,7 @@
       <select name="type" required>
         <option value="">{{ _("— Choisir —") }}</option>
         {% for t in types %}
-          <option value="{{ t }}" {% if form.get('type') == t %}selected{% endif %}>{{ t }}</option>
+          <option value="{{ t }}" {% if form.get('type') == t %}selected{% endif %}>{{ _(t) }}</option>
         {% endfor %}
       </select>
     </label>

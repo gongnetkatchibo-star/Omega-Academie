@@ -12,7 +12,7 @@
     </label>
     <label>{{ _("Type") }}
       <select name="type" required>
-        {% for t in types %}<option value="{{ t }}" {% if t == mouvement.type %}selected{% endif %}>{{ t }}</option>{% endfor %}
+        {% for t in types %}<option value="{{ t }}" {% if t == mouvement.type %}selected{% endif %}>{{ _(t) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ _("Référence") }}

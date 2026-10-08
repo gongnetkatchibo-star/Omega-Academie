@@ -917,6 +917,15 @@ INTERFACE.update({
     "Suspendu": "معلَّق",
     "Suspendre": "تعليق",
     "Réactiver": "إعادة التفعيل",
+    "Scolarité (Finances)": "الرسوم الدراسية (المالية)",
+    "frais|Scolarité": "الرسوم الدراسية",
+    "Uniforme": "الزي المدرسي",
+    "Fournitures": "اللوازم",
+    "Salaire": "راتب",
+    "Loyer / Charges": "الإيجار / التكاليف",
+    "Transport": "النقل",
+    "Entretien": "الصيانة",
+    "Divers": "متفرقات",
 })
 
 # Jours et mois, pour les dates écrites en toutes lettres.

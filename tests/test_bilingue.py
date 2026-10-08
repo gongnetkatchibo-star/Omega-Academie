@@ -135,3 +135,36 @@ def test_bulletin_et_recu_bilingues(client, db, creer_utilisateur, creer_classe,
     client.post(f"/finances/{eleve.id}", data={"echeance": "inscription", "montant": "15000", "mode": "especes"})
     r = client.get(f"/caisse/recu/{MouvementCaisse.query.one().id}/pdf")
     assert r.status_code == 200 and b"NotoNaskhArabic" in r.data
+
+
+def test_ecrans_de_gestion_en_arabe(client, creer_utilisateur, creer_classe, creer_eleve):
+    creer_utilisateur("Fond", "f@t.com", "fondateur")
+    eleve = creer_eleve("Fatima Abakar", creer_classe(nom="CM2", frais_inscription=15000), sexe="F")
+    connecter(client, "f@t.com")
+    client.get("/langue/ar")
+
+    fiche = client.get(f"/eleves/{eleve.id}").get_data(as_text=True)
+    assert "رقم التسجيل" in fiche and "أنثى" in fiche and "Féminin" not in fiche
+    finances = client.get(f"/finances/{eleve.id}").get_data(as_text=True)
+    assert "التفاصيل حسب القسط" in finances and "غير مدفوع" in finances
+    # Message de confirmation traduit, menu « Scolarité » des finances distinct
+    r = client.post(f"/finances/{eleve.id}", data={"echeance": "inscription", "montant": "abc", "mode": "especes"},
+                    follow_redirects=True)
+    assert "يرجى إدخال مبلغ صحيح" in r.get_data(as_text=True)
+    assert "الرسوم الدراسية" in finances
+    assert "الصفحة غير موجودة" in client.get("/nexiste-pas").get_data(as_text=True)
+
+
+def test_traduction_titre_compose_et_libelles_de_documents(app):
+    from flask import request
+    from app.services.langues import traduire
+
+    with app.test_request_context():
+        request.environ["toumai.langue"] = "ar"
+        assert traduire("Bulletin — Awa Mahamat") == "كشف الدرجات — Awa Mahamat"
+        assert traduire("Mathématiques") == "الرياضيات"
+        assert traduire("Scolarité", contexte="frais") == "الرسوم الدراسية"
+        assert traduire("Scolarité") == "التمدرس"
+    with app.test_request_context():
+        request.environ["toumai.langue"] = "fr"
+        assert traduire("Scolarité", contexte="frais") == "Scolarité"

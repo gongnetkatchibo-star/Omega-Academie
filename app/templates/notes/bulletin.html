@@ -18,7 +18,7 @@
       <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Moyenne générale") }}</h3><p>{{ "%.2f"|format(bulletin.moyenne) }} / {{ calcul.bareme }}</p></div>
       <div class="carte-module carte-stat carte-stat-or"><h3>{{ _("Rang") }}</h3><p>{{ bulletin.rang }}{{ "er" if bulletin.rang == 1 else "e" }} / {{ calcul.effectif_classe }}</p></div>
       <div class="carte-module carte-stat carte-stat-vert"><h3>{{ _("Moyenne de la classe") }}</h3><p>{{ "%.2f"|format(calcul.moyenne_classe) }}</p></div>
-      <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Mention") }}</h3><p>{{ bulletin.mention }}</p></div>
+      <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Mention") }}</h3><p>{{ _(bulletin.mention) }}</p></div>
     </div>
 
     {% if bulletin.lignes %}
@@ -27,14 +27,14 @@
         <tbody>
           {% for l in bulletin.lignes %}
             <tr>
-              <td><strong>{{ l.matiere }}</strong></td>
+              <td><strong>{{ _(l.matiere) }}</strong></td>
               <td>{{ "%.2f"|format(l.moyenne) }}</td>
               <td>{{ "%g"|format(l.coefficient) }}</td>
               <td>{{ "%.2f"|format(l.points) }}</td>
               <td>{{ l.rang }}</td>
               <td>{{ "%.2f"|format(l.classe) }}</td>
               <td>{{ "%.2f"|format(l.min) }} – {{ "%.2f"|format(l.max) }}</td>
-              <td>{{ l.mention }}</td>
+              <td>{{ _(l.mention) }}</td>
             </tr>
           {% endfor %}
           <tr>
@@ -53,7 +53,7 @@
           {% endfor %}
         </tbody>
       </table>
-      <p><strong>{{ _("Décision :") }}</strong> {{ bulletin.decision }}</p>
+      <p><strong>{{ _("Décision :") }}</strong> {{ _(bulletin.decision) }}</p>
     {% endif %}
 
     <p>{{ _("Absences :") }} {{ bulletin.absences.non_justifiees }} {{ _("non justifiée(s),") }} {{ bulletin.absences.justifiees }} {{ _("justifiée(s).") }}</p>

@@ -3140,3 +3140,6 @@ form.relances-email {
   margin-left: 0;
   margin-right: 5px;
 }
+
+/* Cellule de tableau qui ne se coupe pas (dates, montants, références). */
+.sans-coupure { white-space: nowrap; }

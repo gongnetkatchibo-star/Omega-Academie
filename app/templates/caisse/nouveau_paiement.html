@@ -25,7 +25,7 @@
     </label>
     <label>{{ _("Mode de paiement") }}
       <select name="mode" required>
-        {% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}
+        {% for m in modes %}<option value="{{ m }}">{{ _(m.replace('_', ' ')) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ _("Référence") }}

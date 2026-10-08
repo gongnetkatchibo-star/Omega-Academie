@@ -36,7 +36,7 @@
           <details class="sidebar-deroulant" {% if request.view_args and request.view_args.get('eleve_id') == e.id %}open{% endif %}>
             <summary>{{ icone("eleves") }} {{ e.nom_complet }}</summary>
             <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">{{ _("Fiche") }}</a>
-            <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">{{ _("Scolarité") }}</a>
+            <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">{{ _("Scolarité", contexte="frais") }}</a>
             <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">{{ _("Bulletin") }}</a>
           </details>
         {% endfor %}
@@ -100,7 +100,7 @@
         {% if peut_scolarite or peut_caisse or peut_salaires or peut_stats %}
           <details class="sidebar-deroulant" {% if module_actif in ["finances", "caisse", "salaires", "statistiques"] %}open{% endif %}>
             <summary>{{ icone("finances") }} {{ _("Finances") }}</summary>
-            {% if peut_scolarite %}<a href="{{ url_for('finances.liste') }}">{{ _("Scolarité") }}</a>{% endif %}
+            {% if peut_scolarite %}<a href="{{ url_for('finances.liste') }}">{{ _("Scolarité", contexte="frais") }}</a>{% endif %}
             {% if peut_caisse %}<a href="{{ url_for('caisse.liste') }}">{{ _("Caisse") }}</a>{% endif %}
             {% if peut_salaires %}<a href="{{ url_for('salaires.liste') }}">{{ _("Salaires") }}</a>{% endif %}
             {% if peut_stats %}<a href="{{ url_for('statistiques.tableau') }}">{{ _("Statistiques") }}</a>{% endif %}

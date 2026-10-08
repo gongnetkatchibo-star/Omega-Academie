@@ -21,19 +21,20 @@
   <div class="grille-cartes" style="margin-bottom:20px;">
     <div class="carte-module carte-stat carte-stat-vert">
       <h3>{{ _("Total recettes") }}</h3>
-      <p>{{ "%.0f"|format(total_recettes) }} FCFA</p>
+      <p>{{ total_recettes|fcfa }}</p>
     </div>
     <div class="carte-module carte-stat carte-stat-rouge">
       <h3>{{ _("Total dépenses") }}</h3>
-      <p>{{ "%.0f"|format(total_depenses) }} FCFA</p>
+      <p>{{ total_depenses|fcfa }}</p>
     </div>
     <div class="carte-module carte-stat {% if solde_actuel < 0 %}carte-stat-rouge{% else %}carte-stat-bleu{% endif %}">
       <h3>{{ _("Solde actuel") }}</h3>
-      <p>{{ "%.0f"|format(solde_actuel) }} FCFA</p>
+      <p>{{ solde_actuel|fcfa }}</p>
     </div>
   </div>
 
   {% if lignes %}
+    <div class="defile-horizontal">
     <table class="table">
       <thead>
         <tr>
@@ -44,8 +45,8 @@
       <tbody>
         {% for l in lignes %}
           <tr>
-            <td>{{ l.mouvement.date.strftime("%d/%m/%Y") }}</td>
-            <td>{{ l.mouvement.type }} {% if l.mouvement.automatique %}<span class="badge-retard">{{ _("auto") }}</span>{% endif %}</td>
+            <td class="sans-coupure">{{ l.mouvement.date.strftime("%d/%m/%Y") }}</td>
+            <td>{{ _(l.mouvement.type) }} {% if l.mouvement.automatique %}<span class="badge-retard">{{ _("auto") }}</span>{% endif %}</td>
             <td>{{ l.mouvement.reference or "—" }}</td>
             <td>{{ l.mouvement.libelle }}</td>
             <td>
@@ -53,9 +54,9 @@
                 <a href="{{ url_for('eleves.detail', eleve_id=l.mouvement.eleve.id) }}">{{ l.mouvement.eleve.nom_complet }}</a>
               {% else %}—{% endif %}
             </td>
-            <td>{{ "%.0f"|format(l.mouvement.recette) if l.mouvement.recette else "—" }}</td>
-            <td>{{ "%.0f"|format(l.mouvement.depense) if l.mouvement.depense else "—" }}</td>
-            <td class="{% if l.solde < 0 %}solde-du{% else %}solde-ok{% endif %}">{{ "%.0f"|format(l.solde) }}</td>
+            <td class="sans-coupure">{{ l.mouvement.recette|fcfa(False) if l.mouvement.recette else "—" }}</td>
+            <td class="sans-coupure">{{ l.mouvement.depense|fcfa(False) if l.mouvement.depense else "—" }}</td>
+            <td class="{% if l.solde < 0 %}solde-du{% else %}solde-ok{% endif %} sans-coupure">{{ l.solde|fcfa(False) }}</td>
             <td>{{ l.mouvement.responsable.nom_complet if l.mouvement.responsable else "—" }}</td>
             <td>
               <a href="{{ url_for('caisse.recu_pdf', mouvement_id=l.mouvement.id) }}">{{ _("Reçu PDF") }}</a>
@@ -73,6 +74,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
     {{ pagination(page) }}
   {% else %}
     {{ etat_vide("Aucun mouvement de caisse pour l'instant.") }}
