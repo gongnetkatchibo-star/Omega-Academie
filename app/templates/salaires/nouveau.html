@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% from "_macros.html" import champ_montant %}
-{% block title %}Nouveau salaire{% endblock %}
+{% block title %}{{ _("Nouveau salaire") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Salaires", url_for('salaires.liste')), ("Nouveau salaire", None)) }}
-  <h1>Nouveau salaire</h1>
+  <h1>{{ _("Nouveau salaire") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post" id="form-salaire">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Personnel
+    <label>{{ _("Personnel") }}
       <select name="personnel_id" id="champ-personnel" class="recherche-nom" required>
-        <option value="">— Choisir —</option>
+        <option value="">{{ _("— Choisir —") }}</option>
         {% for p in personnel %}
           <option value="{{ p.id }}"
             data-email="{{ p.email }}"
@@ -20,35 +20,35 @@
         {% endfor %}
       </select>
     </label>
-    <label>Fonction
+    <label>{{ _("Fonction") }}
       <input type="text" name="fonction" id="champ-fonction">
     </label>
-    <label>Mois
+    <label>{{ _("Mois") }}
       <select name="mois" required>
         {% for i in range(1, 13) %}<option value="{{ i }}">{{ mois_libelles[i-1] }}</option>{% endfor %}
       </select>
     </label>
-    <label>Année
+    <label>{{ _("Année") }}
       <input type="number" name="annee" value="2026" required>
     </label>
 
     <div>
-      <strong>Somme à percevoir — un billet à la fois</strong>
+      <strong>{{ _("Somme à percevoir — un billet à la fois") }}</strong>
       <div id="liste-billets">
         <div class="ligne-billet">{{ champ_montant("billet_0", 0, 10000, 2000) }}</div>
       </div>
-      <button type="button" id="bouton-ajouter-billet">+ Ajouter un billet</button>
-      <p><strong>Total : <span id="total-billets">0</span></strong></p>
+      <button type="button" id="bouton-ajouter-billet">{{ _("+ Ajouter un billet") }}</button>
+      <p><strong>{{ _("Total :") }} <span id="total-billets">0</span></strong></p>
       <input type="hidden" name="montant" id="champ-montant-total" value="0">
     </div>
 
-    <label>Email de contact (pour l'avis de paiement)
+    <label>{{ _("Email de contact (pour l'avis de paiement)") }}
       <input type="email" name="email_contact" id="champ-email-contact">
     </label>
-    <label>Téléphone de contact
+    <label>{{ _("Téléphone de contact") }}
       <input type="text" name="telephone_contact" id="champ-telephone-contact">
     </label>
-    <button type="submit">Enregistrer (impayé)</button>
+    <button type="submit">{{ _("Enregistrer (impayé)") }}</button>
   </form>
 
   <script>

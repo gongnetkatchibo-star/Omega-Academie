@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Vérification de l'email{% endblock %}
+{% block title %}{{ _("Vérification de l'email") }}{% endblock %}
 {% block content %}
-  <h1>Vérifie ton email</h1>
-  <p>Un code à 6 chiffres a été envoyé à <strong>{{ email }}</strong> pour confirmer ton adresse.</p>
+  <h1>{{ _("Vérifie ton email") }}</h1>
+  <p>{{ _("Un code à 6 chiffres a été envoyé à") }} <strong>{{ email }}</strong> {{ _("pour confirmer ton adresse.") }}</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -16,15 +16,15 @@
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Code de vérification
+    <label>{{ _("Code de vérification") }}
       <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required autofocus>
     </label>
-    <button type="submit">Valider</button>
+    <button type="submit">{{ _("Valider") }}</button>
   </form>
 
   <form method="post" action="{{ url_for('auth.renvoyer_code_verification') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit">Renvoyer le code</button>
+    <button type="submit">{{ _("Renvoyer le code") }}</button>
   </form>
 
 {% endblock %}

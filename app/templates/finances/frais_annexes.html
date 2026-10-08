@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Frais annexes{% endblock %}
+{% block title %}{{ _("Frais annexes") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Finances", url_for('finances.liste')), ("Frais annexes", None)) }}
   {{ banniere("finances", "Frais annexes", annee) }}
@@ -9,7 +9,7 @@
 
   {% if frais %}
     <table class="table">
-      <thead><tr><th>Frais</th><th>Montant</th><th>Classe</th><th>Date limite</th><th>Encaissé</th><th></th></tr></thead>
+      <thead><tr><th>{{ _("Frais") }}</th><th>{{ _("Montant") }}</th><th>{{ _("Classe") }}</th><th>{{ _("Date limite") }}</th><th>{{ _("Encaissé") }}</th><th></th></tr></thead>
       <tbody>
         {% for f in frais %}
           <tr>
@@ -20,9 +20,9 @@
             <td>{{ encaisse[f.id]|fcfa }}</td>
             <td>
               {% if acces("fondateur", "administrateur_general") and not encaisse[f.id] %}
-                <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm('Supprimer ce frais ?');">
+                <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm('{{ _("Supprimer ce frais ?") }}');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="bouton-danger">Supprimer</button>
+                  <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
                 </form>
               {% endif %}
             </td>
@@ -34,24 +34,24 @@
     {{ etat_vide("Aucun frais annexe pour cette année.") }}
   {% endif %}
 
-  <h2>Nouveau frais</h2>
+  <h2>{{ _("Nouveau frais") }}</h2>
   <form method="post" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Libellé
+    <label>{{ _("Libellé") }}
       <input type="text" name="libelle" maxlength="80" required>
     </label>
-    <label>Montant
+    <label>{{ _("Montant") }}
       <input type="number" name="montant" min="1" step="1" required>
     </label>
-    <label>Classe
+    <label>{{ _("Classe") }}
       <select name="classe_id">
-        <option value="">Toutes les classes</option>
+        <option value="">{{ _("Toutes les classes") }}</option>
         {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }}</option>{% endfor %}
       </select>
     </label>
-    <label>Date limite de paiement
+    <label>{{ _("Date limite de paiement") }}
       <input type="date" name="date_limite">
     </label>
-    <button type="submit">Ajouter</button>
+    <button type="submit">{{ _("Ajouter") }}</button>
   </form>
 {% endblock %}

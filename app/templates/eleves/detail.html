@@ -7,9 +7,9 @@
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p class="lien-secondaire">
-      <a href="{{ url_for('eleves.modifier', eleve_id=eleve.id) }}">Modifier le dossier</a> ·
-      <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=eleve.id) }}">Certificat de scolarité (PDF)</a> ·
-      <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">Attestation de fréquentation (PDF)</a>
+      <a href="{{ url_for('eleves.modifier', eleve_id=eleve.id) }}">{{ _("Modifier le dossier") }}</a> ·
+      <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=eleve.id) }}">{{ _("Certificat de scolarité (PDF)") }}</a> ·
+      <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">{{ _("Attestation de fréquentation (PDF)") }}</a>
     </p>
   {% endif %}
 
@@ -26,47 +26,47 @@
   <div class="fiche-eleve">
     {% if eleve.photo_mime %}<img class="photo-eleve" src="{{ url_for('eleves.photo', eleve_id=eleve.id) }}" alt="Photo de {{ eleve.nom_complet }}">{% endif %}
     <dl class="fiche-eleve-champs">
-      <dt>Matricule</dt><dd>{{ eleve.matricule }}</dd>
-      <dt>Classe</dt><dd>{{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})</dd>
-      <dt>Genre</dt><dd>{{ eleve.sexe|genre_libelle }}</dd>
-      <dt>Naissance</dt><dd>{{ eleve.date_naissance.strftime("%d/%m/%Y") if eleve.date_naissance else "—" }}{% if eleve.lieu_naissance %} à {{ eleve.lieu_naissance }}{% endif %}</dd>
-      {% if eleve.nationalite %}<dt>Nationalité</dt><dd>{{ eleve.nationalite }}</dd>{% endif %}
-      {% if eleve.adresse %}<dt>Adresse</dt><dd>{{ eleve.adresse }}</dd>{% endif %}
-      {% if eleve.nom_pere %}<dt>Père</dt><dd>{{ eleve.nom_pere }}</dd>{% endif %}
-      {% if eleve.nom_mere %}<dt>Mère</dt><dd>{{ eleve.nom_mere }}</dd>{% endif %}
-      <dt>Téléphone parent</dt><dd>{{ eleve.telephone_parent or "—" }}</dd>
-      {% if eleve.personne_urgence or eleve.telephone_urgence %}<dt>Urgence</dt><dd>{{ eleve.personne_urgence or "" }}{% if eleve.telephone_urgence %} — {{ eleve.telephone_urgence }}{% endif %}</dd>{% endif %}
-      {% if eleve.ecole_origine %}<dt>École d'origine</dt><dd>{{ eleve.ecole_origine }}</dd>{% endif %}
-      <dt>Inscrit le</dt><dd>{{ eleve.date_inscription.strftime("%d/%m/%Y") }}</dd>
+      <dt>{{ _("Matricule") }}</dt><dd>{{ eleve.matricule }}</dd>
+      <dt>{{ _("Classe") }}</dt><dd>{{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})</dd>
+      <dt>{{ _("Genre") }}</dt><dd>{{ eleve.sexe|genre_libelle }}</dd>
+      <dt>{{ _("Naissance") }}</dt><dd>{{ eleve.date_naissance.strftime("%d/%m/%Y") if eleve.date_naissance else "—" }}{% if eleve.lieu_naissance %} {{ _("à") }} {{ eleve.lieu_naissance }}{% endif %}</dd>
+      {% if eleve.nationalite %}<dt>{{ _("Nationalité") }}</dt><dd>{{ eleve.nationalite }}</dd>{% endif %}
+      {% if eleve.adresse %}<dt>{{ _("Adresse") }}</dt><dd>{{ eleve.adresse }}</dd>{% endif %}
+      {% if eleve.nom_pere %}<dt>{{ _("Père") }}</dt><dd>{{ eleve.nom_pere }}</dd>{% endif %}
+      {% if eleve.nom_mere %}<dt>{{ _("Mère") }}</dt><dd>{{ eleve.nom_mere }}</dd>{% endif %}
+      <dt>{{ _("Téléphone parent") }}</dt><dd>{{ eleve.telephone_parent or "—" }}</dd>
+      {% if eleve.personne_urgence or eleve.telephone_urgence %}<dt>{{ _("Urgence") }}</dt><dd>{{ eleve.personne_urgence or "" }}{% if eleve.telephone_urgence %} — {{ eleve.telephone_urgence }}{% endif %}</dd>{% endif %}
+      {% if eleve.ecole_origine %}<dt>{{ _("École d'origine") }}</dt><dd>{{ eleve.ecole_origine }}</dd>{% endif %}
+      <dt>{{ _("Inscrit le") }}</dt><dd>{{ eleve.date_inscription.strftime("%d/%m/%Y") }}</dd>
     </dl>
   </div>
-  <p><strong>Parents liés :</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
+  <p><strong>{{ _("Parents liés :") }}</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="eleves") %}
     <section class="panneau relances-fiche">
-      <div class="panneau-tete"><h2>Écrire à la famille sur WhatsApp</h2></div>
+      <div class="panneau-tete"><h2>{{ _("Écrire à la famille sur WhatsApp") }}</h2></div>
       {{ boutons_whatsapp(eleve, "contact", contacts_whatsapp) }}
     </section>
   {% endif %}
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p>
-      <strong>Statut du dossier (automatique) :</strong>
+      <strong>{{ _("Statut du dossier (automatique) :") }}</strong>
       <span class="{% if eleve.statut_dossier == 'complet' %}solde-ok{% else %}solde-du{% endif %}">{{ eleve.statut_dossier }}</span>
     </p>
     {% if eleve.statut_dossier != "complet" %}
       <p class="lien-secondaire">
-        Il manque :
-        {% if not eleve.date_naissance %}date de naissance{% endif %}
-        {% if not eleve.sexe %}· genre{% endif %}
-        {% if not eleve.parents %}· au moins un parent lié{% endif %}
-        {% if not eleve.telephone_parent and not (eleve.parents|selectattr('telephone')|list) %}· téléphone de contact{% endif %}
+        {{ _("Il manque :") }}
+        {% if not eleve.date_naissance %}{{ _("date de naissance") }}{% endif %}
+        {% if not eleve.sexe %}{{ _("· genre") }}{% endif %}
+        {% if not eleve.parents %}{{ _("· au moins un parent lié") }}{% endif %}
+        {% if not eleve.telephone_parent and not (eleve.parents|selectattr('telephone')|list) %}{{ _("· téléphone de contact") }}{% endif %}
       </p>
     {% endif %}
   {% endif %}
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
-    <h2>Parents ({{ eleve.parents|length }}/{{ max_parents }})</h2>
+    <h2>{{ _("Parents (") }}{{ eleve.parents|length }}/{{ max_parents }})</h2>
     {% if eleve.parents %}
       <ul>
         {% for p in eleve.parents %}
@@ -74,7 +74,7 @@
             {{ p.nom_complet }} ({{ p.email }}{% if p.telephone %} — {{ p.telephone }}{% endif %})
             <form method="post" action="{{ url_for('eleves.retirer_parent', eleve_id=eleve.id, parent_id=p.id) }}" style="display:inline;">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit">Retirer</button>
+              <button type="submit">{{ _("Retirer") }}</button>
             </form>
           </li>
         {% endfor %}
@@ -85,57 +85,57 @@
       {% if parents_restants %}
         <form method="post" action="{{ url_for('eleves.ajouter_parent', eleve_id=eleve.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label>Ajouter un parent
+          <label>{{ _("Ajouter un parent") }}
             <select name="parent_id" class="recherche-nom">
               {% for p in parents_restants %}
                 <option value="{{ p.id }}">{{ p.nom_complet }} ({{ p.email }})</option>
               {% endfor %}
             </select>
           </label>
-          <button type="submit">Lier</button>
+          <button type="submit">{{ _("Lier") }}</button>
         </form>
       {% else %}
-        <p class="lien-secondaire">Aucun autre compte parent actif disponible pour l'instant.</p>
+        <p class="lien-secondaire">{{ _("Aucun autre compte parent actif disponible pour l'instant.") }}</p>
       {% endif %}
     {% else %}
-      <p class="lien-secondaire">Maximum de {{ max_parents }} parents atteint — retire un parent avant d'en ajouter un autre.</p>
+      <p class="lien-secondaire">{{ _("Maximum de") }} {{ max_parents }} {{ _("parents atteint — retire un parent avant d'en ajouter un autre.") }}</p>
     {% endif %}
   {% endif %}
 
   <p class="lien-secondaire">
     {% if acces("enseignant", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
-      <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id) }}">Voir le bulletin</a>
+      <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id) }}">{{ _("Voir le bulletin") }}</a>
     {% endif %}
     {% if acces("comptable", "fondateur", "administrateur_general") %}
-      · <a href="{{ url_for('finances.detail', eleve_id=eleve.id) }}">Finances</a>
+      · <a href="{{ url_for('finances.detail', eleve_id=eleve.id) }}">{{ _("Finances") }}</a>
     {% endif %}
-    · <a href="{{ url_for('absences.historique', eleve_id=eleve.id) }}">Absences</a>
+    · <a href="{{ url_for('absences.historique', eleve_id=eleve.id) }}">{{ _("Absences") }}</a>
   </p>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p>
-      <strong>Moyenne générale ({{ eleve.classe.annee_scolaire }}) :</strong>
+      <strong>{{ _("Moyenne générale (") }}{{ eleve.classe.annee_scolaire }}) :</strong>
       {% if moyenne is not none %}
         {{ moyenne }}/{{ 10 if eleve.classe.niveau <= 6 else 20 }} —
         <span class="{% if reussite %}solde-ok{% else %}solde-du{% endif %}">
           {{ "Admissible" if reussite else "Sous le seuil requis" }}
         </span>
-        (seuil : {{ seuil }})
+        {{ _("(seuil :") }} {{ seuil }})
       {% else %}
-        Aucune note enregistrée cette année — admission indéterminable.
+        {{ _("Aucune note enregistrée cette année — admission indéterminable.") }}
       {% endif %}
     </p>
     {% if classe_superieure %}
       <form method="post" action="{{ url_for('eleves.passage', eleve_id=eleve.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit">Évaluer et faire passer en {{ classe_superieure.nom }}</button>
+        <button type="submit">{{ _("Évaluer et faire passer en") }} {{ classe_superieure.nom }}</button>
       </form>
     {% else %}
-      <p class="lien-secondaire">Aucune classe supérieure définie après {{ eleve.classe.nom }}.</p>
+      <p class="lien-secondaire">{{ _("Aucune classe supérieure définie après") }} {{ eleve.classe.nom }}.</p>
     {% endif %}
   {% endif %}
 
-  <h2>Historique scolaire</h2>
+  <h2>{{ _("Historique scolaire") }}</h2>
   {% if eleve.historique %}
     <ul class="liste-demandes">
       {% for h in eleve.historique %}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Bulletins — {{ classe.nom }}{% endblock %}
+{% block title %}{{ _("Bulletins —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, None)) }}
   {{ banniere("notes", "Bulletins — " ~ classe.nom, calcul.annee) }}
@@ -7,28 +7,28 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
-  <nav class="onglets-periode" aria-label="Période">
+  <nav class="onglets-periode" aria-label="{{ _("Période") }}">
     {% for p in periodes %}
       <a href="{{ url_for('notes.bulletins_classe', classe_id=classe.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ libelles[p] }}</a>
     {% endfor %}
   </nav>
 
   <p class="lien-secondaire">
-    <a href="{{ url_for('notes.coefficients', classe_id=classe.id) }}">Coefficients des matières</a>
-    {% if calcul.effectif_classe %} · <a href="{{ url_for('notes.bulletins_classe_pdf', classe_id=classe.id, trimestre=periode) }}">Télécharger tous les bulletins (PDF)</a>{% endif %}
+    <a href="{{ url_for('notes.coefficients', classe_id=classe.id) }}">{{ _("Coefficients des matières") }}</a>
+    {% if calcul.effectif_classe %} · <a href="{{ url_for('notes.bulletins_classe_pdf', classe_id=classe.id, trimestre=periode) }}">{{ _("Télécharger tous les bulletins (PDF)") }}</a>{% endif %}
   </p>
 
   {% if calcul.effectif_classe %}
     <div class="grille-cartes grille-stats">
-      <div class="carte-module carte-stat carte-stat-bleu"><h3>Moyenne de la classe</h3><p>{{ "%.2f"|format(calcul.moyenne_classe) }} / {{ calcul.bareme }}</p></div>
-      <div class="carte-module carte-stat carte-stat-vert"><h3>Plus forte moyenne</h3><p>{{ "%.2f"|format(calcul.plus_forte) }}</p></div>
-      <div class="carte-module carte-stat carte-stat-or"><h3>Plus faible moyenne</h3><p>{{ "%.2f"|format(calcul.plus_faible) }}</p></div>
+      <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Moyenne de la classe") }}</h3><p>{{ "%.2f"|format(calcul.moyenne_classe) }} / {{ calcul.bareme }}</p></div>
+      <div class="carte-module carte-stat carte-stat-vert"><h3>{{ _("Plus forte moyenne") }}</h3><p>{{ "%.2f"|format(calcul.plus_forte) }}</p></div>
+      <div class="carte-module carte-stat carte-stat-or"><h3>{{ _("Plus faible moyenne") }}</h3><p>{{ "%.2f"|format(calcul.plus_faible) }}</p></div>
     </div>
   {% endif %}
 
   {% if lignes %}
     <table class="table">
-      <thead><tr><th>Rang</th><th>Élève</th><th>Moyenne /{{ calcul.bareme }}</th><th>Mention</th><th></th></tr></thead>
+      <thead><tr><th>{{ _("Rang") }}</th><th>{{ _("Élève") }}</th><th>{{ _("Moyenne /") }}{{ calcul.bareme }}</th><th>{{ _("Mention") }}</th><th></th></tr></thead>
       <tbody>
         {% for e, b in lignes %}
           <tr>
@@ -36,7 +36,7 @@
             <td>{{ e.nom_complet }}</td>
             <td class="{% if b %}{{ 'solde-ok' if b.moyenne >= calcul.seuil else 'solde-du' }}{% endif %}">{{ "%.2f"|format(b.moyenne) if b else "—" }}</td>
             <td>{{ b.mention if b else "Aucune note" }}</td>
-            <td><a href="{{ url_for('notes.bulletin', eleve_id=e.id, trimestre=periode) }}">Bulletin</a></td>
+            <td><a href="{{ url_for('notes.bulletin', eleve_id=e.id, trimestre=periode) }}">{{ _("Bulletin") }}</a></td>
           </tr>
         {% endfor %}
       </tbody>

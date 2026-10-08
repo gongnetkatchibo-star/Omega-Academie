@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Demandes de compte{% endblock %}
+{% block title %}{{ _("Demandes de compte") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Demandes", None)) }}
   {{ banniere("demandes", "Demandes de compte") }}
@@ -25,11 +25,11 @@
           <div class="actions">
             <form method="post" action="{{ url_for('secretariat.approuver', user_id=u.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="bouton-approuver">Approuver</button>
+              <button type="submit" class="bouton-approuver">{{ _("Approuver") }}</button>
             </form>
             <form method="post" action="{{ url_for('secretariat.refuser', user_id=u.id) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="bouton-refuser">Refuser</button>
+              <button type="submit" class="bouton-refuser">{{ _("Refuser") }}</button>
             </form>
           </div>
         </li>

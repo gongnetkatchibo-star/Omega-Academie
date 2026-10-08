@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Guide — {{ guide.titre }}{% endblock %}
+{% block title %}{{ _("Guide —") }} {{ guide.titre }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Guides", url_for('main.index')), (guide.titre, None)) }}
   {{ banniere(guide.icone, guide.titre, guide.apercu) }}
@@ -18,14 +18,14 @@
 
     {% if guide.a_savoir %}
       <div class="guide-a-savoir">
-        <strong>À savoir</strong>
+        <strong>{{ _("À savoir") }}</strong>
         {% for ligne in guide.a_savoir %}<p>{{ ligne }}</p>{% endfor %}
       </div>
     {% endif %}
 
     <p class="guide-actions">
-      {% if guide.endpoint %}<a class="guide-bouton" href="{{ url_for(guide.endpoint) }}">Ouvrir {{ guide.titre }}</a>{% endif %}
-      <a href="{{ url_for('main.index') }}">← Tous les guides</a>
+      {% if guide.endpoint %}<a class="guide-bouton" href="{{ url_for(guide.endpoint) }}">{{ _("Ouvrir") }} {{ guide.titre }}</a>{% endif %}
+      <a href="{{ url_for('main.index') }}">{{ _("← Tous les guides") }}</a>
     </p>
   </article>
 {% endblock %}

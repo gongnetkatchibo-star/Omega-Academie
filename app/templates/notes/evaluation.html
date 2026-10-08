@@ -11,7 +11,7 @@
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <table class="table">
-        <thead><tr><th>Élève</th><th>Note (/{{ bareme|int }})</th></tr></thead>
+        <thead><tr><th>{{ _("Élève") }}</th><th>{{ _("Note (/") }}{{ bareme|int }})</th></tr></thead>
         <tbody>
           {% for e in eleves %}
             <tr>
@@ -21,14 +21,14 @@
           {% endfor %}
         </tbody>
       </table>
-      <button type="submit">Enregistrer les notes</button>
+      <button type="submit">{{ _("Enregistrer les notes") }}</button>
     </form>
   {% else %}
     {{ etat_vide("Aucun élève dans cette classe.") }}
   {% endif %}
 
-  <form method="post" action="{{ url_for('notes.supprimer_evaluation', evaluation_id=evaluation.id) }}" onsubmit="return confirm('Supprimer cette évaluation et toutes ses notes ?');" style="margin-top:24px;">
+  <form method="post" action="{{ url_for('notes.supprimer_evaluation', evaluation_id=evaluation.id) }}" onsubmit="return confirm('{{ _("Supprimer cette évaluation et toutes ses notes ?") }}');" style="margin-top:24px;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="bouton-danger">Supprimer l'évaluation</button>
+    <button type="submit" class="bouton-danger">{{ _("Supprimer l'évaluation") }}</button>
   </form>
 {% endblock %}

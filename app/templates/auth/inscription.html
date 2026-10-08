@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% from "_macros.html" import champ_mot_de_passe %}
-{% block title %}Créer un compte{% endblock %}
+{% block title %}{{ _("Créer un compte") }}{% endblock %}
 {% block content %}
   <p class="nom-plateforme">{{ nom_plateforme() }}</p>
-  <h1>Créer un compte</h1>
+  <h1>{{ _("Créer un compte") }}</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -17,13 +17,13 @@
 
   {% if envoye %}
     <div class="carte-attente">
-      <p><strong>Demande envoyée.</strong></p>
-      <p>Votre compte sera activé dès validation par le secrétariat.</p>
+      <p><strong>{{ _("Demande envoyée.") }}</strong></p>
+      <p>{{ _("Votre compte sera activé dès validation par le secrétariat.") }}</p>
     </div>
   {% else %}
     <form method="post" id="form-inscription" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Établissement
+      <label>{{ _("Établissement") }}
         <select name="ecole_id" required>
           {% if ecoles|length != 1 %}<option value="">—</option>{% endif %}
           {% for e in ecoles %}
@@ -31,63 +31,63 @@
           {% endfor %}
         </select>
       </label>
-      <label>Je suis…
+      <label>{{ _("Je suis…") }}
         <select name="role" id="champ-role" required>
-          <option value="">Choisir un profil</option>
-          <option value="eleve">Élève</option>
-          <option value="parent">Parent</option>
-          <option value="enseignant">Enseignant</option>
-          <option value="personnel">Personnel de l'école (précisé après validation)</option>
+          <option value="">{{ _("Choisir un profil") }}</option>
+          <option value="eleve">{{ _("Élève") }}</option>
+          <option value="parent">{{ _("Parent") }}</option>
+          <option value="enseignant">{{ _("Enseignant") }}</option>
+          <option value="personnel">{{ _("Personnel de l'école (précisé après validation)") }}</option>
         </select>
       </label>
 
       <div id="champs-eleve" style="display:none;">
-        <label>Matricule
+        <label>{{ _("Matricule") }}
           <input type="text" name="matricule" id="champ-matricule" autocomplete="off" value="{{ request.form.get('matricule', '') }}">
         </label>
-        <label>Date de naissance
+        <label>{{ _("Date de naissance") }}
           <input type="date" name="date_naissance_eleve" id="champ-date-eleve">
         </label>
       </div>
 
       <div id="champs-standard">
-        <label>Nom complet
+        <label>{{ _("Nom complet") }}
           <input type="text" name="nom_complet" id="champ-nom-complet" autocomplete="off">
         </label>
       </div>
 
       <div id="champs-parent" style="display:none;">
-        <label>Prénom
+        <label>{{ _("Prénom") }}
           <input type="text" name="prenom" id="champ-prenom" autocomplete="off">
         </label>
-        <label>Nom
+        <label>{{ _("Nom") }}
           <input type="text" name="nom" id="champ-nom" autocomplete="off">
         </label>
-        <label>Profession
+        <label>{{ _("Profession") }}
           <input type="text" name="profession" id="champ-profession" autocomplete="off">
         </label>
       </div>
 
-      <label id="bloc-genre">Genre
+      <label id="bloc-genre">{{ _("Genre") }}
         <select name="genre" id="champ-genre" required>
           <option value="">—</option>
-          <option value="M">Masculin</option>
-          <option value="F">Féminin</option>
+          <option value="M">{{ _("Masculin") }}</option>
+          <option value="F">{{ _("Féminin") }}</option>
         </select>
       </label>
-      <label><span>Email<span id="email-facultatif" style="display:none;"> (facultatif)</span></span>
+      <label><span>{{ _("Email") }}<span id="email-facultatif" style="display:none;"> {{ _("(facultatif)") }}</span></span>
         <input type="email" name="email" id="champ-email" autocomplete="off" required>
       </label>
-      <label><span>Téléphone<span id="tel-obligatoire" style="display:none;"> (obligatoire, unique)</span></span>
+      <label><span>{{ _("Téléphone") }}<span id="tel-obligatoire" style="display:none;"> {{ _("(obligatoire, unique)") }}</span></span>
         <input type="tel" name="telephone" id="champ-telephone" autocomplete="off">
       </label>
-      <label>Mot de passe
+      <label>{{ _("Mot de passe") }}
         {{ champ_mot_de_passe("mot_de_passe") }}
       </label>
-      <label>Confirmer le mot de passe
+      <label>{{ _("Confirmer le mot de passe") }}
         {{ champ_mot_de_passe("confirmation") }}
       </label>
-      <button type="submit">Envoyer ma demande</button>
+      <button type="submit">{{ _("Envoyer ma demande") }}</button>
     </form>
     <script>
       // Bascule les champs affichés selon le profil choisi. La validation
@@ -136,5 +136,5 @@
     </script>
   {% endif %}
 
-  <p class="lien-secondaire"><a href="{{ url_for('auth.connexion') }}">Déjà un compte ? Se connecter</a></p>
+  <p class="lien-secondaire"><a href="{{ url_for('auth.connexion') }}">{{ _("Déjà un compte ? Se connecter") }}</a></p>
 {% endblock %}

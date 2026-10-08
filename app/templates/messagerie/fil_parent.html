@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Messages{% endblock %}
+{% block title %}{{ _("Messages") }}{% endblock %}
 {% block content %}
-  <h1>Mes messages avec l'école</h1>
+  <h1>{{ _("Mes messages avec l'école") }}</h1>
   {% with messages_flash = get_flashed_messages(with_categories=true) %}
     {% if messages_flash %}<ul class="flashes">{% for category, message in messages_flash %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
@@ -22,9 +22,9 @@
 
   <form method="post" action="{{ url_for('messagerie.envoyer') }}" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Ton message
+    <label>{{ _("Ton message") }}
       <textarea name="contenu" rows="4" required></textarea>
     </label>
-    <button type="submit">Envoyer à l'école</button>
+    <button type="submit">{{ _("Envoyer à l'école") }}</button>
   </form>
 {% endblock %}

@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Finances{% endblock %}
+{% block title %}{{ _("Finances") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Finances", None)) }}
   {{ banniere("finances", "Finances") }}
   <form method="get" class="barre-recherche" role="search">
-    <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule de l'élève">
-    <button type="submit">Chercher</button>
+    <input type="search" name="q" value="{{ terme }}" placeholder="{{ _("Nom ou matricule") }}" aria-label="{{ _("Nom ou matricule de l'élève") }}">
+    <button type="submit">{{ _("Chercher") }}</button>
   </form>
   <p class="lien-secondaire">
-    {% if en_retard %}<a href="{{ url_for('finances.liste', q=terme) }}">Tous les élèves</a>{% else %}<a href="{{ url_for('finances.liste', retard=1, q=terme) }}">Seulement les retards</a>{% endif %}
-    · <a href="{{ url_for('finances.frais_annexes') }}">Frais annexes</a>
+    {% if en_retard %}<a href="{{ url_for('finances.liste', q=terme) }}">{{ _("Tous les élèves") }}</a>{% else %}<a href="{{ url_for('finances.liste', retard=1, q=terme) }}">{{ _("Seulement les retards") }}</a>{% endif %}
+    · <a href="{{ url_for('finances.frais_annexes') }}">{{ _("Frais annexes") }}</a>
   </p>
   {% if lignes %}
     <table class="table">
-      <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Solde</th><th>En retard</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>{{ _("Élève") }}</th><th>{{ _("Classe") }}</th><th>{{ _("Dû") }}</th><th>{{ _("Payé") }}</th><th>{{ _("Solde") }}</th><th>{{ _("En retard") }}</th><th>{{ _("Statut") }}</th><th></th></tr></thead>
       <tbody>
         {% for l in lignes %}
           <tr>
@@ -24,7 +24,7 @@
             <td class="{% if l.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ l.solde|fcfa }}</td>
             <td class="{% if l.retard > 0 %}solde-du{% endif %}">{{ l.retard|fcfa if l.retard > 0 else "—" }}</td>
             <td><span class="badge {{ {'PAYÉ': 'badge-ok', 'PARTIEL': 'badge-attention'}.get(l.statut, 'badge-critique') }}">{{ l.statut }}</span></td>
-            <td><a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}">Détail</a></td>
+            <td><a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}">{{ _("Détail") }}</a></td>
           </tr>
         {% endfor %}
       </tbody>

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Fil — {{ parent.nom_complet }}{% endblock %}
+{% block title %}{{ _("Fil —") }} {{ parent.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Messages", url_for('messagerie.index')), (parent.nom_complet, None)) }}
-  <h1>Discussion avec {{ parent.nom_complet }}</h1>
-  <p class="lien-secondaire"><a href="{{ url_for('messagerie.index') }}">← Tous les fils</a></p>
+  <h1>{{ _("Discussion avec") }} {{ parent.nom_complet }}</h1>
+  <p class="lien-secondaire"><a href="{{ url_for('messagerie.index') }}">{{ _("← Tous les fils") }}</a></p>
   {% with messages_flash = get_flashed_messages(with_categories=true) %}
     {% if messages_flash %}<ul class="flashes">{% for category, message in messages_flash %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
@@ -24,9 +24,9 @@
 
   <form method="post" action="{{ url_for('messagerie.repondre', parent_id=parent.id) }}" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Réponse
+    <label>{{ _("Réponse") }}
       <textarea name="contenu" rows="4" required></textarea>
     </label>
-    <button type="submit">Envoyer</button>
+    <button type="submit">{{ _("Envoyer") }}</button>
   </form>
 {% endblock %}

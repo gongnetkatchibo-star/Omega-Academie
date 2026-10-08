@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Bulletin — {{ eleve.nom_complet }}{% endblock %}
+{% block title %}{{ _("Bulletin —") }} {{ eleve.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", url_for('eleves.liste')) if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") else ("Bulletin", None), (eleve.nom_complet, None)) }}
   {{ banniere("notes", "Bulletin — " ~ eleve.nom_complet, eleve.classe.nom ~ " · " ~ eleve.matricule ~ " · " ~ calcul.annee) }}
@@ -7,7 +7,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
-  <nav class="onglets-periode" aria-label="Période">
+  <nav class="onglets-periode" aria-label="{{ _("Période") }}">
     {% for p in periodes %}
       <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ libelles[p] }}</a>
     {% endfor %}
@@ -15,15 +15,15 @@
 
   {% if bulletin %}
     <div class="grille-cartes grille-stats">
-      <div class="carte-module carte-stat carte-stat-bleu"><h3>Moyenne générale</h3><p>{{ "%.2f"|format(bulletin.moyenne) }} / {{ calcul.bareme }}</p></div>
-      <div class="carte-module carte-stat carte-stat-or"><h3>Rang</h3><p>{{ bulletin.rang }}{{ "er" if bulletin.rang == 1 else "e" }} / {{ calcul.effectif_classe }}</p></div>
-      <div class="carte-module carte-stat carte-stat-vert"><h3>Moyenne de la classe</h3><p>{{ "%.2f"|format(calcul.moyenne_classe) }}</p></div>
-      <div class="carte-module carte-stat carte-stat-bleu"><h3>Mention</h3><p>{{ bulletin.mention }}</p></div>
+      <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Moyenne générale") }}</h3><p>{{ "%.2f"|format(bulletin.moyenne) }} / {{ calcul.bareme }}</p></div>
+      <div class="carte-module carte-stat carte-stat-or"><h3>{{ _("Rang") }}</h3><p>{{ bulletin.rang }}{{ "er" if bulletin.rang == 1 else "e" }} / {{ calcul.effectif_classe }}</p></div>
+      <div class="carte-module carte-stat carte-stat-vert"><h3>{{ _("Moyenne de la classe") }}</h3><p>{{ "%.2f"|format(calcul.moyenne_classe) }}</p></div>
+      <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Mention") }}</h3><p>{{ bulletin.mention }}</p></div>
     </div>
 
     {% if bulletin.lignes %}
       <table class="table table-bulletin">
-        <thead><tr><th>Matière</th><th>Moyenne /{{ calcul.bareme }}</th><th>Coef.</th><th>Points</th><th>Rang</th><th>Classe</th><th>Min – Max</th><th>Appréciation</th></tr></thead>
+        <thead><tr><th>{{ _("Matière") }}</th><th>{{ _("Moyenne /") }}{{ calcul.bareme }}</th><th>{{ _("Coef.") }}</th><th>{{ _("Points") }}</th><th>{{ _("Rang") }}</th><th>{{ _("Classe") }}</th><th>{{ _("Min – Max") }}</th><th>{{ _("Appréciation") }}</th></tr></thead>
         <tbody>
           {% for l in bulletin.lignes %}
             <tr>
@@ -38,7 +38,7 @@
             </tr>
           {% endfor %}
           <tr>
-            <td><strong>Total</strong></td><td></td>
+            <td><strong>{{ _("Total") }}</strong></td><td></td>
             <td><strong>{{ "%g"|format(bulletin.total_coefficients) }}</strong></td>
             <td><strong>{{ "%.2f"|format(bulletin.total_points) }}</strong></td><td colspan="4"></td>
           </tr>
@@ -46,32 +46,32 @@
       </table>
     {% else %}
       <table class="table">
-        <thead><tr><th>Période</th><th>Moyenne /{{ calcul.bareme }}</th></tr></thead>
+        <thead><tr><th>{{ _("Période") }}</th><th>{{ _("Moyenne /") }}{{ calcul.bareme }}</th></tr></thead>
         <tbody>
           {% for t, m in bulletin.trimestres.items() %}
             <tr><td>{{ libelles[t] }}</td><td>{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
-      <p><strong>Décision :</strong> {{ bulletin.decision }}</p>
+      <p><strong>{{ _("Décision :") }}</strong> {{ bulletin.decision }}</p>
     {% endif %}
 
-    <p>Absences : {{ bulletin.absences.non_justifiees }} non justifiée(s), {{ bulletin.absences.justifiees }} justifiée(s).</p>
+    <p>{{ _("Absences :") }} {{ bulletin.absences.non_justifiees }} {{ _("non justifiée(s),") }} {{ bulletin.absences.justifiees }} {{ _("justifiée(s).") }}</p>
 
     {% if peut_apprecier %}
       <form method="post" action="{{ url_for('notes.appreciation', eleve_id=eleve.id) }}" class="formulaire-etroit">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="trimestre" value="{{ periode }}">
-        <label>Appréciation du conseil de classe
+        <label>{{ _("Appréciation du conseil de classe") }}
           <textarea name="appreciation" rows="3" maxlength="400">{{ bulletin.appreciation }}</textarea>
         </label>
-        <button type="submit">Enregistrer l'appréciation</button>
+        <button type="submit">{{ _("Enregistrer l'appréciation") }}</button>
       </form>
     {% elif bulletin.appreciation %}
-      <p><strong>Appréciation du conseil de classe :</strong> {{ bulletin.appreciation }}</p>
+      <p><strong>{{ _("Appréciation du conseil de classe :") }}</strong> {{ bulletin.appreciation }}</p>
     {% endif %}
 
-    <p class="lien-secondaire"><a href="{{ url_for('notes.bulletin_pdf', eleve_id=eleve.id, trimestre=periode) }}">Télécharger le bulletin (PDF)</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('notes.bulletin_pdf', eleve_id=eleve.id, trimestre=periode) }}">{{ _("Télécharger le bulletin (PDF)") }}</a></p>
   {% else %}
     {{ etat_vide("Aucune note enregistrée pour cette période.") }}
   {% endif %}

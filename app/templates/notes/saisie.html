@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Notes — {{ classe.nom }}{% endblock %}
+{% block title %}{{ _("Notes —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, None)) }}
   {{ banniere("notes", "Notes — " ~ classe.nom, classe.annee_scolaire) }}
@@ -10,7 +10,7 @@
   {% if matieres %}
     {% if evaluations %}
       <table class="table">
-        <thead><tr><th>Trimestre</th><th>Matière</th><th>Évaluation</th><th>Type</th><th>Date</th><th>Coef.</th><th>Notes</th><th></th></tr></thead>
+        <thead><tr><th>{{ _("Trimestre") }}</th><th>{{ _("Matière") }}</th><th>{{ _("Évaluation") }}</th><th>{{ _("Type") }}</th><th>{{ _("Date") }}</th><th>{{ _("Coef.") }}</th><th>{{ _("Notes") }}</th><th></th></tr></thead>
         <tbody>
           {% for e in evaluations %}
             <tr>
@@ -21,7 +21,7 @@
               <td>{{ e.date.strftime("%d/%m/%Y") }}</td>
               <td>{{ "%g"|format(e.coefficient) }}</td>
               <td>{{ e.notes|length }} / {{ effectif }}</td>
-              <td><a href="{{ url_for('notes.evaluation', evaluation_id=e.id) }}">Saisir les notes</a></td>
+              <td><a href="{{ url_for('notes.evaluation', evaluation_id=e.id) }}">{{ _("Saisir les notes") }}</a></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -30,35 +30,35 @@
       {{ etat_vide("Aucune évaluation pour l'instant.") }}
     {% endif %}
 
-    <h2>Nouvelle évaluation</h2>
+    <h2>{{ _("Nouvelle évaluation") }}</h2>
     <form method="post" class="formulaire-etroit">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Matière
+      <label>{{ _("Matière") }}
         <select name="matiere" required>
-          {% if matieres|length > 1 %}<option value="">— Choisir —</option>{% endif %}
+          {% if matieres|length > 1 %}<option value="">{{ _("— Choisir —") }}</option>{% endif %}
           {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
         </select>
       </label>
-      <label>Trimestre
+      <label>{{ _("Trimestre") }}
         <select name="trimestre" required>
           {% for t in trimestres %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
         </select>
       </label>
-      <label>Type
+      <label>{{ _("Type") }}
         <select name="type" required>
           {% for t in types %}<option value="{{ t }}" {% if t == "devoir" %}selected{% endif %}>{{ libelles_type[t] }}</option>{% endfor %}
         </select>
       </label>
-      <label>Titre
+      <label>{{ _("Titre") }}
         <input type="text" name="titre" maxlength="120" required>
       </label>
-      <label>Date
+      <label>{{ _("Date") }}
         <input type="date" name="date" value="{{ aujourd_hui }}" required>
       </label>
-      <label>Coefficient
+      <label>{{ _("Coefficient") }}
         <input type="number" name="coefficient" value="1" min="0.5" max="10" step="0.5" required>
       </label>
-      <button type="submit">Créer et saisir les notes</button>
+      <button type="submit">{{ _("Créer et saisir les notes") }}</button>
     </form>
   {% else %}
     {{ etat_vide("Vous n'enseignez pas dans cette classe.") }}

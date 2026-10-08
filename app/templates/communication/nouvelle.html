@@ -1,27 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Nouvelle annonce{% endblock %}
+{% block title %}{{ _("Nouvelle annonce") }}{% endblock %}
 {% block content %}
-  <h1>Nouvelle annonce</h1>
+  <h1>{{ _("Nouvelle annonce") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Titre
+    <label>{{ _("Titre") }}
       <input type="text" name="titre" required>
     </label>
-    <label>Contenu
+    <label>{{ _("Contenu") }}
       <textarea name="contenu" rows="4" required></textarea>
     </label>
-    <label>Destinataires
+    <label>{{ _("Destinataires") }}
       <select name="destinataire" required>
         {% for d in destinataires %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
       </select>
     </label>
-    <label>Pièce jointe
+    <label>{{ _("Pièce jointe") }}
       <input type="file" name="fichier">
     </label>
-    <button type="submit">Publier</button>
+    <button type="submit">{{ _("Publier") }}</button>
   </form>
   {% if current_user.role == "enseignant" %}
   {% endif %}

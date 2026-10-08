@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Mon emploi du temps{% endblock %}
+{% block title %}{{ _("Mon emploi du temps") }}{% endblock %}
 {% block content %}
-  <h1>Mon emploi du temps</h1>
+  <h1>{{ _("Mon emploi du temps") }}</h1>
   {% if not profil %}
     {{ etat_vide("Aucun profil enseignant associé à votre compte pour l'instant — contactez la direction.") }}
   {% elif not classes %}
@@ -11,7 +11,7 @@
       {% for c in classes %}
         <a class="carte-module" href="{{ url_for('emploi_du_temps.moi_classe', classe_id=c.id) }}">
           <h3>{{ c.nom }}</h3>
-          <p>Voir mon emploi du temps dans cette classe</p>
+          <p>{{ _("Voir mon emploi du temps dans cette classe") }}</p>
         </a>
       {% endfor %}
     </div>

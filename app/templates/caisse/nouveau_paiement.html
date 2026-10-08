@@ -1,36 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Nouveau paiement officiel{% endblock %}
+{% block title %}{{ _("Nouveau paiement officiel") }}{% endblock %}
 {% block content %}
-  <h1>Nouveau paiement officiel</h1>
+  <h1>{{ _("Nouveau paiement officiel") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Élève
+    <label>{{ _("Élève") }}
       <select name="eleve_id" class="recherche-nom" required>
-        <option value="">— Choisir —</option>
+        <option value="">{{ _("— Choisir —") }}</option>
         {% for e in eleves %}
           <option value="{{ e.id }}">{{ e.nom_complet }} ({{ e.matricule }}) — {{ e.classe.nom }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>Échéance
+    <label>{{ _("Échéance") }}
       <select name="echeance" required>
         {% for ech in echeances %}<option value="{{ ech }}">{{ libelles_echeance[ech] }}</option>{% endfor %}
       </select>
     </label>
-    <label>Montant
+    <label>{{ _("Montant") }}
       <input type="number" step="1" min="1" name="montant" required>
     </label>
-    <label>Mode de paiement
+    <label>{{ _("Mode de paiement") }}
       <select name="mode" required>
         {% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence
+    <label>{{ _("Référence") }}
       <input type="text" name="reference">
     </label>
-    <button type="submit">Enregistrer le paiement</button>
+    <button type="submit">{{ _("Enregistrer le paiement") }}</button>
   </form>
 {% endblock %}

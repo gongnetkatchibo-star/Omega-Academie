@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Tests de niveau{% endblock %}
+{% block title %}{{ _("Tests de niveau") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Tests de niveau", None)) }}
   {{ banniere("tests_niveau", "Tests de niveau") }}
-  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('tests_niveau.nouveau') }}">{{ icone("plus") }} Nouveau test</a></div>
+  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('tests_niveau.nouveau') }}">{{ icone("plus") }} {{ _("Nouveau test") }}</a></div>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
   {% if tests %}
     <table class="table table-tests">
-      <thead><tr><th>Candidat</th><th>Classe demandée</th><th>Date du test</th><th>Note</th><th>Décision</th><th></th></tr></thead>
+      <thead><tr><th>{{ _("Candidat") }}</th><th>{{ _("Classe demandée") }}</th><th>{{ _("Date du test") }}</th><th>{{ _("Note") }}</th><th>{{ _("Décision") }}</th><th></th></tr></thead>
       <tbody>
         {% for t in tests %}
           {% set note_max = bareme(t.classe_demandee)[0] %}
@@ -22,12 +22,12 @@
             <td class="{% if t.decision == 'admis' %}solde-ok{% elif t.decision == 'refuse' %}solde-du{% endif %}">{{ libelles.get(t.decision, t.decision) }}</td>
             <td>
               {% if t.eleve %}
-                <a href="{{ url_for('eleves.detail', eleve_id=t.eleve.id) }}">Inscrit — {{ t.eleve.matricule }}</a>
+                <a href="{{ url_for('eleves.detail', eleve_id=t.eleve.id) }}">{{ _("Inscrit —") }} {{ t.eleve.matricule }}</a>
               {% else %}
                 <form method="post" action="{{ url_for('tests_niveau.decision', test_id=t.id) }}" class="formulaire-note-test">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="number" step="0.25" min="0" max="{{ note_max }}" name="note_obtenue" value="{{ '%g'|format(t.note_obtenue) if t.note_obtenue is not none else '' }}" required placeholder="/ {{ note_max }}" aria-label="Note sur {{ note_max }}">
-                  <button type="submit">Valider</button>
+                  <button type="submit">{{ _("Valider") }}</button>
                 </form>
               {% endif %}
             </td>

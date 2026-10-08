@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Enseignants{% endblock %}
+{% block title %}{{ _("Enseignants") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Enseignants", None)) }}
   {{ banniere("enseignants", "Enseignants") }}
@@ -8,9 +8,9 @@
   {% endwith %}
 
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") %}
-    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('enseignants.nouveau') }}">{{ icone("plus") }} Créer un profil enseignant</a></div>
+    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('enseignants.nouveau') }}">{{ icone("plus") }} {{ _("Créer un profil enseignant") }}</a></div>
     <p class="lien-secondaire">
-      Exporter :
+      {{ _("Exporter :") }}
       <a href="{{ url_for('enseignants.export', fmt='csv') }}">CSV</a> ·
       <a href="{{ url_for('enseignants.export', fmt='xlsx') }}">Excel</a> ·
       <a href="{{ url_for('enseignants.export', fmt='pdf') }}">PDF</a>
@@ -23,9 +23,9 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ e.nom_complet }}</strong>
-            <span>{{ e.user.genre|genre_libelle }} — {{ e.specialite or "Spécialité non précisée" }} — {{ e.affectations|length }} classe(s)</span>
+            <span>{{ e.user.genre|genre_libelle }} — {{ e.specialite or "Spécialité non précisée" }} — {{ e.affectations|length }} {{ _("classe(s)") }}</span>
           </div>
-          <div class="actions"><a href="{{ url_for('enseignants.detail', enseignant_id=e.id) }}">Voir</a></div>
+          <div class="actions"><a href="{{ url_for('enseignants.detail', enseignant_id=e.id) }}">{{ _("Voir") }}</a></div>
         </li>
       {% endfor %}
     </ul>

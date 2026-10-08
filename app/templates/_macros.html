@@ -7,13 +7,13 @@
     {% for o in options %}
       <option value="{{ o }}" {% if valeur == o %}selected{% endif %}>{{ o }}</option>
     {% endfor %}
-    <option value="" {% if valeur not in options %}selected{% endif %}>Autre montant…</option>
+    <option value="" {% if valeur not in options %}selected{% endif %}>{{ _("Autre montant…") }}</option>
   </select>
   <input type="number" step="1" min="0" class="champ-montant-autre"
          style="display:{% if valeur not in options %}inline-block{% else %}none{% endif %};"
          name="{{ name }}_autre"
          value="{% if valeur not in options %}{{ valeur|int }}{% endif %}"
-         placeholder="Montant exact">
+         placeholder="{{ _("Montant exact") }}">
 {% endmacro %}
 
 {% macro champ_mot_de_passe(name, autocomplete="new-password", required=True) %}

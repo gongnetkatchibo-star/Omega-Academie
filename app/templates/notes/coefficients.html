@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Coefficients — {{ classe.nom }}{% endblock %}
+{% block title %}{{ _("Coefficients —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, url_for('notes.bulletins_classe', classe_id=classe.id)), ("Coefficients", None)) }}
-  <h1>Coefficients — {{ classe.nom }}</h1>
+  <h1>{{ _("Coefficients —") }} {{ classe.nom }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
@@ -14,7 +14,7 @@
           <input type="number" name="coefficient_{{ loop.index0 }}" value="{{ '%g'|format(coefficients[m]) }}" min="0.5" max="20" step="0.5" required>
         </label>
       {% endfor %}
-      <button type="submit">Enregistrer</button>
+      <button type="submit">{{ _("Enregistrer") }}</button>
     </form>
   {% else %}
     {{ etat_vide("Aucune matière n'est encore affectée à cette classe.") }}

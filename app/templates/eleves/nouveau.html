@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Inscrire un élève{% endblock %}
+{% block title %}{{ _("Inscrire un élève") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Inscrire un élève", None)) }}
-  <h1>Inscrire un élève</h1>
+  <h1>{{ _("Inscrire un élève") }}</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -17,23 +17,23 @@
   {% if classes %}
     <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <h2>Identité</h2>
-      <label>Nom complet
+      <h2>{{ _("Identité") }}</h2>
+      <label>{{ _("Nom complet") }}
         <input type="text" name="nom_complet" required>
       </label>
-      <label>Date de naissance
+      <label>{{ _("Date de naissance") }}
         <input type="date" name="date_naissance">
       </label>
-      <label>Genre
+      <label>{{ _("Genre") }}
         <select name="sexe">
-          <option value="">Non précisé</option>
-          <option value="M">Masculin</option>
-          <option value="F">Féminin</option>
+          <option value="">{{ _("Non précisé") }}</option>
+          <option value="M">{{ _("Masculin") }}</option>
+          <option value="F">{{ _("Féminin") }}</option>
         </select>
       </label>
-      <label>Classe
+      <label>{{ _("Classe") }}
         <select name="classe_id" required>
-          <option value="">Choisir une classe</option>
+          <option value="">{{ _("Choisir une classe") }}</option>
           {% for c in classes %}
             <option value="{{ c.id }}">{{ c.nom }} — {{ c.annee_scolaire }}</option>
           {% endfor %}
@@ -41,9 +41,9 @@
       </label>
       {% set e = none %}
       {% include "eleves/_champs_dossier.html" %}
-      <button type="submit">Inscrire l'élève</button>
+      <button type="submit">{{ _("Inscrire l'élève") }}</button>
     </form>
   {% else %}
-    <div class="etat-vide"><span class="etat-vide-icone">{{ icone("dossier") }}</span><p>Aucune classe n'existe encore. <a href="{{ url_for('classes.nouvelle') }}">Créer une classe</a> avant d'inscrire un élève.</p></div>
+    <div class="etat-vide"><span class="etat-vide-icone">{{ icone("dossier") }}</span><p>{{ _("Aucune classe n'existe encore.") }} <a href="{{ url_for('classes.nouvelle') }}">{{ _("Créer une classe") }}</a> {{ _("avant d'inscrire un élève.") }}</p></div>
   {% endif %}
 {% endblock %}

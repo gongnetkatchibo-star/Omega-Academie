@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Plateforme{% endblock %}
+{% block title %}{{ _("Plateforme") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Plateforme", None)) }}
-  <h1>Établissements de la plateforme</h1>
+  <h1>{{ _("Établissements de la plateforme") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('plateforme.nouvelle') }}">{{ icone("plus") }} Nouvel établissement</a></div>
+  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('plateforme.nouvelle') }}">{{ icone("plus") }} {{ _("Nouvel établissement") }}</a></div>
 
   {% if ecoles %}
     <table class="table">
-      <thead><tr><th></th><th>Établissement</th><th>Ville</th><th>Comptes</th><th>Élèves</th><th>État</th><th></th></tr></thead>
+      <thead><tr><th></th><th>{{ _("Établissement") }}</th><th>{{ _("Ville") }}</th><th>{{ _("Comptes") }}</th><th>{{ _("Élèves") }}</th><th>{{ _("État") }}</th><th></th></tr></thead>
       <tbody>
         {% for e in ecoles %}
           <tr>
             <td>{% if e.logo %}<img src="{{ url_for('plateforme.image', ecole_id=e.id, image='logo') }}" alt="" style="height:44px;">{% else %}—{% endif %}</td>
-            <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">en cours</span>{% endif %}</td>
+            <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">{{ _("en cours") }}</span>{% endif %}</td>
             <td>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}</td>
             <td>{{ stats[e.id].comptes }}</td>
             <td>{{ stats[e.id].eleves }}</td>
@@ -24,10 +24,10 @@
               <div class="actions-tableau actions-console">
                 <form method="post" action="{{ url_for('plateforme.entrer', ecole_id=e.id) }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit">Entrer</button>
+                  <button type="submit">{{ _("Entrer") }}</button>
                 </form>
-                <a href="{{ url_for('plateforme.modifier', ecole_id=e.id) }}">Modifier</a>
-                <a href="{{ url_for('plateforme.restaurer', ecole_id=e.id) }}">Restaurer</a>
+                <a href="{{ url_for('plateforme.modifier', ecole_id=e.id) }}">{{ _("Modifier") }}</a>
+                <a href="{{ url_for('plateforme.restaurer', ecole_id=e.id) }}">{{ _("Restaurer") }}</a>
                 <form method="post" action="{{ url_for('plateforme.basculer', ecole_id=e.id) }}" onsubmit="return confirm({{ ((('Suspendre ' if e.actif else 'Réactiver ') ~ e.nom ~ ' ?'))|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="{{ 'bouton-danger' if e.actif else '' }}">{{ "Suspendre" if e.actif else "Réactiver" }}</button>

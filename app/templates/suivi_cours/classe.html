@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Suivi des cours — {{ classe.nom }}{% endblock %}
+{% block title %}{{ _("Suivi des cours —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
-  <h1>Suivi des cours — {{ classe.nom }}</h1>
+  <h1>{{ _("Suivi des cours —") }} {{ classe.nom }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
@@ -9,34 +9,34 @@
   {% if matieres %}
     <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Matière
+      <label>{{ _("Matière") }}
         <select name="matiere" required>
           {% for m in matieres %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
         </select>
       </label>
-      <label>Chapitre
+      <label>{{ _("Chapitre") }}
         <input type="text" name="chapitre" required>
       </label>
-      <label>Progression (%)
+      <label>{{ _("Progression (%)") }}
         <input type="number" name="pourcentage" min="0" max="100" value="0">
       </label>
       <label class="ligne-case">
-        <input type="checkbox" name="en_retard" value="1"> En retard sur le programme
+        <input type="checkbox" name="en_retard" value="1"> {{ _("En retard sur le programme") }}
       </label>
-      <label>Difficultés rencontrées
+      <label>{{ _("Difficultés rencontrées") }}
         <input type="text" name="difficultes">
       </label>
-      <button type="submit">Enregistrer</button>
+      <button type="submit">{{ _("Enregistrer") }}</button>
     </form>
   {% endif %}
 
-  <h2>Historique</h2>
+  <h2>{{ _("Historique") }}</h2>
   {% if historique %}
     <ul class="liste-demandes">
       {% for s in historique %}
         <li class="carte-demande">
           <div class="infos">
-            <strong>{{ s.matiere }} — {{ s.chapitre }}{% if s.en_retard %} <span class="badge-retard">En retard</span>{% endif %}</strong>
+            <strong>{{ s.matiere }} — {{ s.chapitre }}{% if s.en_retard %} <span class="badge-retard">{{ _("En retard") }}</span>{% endif %}</strong>
             <span>{{ s.pourcentage }}% · {{ s.date_maj.strftime("%d/%m/%Y") }}{% if s.difficultes %} · {{ s.difficultes }}{% endif %}</span>
           </div>
         </li>

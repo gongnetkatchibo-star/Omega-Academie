@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Élèves{% endblock %}
+{% block title %}{{ _("Élèves") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", None)) }}
   {{ banniere("eleves", "Élèves") }}
@@ -17,32 +17,32 @@
   {% set gestion = acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
   {% if gestion %}
     <div class="barre-actions">
-      <a class="bouton bouton-plein" href="{{ url_for('eleves.nouveau') }}">{{ icone("plus") }} Inscrire un élève</a>
-      <a class="bouton" href="{{ url_for('eleves.importer') }}">{{ icone("importer") }} Importer depuis Excel</a>
-      <a class="bouton" href="{{ url_for('eleves.passage_en_masse') }}">{{ icone("chapeau") }} Passage de classe</a>
+      <a class="bouton bouton-plein" href="{{ url_for('eleves.nouveau') }}">{{ icone("plus") }} {{ _("Inscrire un élève") }}</a>
+      <a class="bouton" href="{{ url_for('eleves.importer') }}">{{ icone("importer") }} {{ _("Importer depuis Excel") }}</a>
+      <a class="bouton" href="{{ url_for('eleves.passage_en_masse') }}">{{ icone("chapeau") }} {{ _("Passage de classe") }}</a>
     </div>
   {% endif %}
 
   <form method="get" class="barre-recherche barre-recherche-large" role="search">
-    <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule">
+    <input type="search" name="q" value="{{ terme }}" placeholder="{{ _("Nom ou matricule") }}" aria-label="{{ _("Nom ou matricule") }}">
     {% if classes %}
-      <select name="classe_id" aria-label="Classe">
-        <option value="">Toutes les classes</option>
+      <select name="classe_id" aria-label="{{ _("Classe") }}">
+        <option value="">{{ _("Toutes les classes") }}</option>
         {% for c in classes %}
           <option value="{{ c.id }}" {% if classe_id == c.id %}selected{% endif %}>{{ c.nom }}</option>
         {% endfor %}
       </select>
     {% endif %}
-    <button type="submit">Chercher</button>
+    <button type="submit">{{ _("Chercher") }}</button>
   </form>
 
   {% if page.total %}
     <section class="panneau">
       <div class="panneau-tete">
-        <h2>{{ page.total }} élève{{ "s" if page.total > 1 }}</h2>
+        <h2>{{ page.total }} {{ _("élèves" if page.total > 1 else "élève") }}</h2>
         {% if gestion %}
           <span class="liens-export">
-            Exporter {% if classe_id %}cette classe{% else %}toutes les classes{% endif %} :
+            {{ _("Exporter") }} {% if classe_id %}{{ _("cette classe") }}{% else %}{{ _("toutes les classes") }}{% endif %} :
             <a href="{{ url_for('eleves.export', fmt='csv', classe_id=classe_id) }}">CSV</a>
             <a href="{{ url_for('eleves.export', fmt='xlsx', classe_id=classe_id) }}">Excel</a>
             <a href="{{ url_for('eleves.export', fmt='pdf', classe_id=classe_id) }}">PDF</a>
@@ -51,7 +51,7 @@
       </div>
       <div class="defile-horizontal">
         <table class="tableau-compact">
-          <thead><tr><th>Élève</th><th>Matricule</th><th>Classe</th><th>Sexe</th><th>Dossier</th></tr></thead>
+          <thead><tr><th>{{ _("Élève") }}</th><th>{{ _("Matricule") }}</th><th>{{ _("Classe") }}</th><th>{{ _("Sexe") }}</th><th>{{ _("Dossier") }}</th></tr></thead>
           <tbody>
             {% for e in page %}
               <tr>
@@ -66,7 +66,7 @@
                 <td class="cellule-discrete">{{ e.matricule }}</td>
                 <td>{{ e.classe.nom }}</td>
                 <td>{{ e.sexe|genre_libelle }}</td>
-                <td>{% if e.statut_dossier == "complet" %}<span class="badge badge-ok">Complet</span>{% else %}<span class="badge badge-attention">Incomplet</span>{% endif %}</td>
+                <td>{% if e.statut_dossier == "complet" %}<span class="badge badge-ok">{{ _("Complet") }}</span>{% else %}<span class="badge badge-attention">{{ _("Incomplet") }}</span>{% endif %}</td>
               </tr>
             {% endfor %}
           </tbody>

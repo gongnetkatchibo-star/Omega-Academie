@@ -9,8 +9,8 @@
   </div>
 
   {% if annonce.nom_fichier %}
-    <p class="lien-secondaire"><a href="{{ url_for('communication.telecharger', annonce_id=annonce.id) }}">Télécharger la pièce jointe</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('communication.telecharger', annonce_id=annonce.id) }}">{{ _("Télécharger la pièce jointe") }}</a></p>
   {% endif %}
 
-  <p class="lien-secondaire"><a href="{{ url_for('communication.liste') }}">← Toutes les annonces</a></p>
+  <p class="lien-secondaire"><a href="{{ url_for('communication.liste') }}">{{ _("← Toutes les annonces") }}</a></p>
 {% endblock %}

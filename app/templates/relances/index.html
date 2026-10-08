@@ -42,7 +42,7 @@
   {% if paiements is not none %}
     <section class="panneau relances-section" aria-labelledby="titre-paiements">
       <div class="panneau-tete">
-        <h2 id="titre-paiements">{{ _("Soldes à régler" if paiements.tous else "Paiements en retard") }} <span class="tdb-discret relances-compte">{{ paiements.total }} élève{{ "s" if paiements.total > 1 }}</span></h2>
+        <h2 id="titre-paiements">{{ _("Soldes à régler" if paiements.tous else "Paiements en retard") }} <span class="tdb-discret relances-compte">{{ paiements.total }} {{ _("élèves" if paiements.total > 1 else "élève") }}</span></h2>
         {% if paiements.tous %}
           <a href="{{ url_for('relances.index', date=jour.isoformat()) }}">{{ _("Seulement les retards") }}</a>
         {% else %}
@@ -69,7 +69,7 @@
           {% endfor %}
         </ul>
         {% if paiements.nb_pages > 1 %}
-          <nav class="pagination" aria-label="Pages">
+          <nav class="pagination" aria-label="{{ _("Pages") }}">
             {% if paiements.page > 1 %}<a href="{{ url_for('relances.index', date=jour.isoformat(), tous=1 if paiements.tous else None, page=paiements.page - 1) }}">{{ _("← Précédent") }}</a>{% endif %}
             <span class="pagination-resume">{{ _("page {page}/{total}", page=paiements.page, total=paiements.nb_pages) }}</span>
             {% if paiements.page < paiements.nb_pages %}<a href="{{ url_for('relances.index', date=jour.isoformat(), tous=1 if paiements.tous else None, page=paiements.page + 1) }}">{{ _("Suivant →") }}</a>{% endif %}

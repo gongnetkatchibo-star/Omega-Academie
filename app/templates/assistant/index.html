@@ -1,28 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Assistant{% endblock %}
+{% block title %}{{ _("Assistant") }}{% endblock %}
 {% block content %}
-  <h1>Assistant</h1>
+  <h1>{{ _("Assistant") }}</h1>
 
   {% if not ia_configuree %}
   {% endif %}
 
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Ta question
+    <label>{{ _("Ta question") }}
       <input type="text" name="question" value="{{ question or '' }}" required>
     </label>
-    <button type="submit">Demander</button>
+    <button type="submit">{{ _("Demander") }}</button>
   </form>
 
   {% if reponse %}
     <div class="carte-attente">
-      <p><strong>Réponse :</strong></p>
+      <p><strong>{{ _("Réponse :") }}</strong></p>
       <p>{{ reponse }}</p>
     </div>
   {% endif %}
 
   {% if suggestions %}
-    <h2>Exemples de questions que tu peux poser</h2>
+    <h2>{{ _("Exemples de questions que tu peux poser") }}</h2>
     <ul>
       {% for s in suggestions %}<li>{{ s }}</li>{% endfor %}
     </ul>

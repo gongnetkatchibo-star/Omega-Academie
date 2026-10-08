@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import graphique_barres %}
-{% block title %}Statistiques{% endblock %}
+{% block title %}{{ _("Statistiques") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Statistiques", None)) }}
   {{ banniere("statistiques", "Statistiques — " ~ annee) }}
@@ -8,7 +8,7 @@
   {% if annees_disponibles %}
     <form method="get" style="margin-bottom:12px;">
       <input type="hidden" name="vue" value="{{ vue }}">
-      <label>Année scolaire
+      <label>{{ _("Année scolaire") }}
         <select name="annee" onchange="this.form.submit()">
           {% for a in annees_disponibles %}<option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>{% endfor %}
         </select>
@@ -18,11 +18,11 @@
 
   <div class="stats-layout">
     <nav class="stats-sidebar">
-      <a class="stats-lien {% if vue == 'global' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='global', annee=annee) }}">Statistique globale</a>
+      <a class="stats-lien {% if vue == 'global' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='global', annee=annee) }}">{{ _("Statistique globale") }}</a>
       {% for c in classes %}
         <a class="stats-lien {% if vue == 'classe_' ~ c.id %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='classe_' ~ c.id, annee=annee) }}">{{ c.nom }}</a>
       {% endfor %}
-      <a class="stats-lien {% if vue == 'finances' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='finances', annee=annee) }}">Finances</a>
+      <a class="stats-lien {% if vue == 'finances' %}stats-lien-actif{% endif %}" href="{{ url_for('statistiques.tableau', vue='finances', annee=annee) }}">{{ _("Finances") }}</a>
     </nav>
 
     <div class="stats-contenu">
@@ -30,31 +30,31 @@
 
       {% if vue != 'finances' %}
         <div class="grille-cartes grille-stats">
-          <div class="carte-module carte-stat carte-stat-bleu"><h3>Effectif</h3><p>{{ effectif_total }}</p></div>
-          <div class="carte-module carte-stat carte-stat-bleu"><h3>Garçons</h3><p>{{ garcons }}</p></div>
-          <div class="carte-module carte-stat carte-stat-or"><h3>Filles</h3><p>{{ filles }}</p></div>
+          <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Effectif") }}</h3><p>{{ effectif_total }}</p></div>
+          <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Garçons") }}</h3><p>{{ garcons }}</p></div>
+          <div class="carte-module carte-stat carte-stat-or"><h3>{{ _("Filles") }}</h3><p>{{ filles }}</p></div>
         </div>
 
         {{ graphique_barres("Effectif par sexe", [("Garçons", garcons, "#0F5FA6"), ("Filles", filles, "#00A99D")]) }}
 
-        <h3>Réussite par sexe</h3>
+        <h3>{{ _("Réussite par sexe") }}</h3>
         <table class="table">
-          <thead><tr><th>Indicateur</th><th>Garçons</th><th>Filles</th><th>Total</th></tr></thead>
+          <thead><tr><th>{{ _("Indicateur") }}</th><th>{{ _("Garçons") }}</th><th>{{ _("Filles") }}</th><th>{{ _("Total") }}</th></tr></thead>
           <tbody>
             <tr>
-              <td>Effectif</td>
+              <td>{{ _("Effectif") }}</td>
               <td>{{ tableau_sexe['Garçons'].effectif }}</td>
               <td>{{ tableau_sexe['Filles'].effectif }}</td>
               <td>{{ tableau_sexe['Total'].effectif }}</td>
             </tr>
             <tr>
-              <td>Taux de réussite</td>
+              <td>{{ _("Taux de réussite") }}</td>
               <td class="solde-ok">{{ tableau_sexe['Garçons'].taux_reussite ~ ' %' if tableau_sexe['Garçons'].taux_reussite is not none else '—' }}</td>
               <td class="solde-ok">{{ tableau_sexe['Filles'].taux_reussite ~ ' %' if tableau_sexe['Filles'].taux_reussite is not none else '—' }}</td>
               <td class="solde-ok">{{ tableau_sexe['Total'].taux_reussite ~ ' %' if tableau_sexe['Total'].taux_reussite is not none else '—' }}</td>
             </tr>
             <tr>
-              <td>Taux d'échec</td>
+              <td>{{ _("Taux d'échec") }}</td>
               <td class="solde-du">{{ tableau_sexe['Garçons'].taux_echec ~ ' %' if tableau_sexe['Garçons'].taux_echec is not none else '—' }}</td>
               <td class="solde-du">{{ tableau_sexe['Filles'].taux_echec ~ ' %' if tableau_sexe['Filles'].taux_echec is not none else '—' }}</td>
               <td class="solde-du">{{ tableau_sexe['Total'].taux_echec ~ ' %' if tableau_sexe['Total'].taux_echec is not none else '—' }}</td>
@@ -62,7 +62,7 @@
           </tbody>
         </table>
         {% if stats_globales.nb_avec_notes == 0 %}
-          <p class="lien-secondaire">Aucun élève n'a encore de notes saisies pour cette sélection.</p>
+          <p class="lien-secondaire">{{ _("Aucun élève n'a encore de notes saisies pour cette sélection.") }}</p>
         {% else %}
           {{ graphique_barres("Taux de réussite par sexe", [
             ("Garçons", tableau_sexe['Garçons'].taux_reussite or 0, "#0F5FA6"),
@@ -73,18 +73,18 @@
 
       {% else %}
         <div class="grille-cartes grille-stats">
-          <div class="carte-module carte-stat carte-stat-bleu"><h3>Total à recouvrer</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
-          <div class="carte-module carte-stat carte-stat-vert"><h3>Total encaissé</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
+          <div class="carte-module carte-stat carte-stat-bleu"><h3>{{ _("Total à recouvrer") }}</h3><p>{{ "%.0f"|format(total_a_recouvrer) }}</p></div>
+          <div class="carte-module carte-stat carte-stat-vert"><h3>{{ _("Total encaissé") }}</h3><p>{{ "%.0f"|format(total_encaisse) }}</p></div>
           <div class="carte-module carte-stat {% if solde_a_recouvrer > 0 %}carte-stat-rouge{% else %}carte-stat-vert{% endif %}">
-            <h3>Solde à recouvrer</h3>
+            <h3>{{ _("Solde à recouvrer") }}</h3>
             <p>{{ "%.0f"|format(solde_a_recouvrer) }}</p>
           </div>
-          <div class="carte-module carte-stat carte-stat-or"><h3>Taux de recouvrement</h3><p>{{ "%.1f"|format(taux_recouvrement) }} %</p></div>
+          <div class="carte-module carte-stat carte-stat-or"><h3>{{ _("Taux de recouvrement") }}</h3><p>{{ "%.1f"|format(taux_recouvrement) }} %</p></div>
         </div>
 
-        <h3>Par échéance</h3>
+        <h3>{{ _("Par échéance") }}</h3>
         <table class="table">
-          <thead><tr><th>Échéance</th><th>Attendu</th><th>Payé</th><th>Solde</th><th>Taux</th></tr></thead>
+          <thead><tr><th>{{ _("Échéance") }}</th><th>{{ _("Attendu") }}</th><th>{{ _("Payé") }}</th><th>{{ _("Solde") }}</th><th>{{ _("Taux") }}</th></tr></thead>
           <tbody>
             {% for cle, t in par_tranche.items() %}
               <tr>
@@ -98,9 +98,9 @@
           </tbody>
         </table>
 
-        <h3>Listes par situation de paiement</h3>
+        <h3>{{ _("Listes par situation de paiement") }}</h3>
         <table class="table">
-          <thead><tr><th>Situation</th><th>Nb élèves</th><th>Télécharger</th></tr></thead>
+          <thead><tr><th>{{ _("Situation") }}</th><th>{{ _("Nb élèves") }}</th><th>{{ _("Télécharger") }}</th></tr></thead>
           <tbody>
             {% for cle, libelle in libelles_filtre.items() %}
               <tr>

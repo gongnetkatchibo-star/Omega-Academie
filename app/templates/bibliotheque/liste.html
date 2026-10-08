@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Bibliothèque numérique{% endblock %}
+{% block title %}{{ _("Bibliothèque numérique") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Bibliothèque", None)) }}
   {{ banniere("bibliotheque", "Bibliothèque numérique") }}
@@ -9,16 +9,16 @@
 
   {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
     <div class="barre-actions">
-      <a class="bouton bouton-plein" href="{{ url_for('bibliotheque.nouvelle') }}">{{ icone("plus") }} Ajouter une ressource</a>
-      <a class="bouton" href="{{ url_for('bibliotheque.importer') }}">{{ icone("importer") }} Importer plusieurs fichiers</a>
-      <a class="bouton" href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">{{ icone("telecharger") }} Exporter {{ "cette sélection" if type_filtre else "tout" }} (.zip)</a>
+      <a class="bouton bouton-plein" href="{{ url_for('bibliotheque.nouvelle') }}">{{ icone("plus") }} {{ _("Ajouter une ressource") }}</a>
+      <a class="bouton" href="{{ url_for('bibliotheque.importer') }}">{{ icone("importer") }} {{ _("Importer plusieurs fichiers") }}</a>
+      <a class="bouton" href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">{{ icone("telecharger") }} {{ _("Exporter") }} {{ "cette sélection" if type_filtre else "tout" }} {{ _("(.zip)") }}</a>
     </div>
   {% endif %}
 
   <form method="get">
-    <label>Filtrer par type
+    <label>{{ _("Filtrer par type") }}
       <select name="type" onchange="this.form.submit()">
-        <option value="">Tous les types</option>
+        <option value="">{{ _("Tous les types") }}</option>
         {% for t in types %}<option value="{{ t }}" {% if t == type_filtre %}selected{% endif %}>{{ t }}</option>{% endfor %}
       </select>
     </label>
@@ -30,14 +30,14 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ r.titre }}</strong>
-            {% if r.consultation_sur_place %}<span class="badge-retard">{{ icone("cadenas") }} Consultation sur place</span>{% endif %}
+            {% if r.consultation_sur_place %}<span class="badge-retard">{{ icone("cadenas") }} {{ _("Consultation sur place") }}</span>{% endif %}
             <span>{{ r.type }}{% if r.matiere %} · {{ r.matiere }}{% endif %}</span>
           </div>
           <div class="actions">
             {% if r.consultation_sur_place %}
-              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}" target="_blank">Consulter en ligne</a>
+              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}" target="_blank">{{ _("Consulter en ligne") }}</a>
             {% else %}
-              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}">Télécharger</a>
+              <a href="{{ url_for('bibliotheque.telecharger', ressource_id=r.id) }}">{{ _("Télécharger") }}</a>
             {% endif %}
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
               <form method="post" action="{{ url_for('bibliotheque.basculer_verrouillage', ressource_id=r.id) }}" style="display:inline;">
@@ -46,9 +46,9 @@
               </form>
             {% endif %}
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") or (current_user.role == "enseignant" and r.ajoute_par_id == current_user.id) %}
-              <form method="post" action="{{ url_for('bibliotheque.supprimer', ressource_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer définitivement cette ressource ?');">
+              <form method="post" action="{{ url_for('bibliotheque.supprimer', ressource_id=r.id) }}" style="display:inline;" onsubmit="return confirm('{{ _("Supprimer définitivement cette ressource ?") }}');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="bouton-danger">Supprimer</button>
+                <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
               </form>
             {% endif %}
           </div>

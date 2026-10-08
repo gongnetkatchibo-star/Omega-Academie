@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% from "_macros.html" import champ_mot_de_passe %}
-{% block title %}Nouveau mot de passe{% endblock %}
+{% block title %}{{ _("Nouveau mot de passe") }}{% endblock %}
 {% block content %}
-  <h1>Choisir un nouveau mot de passe</h1>
+  <h1>{{ _("Choisir un nouveau mot de passe") }}</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -16,12 +16,12 @@
 
   <form method="post" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Nouveau mot de passe
+    <label>{{ _("Nouveau mot de passe") }}
       {{ champ_mot_de_passe("mot_de_passe") }}
     </label>
-    <label>Confirmer le mot de passe
+    <label>{{ _("Confirmer le mot de passe") }}
       {{ champ_mot_de_passe("confirmation") }}
     </label>
-    <button type="submit">Réinitialiser</button>
+    <button type="submit">{{ _("Réinitialiser") }}</button>
   </form>
 {% endblock %}

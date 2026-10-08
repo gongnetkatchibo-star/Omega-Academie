@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import champ_mot_de_passe %}
-{% block title %}Mon profil{% endblock %}
+{% block title %}{{ _("Mon profil") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Mon profil", None)) }}
   {{ banniere("profil", "Mon profil") }}
@@ -9,34 +9,34 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
-  <h2>Genre</h2>
+  <h2>{{ _("Genre") }}</h2>
   <form method="post" action="{{ url_for('main.modifier_genre') }}" class="formulaire-filtre">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Genre
+    <label>{{ _("Genre") }}
       <select name="genre">
-        <option value="M" {% if current_user.genre == "M" %}selected{% endif %}>Masculin</option>
-        <option value="F" {% if current_user.genre == "F" %}selected{% endif %}>Féminin</option>
+        <option value="M" {% if current_user.genre == "M" %}selected{% endif %}>{{ _("Masculin") }}</option>
+        <option value="F" {% if current_user.genre == "F" %}selected{% endif %}>{{ _("Féminin") }}</option>
       </select>
     </label>
-    <button type="submit">Enregistrer</button>
+    <button type="submit">{{ _("Enregistrer") }}</button>
   </form>
 
-  <h2>Mot de passe</h2>
+  <h2>{{ _("Mot de passe") }}</h2>
   <form method="post" action="{{ url_for('main.changer_mot_de_passe') }}" class="formulaire-etroit" autocomplete="off">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Mot de passe actuel
+    <label>{{ _("Mot de passe actuel") }}
       {{ champ_mot_de_passe("mot_de_passe_actuel", autocomplete="current-password") }}
     </label>
-    <label>Nouveau mot de passe
+    <label>{{ _("Nouveau mot de passe") }}
       {{ champ_mot_de_passe("nouveau_mot_de_passe") }}
     </label>
-    <label>Confirmer le nouveau mot de passe
+    <label>{{ _("Confirmer le nouveau mot de passe") }}
       {{ champ_mot_de_passe("confirmation") }}
     </label>
-    <button type="submit">Changer le mot de passe</button>
+    <button type="submit">{{ _("Changer le mot de passe") }}</button>
   </form>
 
-  <h2>Mes numéros</h2>
+  <h2>{{ _("Mes numéros") }}</h2>
   {% if numeros %}
     <ul class="liste-demandes">
       {% for n in numeros %}
@@ -46,9 +46,9 @@
             <span>{{ "Airtel Tchad" if n.operateur == "airtel" else "Moov Africa Tchad" }}{% if n.libelle %} · {{ n.libelle }}{% endif %}</span>
           </div>
           <div class="actions">
-            <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm('Supprimer ce numéro ?');">
+            <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm('{{ _("Supprimer ce numéro ?") }}');">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="bouton-danger">Supprimer</button>
+              <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
             </form>
           </div>
         </li>
@@ -58,23 +58,23 @@
     {{ etat_vide("Aucun numéro enregistré pour l'instant.") }}
   {% endif %}
 
-  <h2>Ajouter un numéro</h2>
+  <h2>{{ _("Ajouter un numéro") }}</h2>
   <form method="post" action="{{ url_for('main.ajouter_numero') }}" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Numéro
+    <label>{{ _("Numéro") }}
       <input type="text" name="numero" required>
     </label>
-    <label>Opérateur
+    <label>{{ _("Opérateur") }}
       <select name="operateur" required>
-        <option value="">Choisir…</option>
+        <option value="">{{ _("Choisir…") }}</option>
         {% for cle, nom in operateurs %}
           <option value="{{ cle }}">{{ nom }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>Nom
+    <label>{{ _("Nom") }}
       <input type="text" name="libelle">
     </label>
-    <button type="submit">Ajouter</button>
+    <button type="submit">{{ _("Ajouter") }}</button>
   </form>
 {% endblock %}

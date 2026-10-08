@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Démarrer une année scolaire{% endblock %}
+{% block title %}{{ _("Démarrer une année scolaire") }}{% endblock %}
 {% block content %}
-  <h1>Démarrer une année scolaire</h1>
+  <h1>{{ _("Démarrer une année scolaire") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Nouvelle année scolaire
+    <label>{{ _("Nouvelle année scolaire") }}
       <input type="text" name="annee_scolaire" value="{{ annee_suggeree }}" required>
     </label>
-    <label>Reprendre l'échéancier de frais depuis
+    <label>{{ _("Reprendre l'échéancier de frais depuis") }}
       <select name="annee_source">
-        <option value="">— Ne pas reprendre —</option>
+        <option value="">{{ _("— Ne pas reprendre —") }}</option>
         {% for a in annees %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
       </select>
     </label>
-    <button type="submit">Créer les classes CP1 à 3ème pour cette année</button>
+    <button type="submit">{{ _("Créer les classes CP1 à 3ème pour cette année") }}</button>
   </form>
 {% endblock %}

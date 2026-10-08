@@ -1,24 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Importer des ressources{% endblock %}
+{% block title %}{{ _("Importer des ressources") }}{% endblock %}
 {% block content %}
-  <h1>Importer plusieurs fichiers</h1>
+  <h1>{{ _("Importer plusieurs fichiers") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Type (appliqué à tous les fichiers)
+    <label>{{ _("Type (appliqué à tous les fichiers)") }}
       <select name="type" required>
         {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
       </select>
     </label>
-    <label>Matière
+    <label>{{ _("Matière") }}
       <input type="text" name="matiere">
     </label>
-    <label>Fichiers (plusieurs à la fois)
+    <label>{{ _("Fichiers (plusieurs à la fois)") }}
       <input type="file" name="fichiers" multiple required>
     </label>
-    <label><input type="checkbox" name="consultation_sur_place"> Consultation sur place uniquement (non téléchargeable), pour tous les fichiers importés</label>
-    <button type="submit">Importer</button>
+    <label><input type="checkbox" name="consultation_sur_place"> {{ _("Consultation sur place uniquement (non téléchargeable), pour tous les fichiers importés") }}</label>
+    <button type="submit">{{ _("Importer") }}</button>
   </form>
 {% endblock %}

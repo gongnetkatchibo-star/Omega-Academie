@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Annonces{% endblock %}
+{% block title %}{{ _("Annonces") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Annonces", None)) }}
   {{ banniere("annonces", "Annonces") }}
@@ -13,32 +13,32 @@
     {% endif %}
   {% endwith %}
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant") %}
-    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('communication.nouvelle') }}">{{ icone("plus") }} Nouvelle annonce</a></div>
+    <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('communication.nouvelle') }}">{{ icone("plus") }} {{ _("Nouvelle annonce") }}</a></div>
   {% endif %}
 
   <form method="get" class="formulaire-filtre">
-    <label>Date précise
+    <label>{{ _("Date précise") }}
       <input type="date" name="date" value="{{ filtre_date or '' }}">
     </label>
-    <label>Mois
+    <label>{{ _("Mois") }}
       <select name="mois">
-        <option value="">Tous</option>
+        <option value="">{{ _("Tous") }}</option>
         {% for i in range(1, 13) %}
           <option value="{{ i }}" {% if filtre_mois == i %}selected{% endif %}>{{ mois_libelles[i-1] }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>Année
+    <label>{{ _("Année") }}
       <select name="annee">
-        <option value="">Toutes</option>
+        <option value="">{{ _("Toutes") }}</option>
         {% for a in annees_disponibles %}
           <option value="{{ a }}" {% if filtre_annee == a %}selected{% endif %}>{{ a }}</option>
         {% endfor %}
       </select>
     </label>
-    <button type="submit">Rechercher</button>
+    <button type="submit">{{ _("Rechercher") }}</button>
     {% if filtre_date or filtre_mois or filtre_annee %}
-      <a href="{{ url_for('communication.liste') }}">Réinitialiser</a>
+      <a href="{{ url_for('communication.liste') }}">{{ _("Réinitialiser") }}</a>
     {% endif %}
   </form>
 
@@ -50,14 +50,14 @@
             <strong>{{ a.titre }}</strong>
             <span>{{ a.contenu }}</span>
             {% if a.nom_fichier %}
-              <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">{{ icone("trombone") }} Télécharger la pièce jointe</a></span>
+              <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">{{ icone("trombone") }} {{ _("Télécharger la pièce jointe") }}</a></span>
             {% endif %}
             <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }}</span>
           </div>
           {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire") or (current_user.role == "enseignant" and a.auteur_id == current_user.id) %}
-            <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm('Supprimer cette annonce ?');">
+            <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm('{{ _("Supprimer cette annonce ?") }}');">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="bouton-danger">Supprimer</button>
+              <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
             </form>
           {% endif %}
         </li>

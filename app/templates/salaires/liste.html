@@ -1,36 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Salaires{% endblock %}
+{% block title %}{{ _("Salaires") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Salaires", None)) }}
   {{ banniere("salaires", "Salaires du personnel") }}
-  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('salaires.nouveau') }}">{{ icone("plus") }} Nouveau salaire</a></div>
+  <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('salaires.nouveau') }}">{{ icone("plus") }} {{ _("Nouveau salaire") }}</a></div>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module carte-stat carte-stat-vert"><h3>Total payé</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
-    <div class="carte-module carte-stat carte-stat-rouge"><h3>Total impayé</h3><p>{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
+    <div class="carte-module carte-stat carte-stat-vert"><h3>{{ _("Total payé") }}</h3><p>{{ "%.0f"|format(total_paye) }} FCFA</p></div>
+    <div class="carte-module carte-stat carte-stat-rouge"><h3>{{ _("Total impayé") }}</h3><p>{{ "%.0f"|format(total_impaye) }} FCFA</p></div>
   </div>
 
   <form method="get" class="formulaire-filtre">
-    <label>Nom du bénéficiaire
+    <label>{{ _("Nom du bénéficiaire") }}
       <input type="text" name="nom" value="{{ filtre_nom }}">
     </label>
-    <label>Payé à partir du
+    <label>{{ _("Payé à partir du") }}
       <input type="date" name="date_debut" value="{{ filtre_date_debut }}">
     </label>
-    <label>Jusqu'au
+    <label>{{ _("Jusqu'au") }}
       <input type="date" name="date_fin" value="{{ filtre_date_fin }}">
     </label>
-    <button type="submit">Filtrer</button>
+    <button type="submit">{{ _("Filtrer") }}</button>
     {% if filtre_nom or filtre_date_debut or filtre_date_fin %}
-      <a href="{{ url_for('salaires.liste') }}">Réinitialiser</a>
+      <a href="{{ url_for('salaires.liste') }}">{{ _("Réinitialiser") }}</a>
     {% endif %}
   </form>
 
   <p class="lien-secondaire">
-    Télécharger cette liste (avec les mêmes filtres) :
+    {{ _("Télécharger cette liste (avec les mêmes filtres) :") }}
     {% set args = request.args %}
     <a href="{{ url_for('salaires.exporter', format_fichier='pdf', **args) }}">PDF</a> ·
     <a href="{{ url_for('salaires.exporter', format_fichier='xlsx', **args) }}">Excel</a> ·
@@ -39,7 +39,7 @@
 
   {% if salaires %}
     <table class="table">
-      <thead><tr><th>Bénéficiaire</th><th>Fonction</th><th>Email</th><th>Téléphone</th><th>Période</th><th>Montant</th><th>Statut</th><th>Date paiement</th><th></th></tr></thead>
+      <thead><tr><th>{{ _("Bénéficiaire") }}</th><th>{{ _("Fonction") }}</th><th>{{ _("Email") }}</th><th>{{ _("Téléphone") }}</th><th>{{ _("Période") }}</th><th>{{ _("Montant") }}</th><th>{{ _("Statut") }}</th><th>{{ _("Date paiement") }}</th><th></th></tr></thead>
       <tbody>
         {% for s in salaires %}
           <tr>
@@ -56,13 +56,13 @@
                 {% if s.statut == "impaye" %}
                   <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit">Marquer payé</button>
+                    <button type="submit">{{ _("Marquer payé") }}</button>
                   </form>
                 {% endif %}
                 {% if acces("fondateur", "administrateur_general") %}
-                  <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" onsubmit="return confirm('Supprimer cette ligne de salaire ?');">
+                  <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" onsubmit="return confirm('{{ _("Supprimer cette ligne de salaire ?") }}');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="bouton-danger">Supprimer</button>
+                    <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
                   </form>
                 {% endif %}
               </div>

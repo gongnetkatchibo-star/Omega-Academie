@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Absences — {{ eleve.nom_complet }}{% endblock %}
+{% block title %}{{ _("Absences —") }} {{ eleve.nom_complet }}{% endblock %}
 {% block content %}
-  <h1>Absences — {{ eleve.nom_complet }}</h1>
-  <p><strong>Absences non justifiées :</strong> <span class="{% if nb_injustifiees %}solde-du{% else %}solde-ok{% endif %}">{{ nb_injustifiees }}</span></p>
+  <h1>{{ _("Absences —") }} {{ eleve.nom_complet }}</h1>
+  <p><strong>{{ _("Absences non justifiées :") }}</strong> <span class="{% if nb_injustifiees %}solde-du{% else %}solde-ok{% endif %}">{{ nb_injustifiees }}</span></p>
 
   {% if absences %}
     <table class="table">
-      <thead><tr><th>Date</th><th>Justifiée</th><th>Motif</th></tr></thead>
+      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Justifiée") }}</th><th>{{ _("Motif") }}</th></tr></thead>
       <tbody>
         {% for a in absences %}
           <tr>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Messagerie{% endblock %}
+{% block title %}{{ _("Messagerie") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Messages", None)) }}
   {{ banniere("messagerie", "Messagerie") }}
@@ -9,9 +9,9 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ p.nom_complet }}</strong>
-            {% if non_lus.get(p.id) %}<span class="badge-retard">{{ non_lus[p.id] }} non lu(s)</span>{% endif %}
+            {% if non_lus.get(p.id) %}<span class="badge-retard">{{ non_lus[p.id] }} {{ _("non lu(s)") }}</span>{% endif %}
           </div>
-          <div class="actions"><a href="{{ url_for('messagerie.fil', parent_id=p.id) }}">Ouvrir le fil</a></div>
+          <div class="actions"><a href="{{ url_for('messagerie.fil', parent_id=p.id) }}">{{ _("Ouvrir le fil") }}</a></div>
         </li>
       {% endfor %}
     </ul>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Suivi des cours{% endblock %}
+{% block title %}{{ _("Suivi des cours") }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Suivi des cours", None)) }}
   {{ banniere("suivi_cours", "Suivi des cours") }}
@@ -8,7 +8,7 @@
       {% for s in suivis %}
         <li class="carte-demande">
           <div class="infos">
-            <strong>{{ s.classe.nom }} — {{ s.matiere }}{% if s.en_retard %} <span class="badge-retard">En retard</span>{% endif %}</strong>
+            <strong>{{ s.classe.nom }} — {{ s.matiere }}{% if s.en_retard %} <span class="badge-retard">{{ _("En retard") }}</span>{% endif %}</strong>
             <span>{{ s.chapitre }} · {{ s.pourcentage }}% · {{ s.enseignant.nom_complet }}</span>
           </div>
         </li>

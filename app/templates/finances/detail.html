@@ -1,48 +1,48 @@
 {% extends "base.html" %}
 {% from "_whatsapp.html" import boutons_whatsapp with context %}
-{% block title %}Finances — {{ eleve.nom_complet }}{% endblock %}
+{% block title %}{{ _("Finances —") }} {{ eleve.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Finances", url_for('finances.liste')), (eleve.nom_complet, None)) }}
-  <h1>Finances — {{ eleve.nom_complet }}</h1>
+  <h1>{{ _("Finances —") }} {{ eleve.nom_complet }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
   <p>
-    <strong>Total dû :</strong> {{ resume.du|fcfa }} ·
-    <strong>Total payé :</strong> {{ resume.paye|fcfa }} ·
-    <strong>Solde :</strong> {{ resume.solde|fcfa }} ·
-    <strong>Statut :</strong>
+    <strong>{{ _("Total dû :") }}</strong> {{ resume.du|fcfa }} ·
+    <strong>{{ _("Total payé :") }}</strong> {{ resume.paye|fcfa }} ·
+    <strong>{{ _("Solde :") }}</strong> {{ resume.solde|fcfa }} ·
+    <strong>{{ _("Statut :") }}</strong>
     <span class="badge {{ {'PAYÉ': 'badge-ok', 'PARTIEL': 'badge-attention'}.get(resume.statut, 'badge-critique') }}">{{ resume.statut }}</span>
   </p>
 
   {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general", module="finances") %}
     <section class="panneau relances-fiche">
-      <div class="panneau-tete"><h2>Relancer la famille</h2></div>
-      <p class="tdb-sous-titre">Sur WhatsApp, gratuitement : le message avec le montant dû est déjà rédigé.</p>
+      <div class="panneau-tete"><h2>{{ _("Relancer la famille") }}</h2></div>
+      <p class="tdb-sous-titre">{{ _("Sur WhatsApp, gratuitement : le message avec le montant dû est déjà rédigé.") }}</p>
       {{ boutons_whatsapp(eleve, "relance", contacts_whatsapp) }}
       <form method="post" action="{{ url_for('finances.relancer', eleve_id=eleve.id) }}" class="relances-email">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="bouton">Envoyer aussi par email</button>
+        <button type="submit" class="bouton">{{ _("Envoyer aussi par email") }}</button>
       </form>
     </section>
   {% endif %}
 
   {% if resume.retard > 0 %}
-    <p class="solde-du"><strong>En retard : {{ resume.retard|fcfa }}</strong> (date limite dépassée)</p>
+    <p class="solde-du"><strong>{{ _("En retard :") }} {{ resume.retard|fcfa }}</strong> {{ _("(date limite dépassée)") }}</p>
   {% endif %}
   {% if resume.remise %}
-    <p>Remise de <strong>{{ "%g"|format(resume.remise) }} %</strong> sur la scolarité{% if eleve.remise_motif %} — {{ eleve.remise_motif }}{% endif %}.</p>
+    <p>{{ _("Remise de") }} <strong>{{ "%g"|format(resume.remise) }} %</strong> {{ _("sur la scolarité") }}{% if eleve.remise_motif %} — {{ eleve.remise_motif }}{% endif %}.</p>
   {% endif %}
 
-  <h2>Détail par échéance</h2>
+  <h2>{{ _("Détail par échéance") }}</h2>
   <table class="table">
-    <thead><tr><th>Échéance</th><th>Date limite</th><th>Attendu</th><th>Payé</th><th>Reste</th></tr></thead>
+    <thead><tr><th>{{ _("Échéance") }}</th><th>{{ _("Date limite") }}</th><th>{{ _("Attendu") }}</th><th>{{ _("Payé") }}</th><th>{{ _("Reste") }}</th></tr></thead>
     <tbody>
       {% for e in resume.echeances + resume.annexes %}
         <tr>
           <td>{{ e.libelle }}</td>
-          <td class="{% if e.en_retard %}solde-du{% endif %}">{{ e.date_limite.strftime("%d/%m/%Y") if e.date_limite else "—" }}{% if e.en_retard %} · en retard{% endif %}</td>
+          <td class="{% if e.en_retard %}solde-du{% endif %}">{{ e.date_limite.strftime("%d/%m/%Y") if e.date_limite else "—" }}{% if e.en_retard %} {{ _("· en retard") }}{% endif %}</td>
           <td>{{ e.attendu|fcfa }}</td>
           <td>{{ e.paye|fcfa }}</td>
           <td class="{% if e.reste > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ e.reste|fcfa }}</td>
@@ -52,47 +52,47 @@
   </table>
 
   {% if peut_remise %}
-    <h2>Remise</h2>
+    <h2>{{ _("Remise") }}</h2>
     <form method="post" action="{{ url_for('finances.remise', eleve_id=eleve.id) }}" class="formulaire-etroit">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Remise sur la scolarité (%)
+      <label>{{ _("Remise sur la scolarité (%)") }}
         <input type="number" name="remise_pourcent" min="0" max="100" step="1" value="{{ '%g'|format(eleve.remise_pourcent or 0) }}" required>
       </label>
-      <label>Motif
+      <label>{{ _("Motif") }}
         <input type="text" name="remise_motif" maxlength="120" value="{{ eleve.remise_motif or '' }}">
       </label>
-      <button type="submit">Enregistrer la remise</button>
+      <button type="submit">{{ _("Enregistrer la remise") }}</button>
     </form>
   {% endif %}
 
   {% if acces("comptable", "fondateur", "administrateur_general") %}
-  <h2>Nouveau paiement</h2>
+  <h2>{{ _("Nouveau paiement") }}</h2>
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>Échéance
+    <label>{{ _("Échéance") }}
       <select name="echeance" required>
-        {% for e in resume.echeances + resume.annexes %}<option value="{{ e.cle }}">{{ e.libelle }}{% if e.reste > 0 %} — reste {{ e.reste|fcfa }}{% endif %}</option>{% endfor %}
+        {% for e in resume.echeances + resume.annexes %}<option value="{{ e.cle }}">{{ e.libelle }}{% if e.reste > 0 %} {{ _("— reste") }} {{ e.reste|fcfa }}{% endif %}</option>{% endfor %}
       </select>
     </label>
-    <label>Montant
+    <label>{{ _("Montant") }}
       <input type="number" step="1" min="1" name="montant" required>
     </label>
-    <label>Mode de paiement
+    <label>{{ _("Mode de paiement") }}
       <select name="mode" required>
         {% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}
       </select>
     </label>
-    <label>Référence
+    <label>{{ _("Référence") }}
       <input type="text" name="reference">
     </label>
-    <button type="submit">Enregistrer le paiement</button>
+    <button type="submit">{{ _("Enregistrer le paiement") }}</button>
   </form>
   {% endif %}
 
-  <h2>Historique des paiements</h2>
+  <h2>{{ _("Historique des paiements") }}</h2>
   {% if paiements %}
     <table class="table">
-      <thead><tr><th>Date</th><th>Échéance</th><th>Montant</th><th>Mode</th><th>N° reçu</th><th>Référence</th>{% if acces("comptable", "fondateur", "administrateur_general") %}<th></th>{% endif %}</tr></thead>
+      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Échéance") }}</th><th>{{ _("Montant") }}</th><th>{{ _("Mode") }}</th><th>{{ _("N° reçu") }}</th><th>{{ _("Référence") }}</th>{% if acces("comptable", "fondateur", "administrateur_general") %}<th></th>{% endif %}</tr></thead>
       <tbody>
         {% for p in paiements %}
           <tr>
@@ -104,11 +104,11 @@
             <td>{{ p.reference or "—" }}</td>
             {% if acces("comptable", "fondateur", "administrateur_general") %}
               <td>
-                <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">Corriger</a>
+                <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">{{ _("Corriger") }}</a>
                 {% if acces("fondateur", "administrateur_general") %}
-                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce paiement et sa ligne de Caisse associée ?');">
+                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm('{{ _("Supprimer ce paiement et sa ligne de Caisse associée ?") }}');">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit">Supprimer</button>
+                      <button type="submit">{{ _("Supprimer") }}</button>
                     </form>
                 {% endif %}
               </td>

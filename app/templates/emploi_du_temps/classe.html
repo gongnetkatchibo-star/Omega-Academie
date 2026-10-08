@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Emploi du temps — {{ classe.nom }}{% endblock %}
+{% block title %}{{ _("Emploi du temps —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
-  <h1>Emploi du temps — {{ classe.nom }}</h1>
+  <h1>{{ _("Emploi du temps —") }} {{ classe.nom }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
   {% if vue_enseignant %}
-    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.moi_classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} Télécharger en PDF</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.moi_classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} {{ _("Télécharger en PDF") }}</a></p>
   {% else %}
-    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} Télécharger en PDF</a></p>
+    <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} {{ _("Télécharger en PDF") }}</a></p>
   {% endif %}
 
   {% if grille %}
     <table class="table table-edt">
       <thead>
         <tr>
-          <th>Heure</th>
+          <th>{{ _("Heure") }}</th>
           {% for jour in jours %}<th>{{ jour }}</th>{% endfor %}
         </tr>
       </thead>
@@ -42,30 +42,30 @@
   {% endif %}
 
   {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique") and not vue_enseignant %}
-    <h2>Ajouter un créneau</h2>
+    <h2>{{ _("Ajouter un créneau") }}</h2>
     <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Matière
+      <label>{{ _("Matière") }}
         <input type="text" name="matiere" required>
       </label>
-      <label>Enseignant
+      <label>{{ _("Enseignant") }}
         <select name="enseignant_id" class="recherche-nom">
-          <option value="">Non assigné</option>
+          <option value="">{{ _("Non assigné") }}</option>
           {% for e in enseignants %}<option value="{{ e.id }}">{{ e.nom_complet }}</option>{% endfor %}
         </select>
       </label>
-      <label>Jour
+      <label>{{ _("Jour") }}
         <select name="jour" required>
           {% for j in jours %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
         </select>
       </label>
-      <label>Heure de début
+      <label>{{ _("Heure de début") }}
         <input type="time" name="heure_debut" required>
       </label>
-      <label>Heure de fin
+      <label>{{ _("Heure de fin") }}
         <input type="time" name="heure_fin" required>
       </label>
-      <button type="submit">Ajouter</button>
+      <button type="submit">{{ _("Ajouter") }}</button>
     </form>
   {% endif %}
 {% endblock %}
