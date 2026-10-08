@@ -45,10 +45,18 @@ def langue_courante():
 def traduire(texte, **valeurs):
     """Texte dans la langue de la personne connectée. Les {valeurs} sont
     remplacées après traduction : _("Bonjour, {prenom}", prenom="Amina")."""
+    from markupsafe import Markup, escape
+
+    texte = str(texte)
     if langue_courante() == "ar":
         from app.services.traductions_ar import INTERFACE
         texte = INTERFACE.get(texte, texte)
-    return texte.format(**valeurs) if valeurs else texte
+    if valeurs:
+        texte = texte.format(**{cle: str(valeur) for cle, valeur in valeurs.items()})
+    # Échappé (le texte peut contenir un nom saisi par un utilisateur), mais
+    # l'apostrophe reste telle quelle : elle ne présente aucun risque entre
+    # balises ni dans un attribut entre guillemets doubles.
+    return Markup(str(escape(texte)).replace("&#39;", "'"))
 
 
 # --- Documents PDF ------------------------------------------------------------
