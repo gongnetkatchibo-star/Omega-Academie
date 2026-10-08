@@ -2814,3 +2814,19 @@ img.initiales-rondes {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+.verification-formulaire input[type=text]::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.hero-verifier {
+  margin-top: 18px;
+  font-size: 14.5px;
+  color: var(--encre-2);
+}
+
+.hero-verifier a {
+  font-weight: 600;
+  color: var(--navy);
+}

@@ -8,6 +8,10 @@
       <a class="bouton-principal" href="{{ url_for('auth.connexion') }}">Se connecter</a>
       <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">Créer un compte</a>
     </div>
+    <p class="hero-verifier">
+      Vous avez reçu un bulletin, un certificat ou un reçu ?
+      <a href="{{ url_for('main.verifier_formulaire') }}">Vérifier qu'il est authentique</a>
+    </p>
   </section>
 
   <footer class="pied-accueil">
