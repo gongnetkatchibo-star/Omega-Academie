@@ -131,22 +131,53 @@ def create_app(config_name=None):
         except OSError:
             return 0
 
+    # Clé de module → dessin du fichier templates/_icones.html. Des icônes
+    # dessinées plutôt que des emojis, qui changeaient d'aspect d'un
+    # téléphone à l'autre (oct. 2026).
     ICONES_MODULES = {
-        "classes": "🏫", "eleves": "🎓", "tests_niveau": "📝", "enseignants": "👩‍🏫",
-        "suivi_cours": "📖", "finances": "💰", "caisse": "🧾", "salaires": "💵",
-        "statistiques": "📊", "alertes": "⚠️", "messagerie": "💬", "bibliotheque": "📚",
-        "annonces": "📣", "communication": "📣", "assistant": "🤖", "demandes": "📥",
-        "secretariat": "📥", "tableau_de_bord": "🏠", "profil": "👤", "deconnexion": "🚪",
-        "dev": "🛠️", "emploi_du_temps": "🗓️", "notes": "📋", "etablissement": "🏛️",
-        "documents": "📄", "sauvegarde": "💾", "scolarite": "🎒", "pedagogie": "📘", "administration": "⚙️",
-        "plateforme": "🌐",
+        "classes": "ecole", "eleves": "eleves", "tests_niveau": "crayon", "enseignants": "personne",
+        "suivi_cours": "livre", "finances": "portefeuille", "caisse": "recu", "salaires": "billets",
+        "statistiques": "graphique", "alertes": "alerte", "messagerie": "message", "bibliotheque": "bibliotheque",
+        "annonces": "annonce", "communication": "annonce", "assistant": "etincelle", "demandes": "boite",
+        "secretariat": "boite", "tableau_de_bord": "accueil", "profil": "personne", "deconnexion": "sortie",
+        "dev": "outil", "emploi_du_temps": "calendrier", "notes": "liste", "etablissement": "ecole",
+        "documents": "document", "sauvegarde": "disque", "scolarite": "chapeau", "pedagogie": "livre",
+        "administration": "reglages", "plateforme": "globe", "mes_enfants": "eleves", "mon_espace": "chapeau",
+        "mon_edt": "calendrier", "roles": "outil", "absences": "calendrier",
     }
 
     @app.template_global()
     def icone(cle):
-        """Icône (emoji) associée à un module — pas de police d'icônes
-        externe à charger, ce qui respecterait mal notre CSP (sept. 2026)."""
-        return ICONES_MODULES.get(cle, "")
+        """Icône d'un module, dessinée en SVG (fichier _icones.html inclus
+        une fois par base.html). `cle` peut aussi être directement le nom
+        d'un dessin (ex. "plus", "chevron")."""
+        dessin = ICONES_MODULES.get(cle, cle)
+        if not dessin:
+            return ""
+        return Markup(f'<svg class="icone" aria-hidden="true"><use href="#i-{escape(dessin)}"/></svg>')
+
+    @app.template_filter("fcfa")
+    def fcfa(montant, unite=True):
+        """145000 → « 145 000 FCFA ». Espaces insécables : le montant ne
+        se coupe jamais en fin de ligne."""
+        try:
+            entier = int(round(float(montant or 0)))
+        except (TypeError, ValueError):
+            return montant
+        texte = f"{entier:,}".replace(",", "\u00a0")
+        return f"{texte}\u00a0FCFA" if unite else texte
+
+    JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+    MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+            "septembre", "octobre", "novembre", "décembre"]
+
+    @app.template_filter("date_longue")
+    def date_longue(jour, avec_jour=True):
+        """date(2026, 10, 8) → « jeudi 8 octobre 2026 »."""
+        if not jour:
+            return ""
+        texte = f"{'1er' if jour.day == 1 else jour.day} {MOIS[jour.month - 1]} {jour.year}"
+        return f"{JOURS[jour.weekday()]} {texte}" if avec_jour else texte
 
     from app.services.pagination import liens_pagination
     app.add_template_global(liens_pagination, "pagination")
@@ -198,7 +229,7 @@ def create_app(config_name=None):
         bloc_description = f'<p>{escape(description)}</p>' if description else ""
         return Markup(
             f'<div class="banniere-page">'
-            f'<span class="banniere-page-icone">{escape(ICONES_MODULES.get(cle_icone, ""))}</span>'
+            f'<span class="banniere-page-icone">{icone(cle_icone)}</span>'
             f'<div><h1>{escape(titre)}</h1>{bloc_description}</div>'
             f'</div>'
         )
