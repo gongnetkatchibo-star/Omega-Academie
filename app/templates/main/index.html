@@ -60,7 +60,7 @@
             {% if f.evolution_mois is not none %}
               <span class="{{ 'tdb-hausse' if f.evolution_mois >= 0 else 'tdb-baisse' }}">{{ "%+d"|format(f.evolution_mois) }} %</span> {{ _("par rapport à l'an dernier") }}
             {% else %}
-              {% if langue_courante() == "ar" %}{{ _("Depuis le début du mois") }}{% else %}{{ _("Depuis le 1") }}<sup>{{ _("er") }}</sup> {{ _("du mois") }}{% endif %}
+              {% if langue_courante() == "ar" %}{{ _("Depuis le début du mois") }}{% else %}Depuis le 1<sup>er</sup> du mois{% endif %}
             {% endif %}
           </span>
         </div>
@@ -75,7 +75,7 @@
         <div class="tdb-indicateur">
           <span class="tdb-indicateur-titre">{{ icone("eleves") }} {{ _("Élèves inscrits") }}</span>
           <span class="tdb-indicateur-valeur">{{ eff.total }}</span>
-          <span class="tdb-indicateur-detail">{% if langue_courante() == "ar" %}{{ _("{filles} filles · {garcons} garçons · {classes} classes", filles=eff.filles, garcons=eff.garcons, classes=eff.classes) }}{% else %}{{ eff.filles }} {{ _("filles ·") }} {{ eff.garcons }} {{ _("garçons ·") }} {{ eff.classes }} {{ _("classe") }}{{ "s" if eff.classes > 1 }}{% endif %}</span>
+          <span class="tdb-indicateur-detail">{% if langue_courante() == "ar" %}{{ _("{filles} filles · {garcons} garçons · {classes} classes", filles=eff.filles, garcons=eff.garcons, classes=eff.classes) }}{% else %}{{ eff.filles }} filles · {{ eff.garcons }} garçons · {{ eff.classes }} classe{{ "s" if eff.classes > 1 }}{% endif %}</span>
         </div>
       {% endif %}
       {% if a %}
@@ -83,7 +83,7 @@
           <span class="tdb-indicateur-titre">{{ icone("calendrier") }} {{ _("Absents aujourd'hui") }}</span>
           <span class="tdb-indicateur-valeur">{{ a.absents }}</span>
           <span class="tdb-indicateur-detail">
-            {% if a.absents %}{% if langue_courante() == "ar" %}{{ _("dont {n} non justifiés", n=a.non_justifies) }}{% else %}{{ _("dont") }} {{ a.non_justifies }} {{ _("non justifié") }}{{ "s" if a.non_justifies > 1 }}{% endif %}{% else %}{{ _("Aucune absence signalée") }}{% endif %}
+            {% if a.absents %}{% if langue_courante() == "ar" %}{{ _("dont {n} non justifiés", n=a.non_justifies) }}{% else %}dont {{ a.non_justifies }} non justifié{{ "s" if a.non_justifies > 1 }}{% endif %}{% else %}{{ _("Aucune absence signalée") }}{% endif %}
           </span>
         </div>
       {% endif %}
@@ -164,7 +164,7 @@
                   </tbody>
                 </table>
               </div>
-              {% if f.nb_classes_masquees %}<p class="tdb-discret">{{ _("Et") }} {{ f.nb_classes_masquees }} {{ _("autre") }}{{ "s" if f.nb_classes_masquees > 1 }} {{ _("classe") }}{{ "s" if f.nb_classes_masquees > 1 }} {{ _("mieux recouvrée") }}{{ "s" if f.nb_classes_masquees > 1 }}.</p>{% endif %}
+              {% if f.nb_classes_masquees %}<p class="tdb-discret">{% if langue_courante() == "ar" %}{{ _("Et {n} autre(s) classe(s) mieux recouvrée(s).", n=f.nb_classes_masquees) }}{% else %}Et {{ f.nb_classes_masquees }} autre{{ "s" if f.nb_classes_masquees > 1 }} classe{{ "s" if f.nb_classes_masquees > 1 }} mieux recouvrée{{ "s" if f.nb_classes_masquees > 1 }}.{% endif %}</p>{% endif %}
             {% else %}
               <p class="tdb-vide">{{ _("Aucun frais de scolarité n'est encore fixé pour cette année.") }}</p>
             {% endif %}
@@ -180,7 +180,7 @@
             {% if a.par_classe %}
               <ul class="tdb-absences">
                 {% for l in a.par_classe %}
-                  <li><span>{{ l.classe.nom }}</span><strong>{% if langue_courante() == "ar" %}{{ _("{n} absent(s)", n=l.absents) }}{% else %}{{ l.absents }} {{ _("absent") }}{{ "s" if l.absents > 1 }}{% endif %}<span class="tdb-discret"> {{ _("sur {n}", n=l.effectif) }}</span></strong></li>
+                  <li><span>{{ l.classe.nom }}</span><strong>{% if langue_courante() == "ar" %}{{ _("{n} absent(s)", n=l.absents) }}{% else %}{{ l.absents }} absent{{ "s" if l.absents > 1 }}{% endif %}<span class="tdb-discret"> {{ _("sur {n}", n=l.effectif) }}</span></strong></li>
                 {% endfor %}
               </ul>
             {% else %}
