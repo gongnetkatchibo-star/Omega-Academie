@@ -1,0 +1,26 @@
+{# Boutons « Prévenir sur WhatsApp » (oct. 2026). Un formulaire par
+   numéro : le clic note l'envoi dans le journal, puis ouvre WhatsApp dans
+   un nouvel onglet avec le message déjà rédigé. À importer avec
+   {% from "_whatsapp.html" import boutons_whatsapp with context %}. #}
+{% macro boutons_whatsapp(eleve, type_envoi, contacts, jour=None) %}
+  {% if contacts %}
+    <div class="whatsapp-boutons">
+      {% for c in contacts %}
+        <form method="post" action="{{ url_for('relances.envoyer') }}" target="_blank" rel="noopener" class="whatsapp-form"
+              onsubmit="setTimeout(function () { location.reload(); }, 1500);">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="type" value="{{ type_envoi }}">
+          <input type="hidden" name="eleve_id" value="{{ eleve.id }}">
+          <input type="hidden" name="numero" value="{{ c.numero }}">
+          {% if jour %}<input type="hidden" name="date" value="{{ jour.isoformat() }}">{% endif %}
+          <button type="submit" class="bouton-whatsapp" title="Ouvrir WhatsApp avec le message prêt à envoyer">
+            {{ icone("whatsapp") }}
+            <span>{{ c.nom }}{% if c.libelle %} · {{ c.libelle }}{% endif %}<small>{{ c.numero|numero_lisible }}</small></span>
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+  {% else %}
+    <span class="whatsapp-sans-numero">Aucun numéro mobile valide dans le dossier</span>
+  {% endif %}
+{% endmacro %}

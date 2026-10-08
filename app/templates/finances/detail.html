@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_whatsapp.html" import boutons_whatsapp with context %}
 {% block title %}Finances — {{ eleve.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Finances", url_for('finances.liste')), (eleve.nom_complet, None)) }}
@@ -15,11 +16,16 @@
     <span class="badge {{ {'PAYÉ': 'badge-ok', 'PARTIEL': 'badge-attention'}.get(resume.statut, 'badge-critique') }}">{{ resume.statut }}</span>
   </p>
 
-  {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general") %}
-    <form method="post" action="{{ url_for('finances.relancer', eleve_id=eleve.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit">Envoyer une relance de paiement au(x) parent(s)</button>
-    </form>
+  {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general", module="finances") %}
+    <section class="panneau relances-fiche">
+      <div class="panneau-tete"><h2>Relancer la famille</h2></div>
+      <p class="tdb-sous-titre">Sur WhatsApp, gratuitement : le message avec le montant dû est déjà rédigé.</p>
+      {{ boutons_whatsapp(eleve, "relance", contacts_whatsapp) }}
+      <form method="post" action="{{ url_for('finances.relancer', eleve_id=eleve.id) }}" class="relances-email">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="bouton">Envoyer aussi par email</button>
+      </form>
+    </section>
   {% endif %}
 
   {% if resume.retard > 0 %}

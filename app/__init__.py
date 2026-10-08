@@ -143,7 +143,7 @@ def create_app(config_name=None):
         "dev": "outil", "emploi_du_temps": "calendrier", "notes": "liste", "etablissement": "ecole",
         "documents": "document", "sauvegarde": "disque", "scolarite": "chapeau", "pedagogie": "livre",
         "administration": "reglages", "plateforme": "globe", "mes_enfants": "eleves", "mon_espace": "chapeau",
-        "mon_edt": "calendrier", "roles": "outil", "absences": "calendrier",
+        "mon_edt": "calendrier", "roles": "outil", "absences": "calendrier", "relances": "whatsapp",
     }
 
     @app.template_global()
@@ -166,6 +166,11 @@ def create_app(config_name=None):
             return montant
         texte = f"{entier:,}".replace(",", "\u00a0")
         return f"{texte}\u00a0FCFA" if unite else texte
+
+    @app.template_filter("numero_lisible")
+    def numero_lisible(numero):
+        from app.services.whatsapp import numero_lisible as formater
+        return formater(numero) if numero and numero.startswith("+235") and len(numero) == 12 else numero
 
     JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
     MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
@@ -355,6 +360,9 @@ def create_app(config_name=None):
 
     from app.alertes import alertes_bp
     app.register_blueprint(alertes_bp)
+
+    from app.relances import relances_bp
+    app.register_blueprint(relances_bp)
 
     from app.documents_officiels import documents_officiels_bp
     app.register_blueprint(documents_officiels_bp)

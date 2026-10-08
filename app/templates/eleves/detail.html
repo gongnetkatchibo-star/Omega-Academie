@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_whatsapp.html" import boutons_whatsapp with context %}
 {% block title %}{{ eleve.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Élèves", url_for('eleves.liste')), (eleve.nom_complet, None)) }}
@@ -40,6 +41,13 @@
     </dl>
   </div>
   <p><strong>Parents liés :</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
+
+  {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="eleves") %}
+    <section class="panneau relances-fiche">
+      <div class="panneau-tete"><h2>Écrire à la famille sur WhatsApp</h2></div>
+      {{ boutons_whatsapp(eleve, "contact", contacts_whatsapp) }}
+    </section>
+  {% endif %}
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p>

@@ -12,6 +12,7 @@ from app.models.user import User
 from app.eleves import eleves_bp
 from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
 from app.services.cycles import cycle_du_role, filtrer_par_cycle, classe_dans_le_cycle
+from app.services.whatsapp import contacts as contacts_whatsapp
 
 ROLES_GESTION = ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"]
 ROLES_LECTURE = ROLES_GESTION + ["enseignant"]
@@ -307,6 +308,7 @@ def detail(eleve_id):
         parents_disponibles=parents_disponibles, statuts_dossier=STATUTS_DOSSIER,
         max_parents=MAX_PARENTS_PAR_ELEVE, moyenne=moyenne,
         reussite=a_reussi(eleve, annee), seuil=seuil_reussite_pour_classe(eleve.classe),
+        contacts_whatsapp=contacts_whatsapp(eleve),
     )
 
 

@@ -10,6 +10,7 @@ from app.services.paiements import enregistrer_paiement, resume_paiements, resum
 from app.utils import montant_entier
 from app.services.journal import journaliser
 from app.models.mouvement_caisse import MouvementCaisse
+from app.services.whatsapp import contacts as contacts_whatsapp
 
 ROLES_GESTION = ["comptable", "fondateur", "administrateur_general"]
 # Suppression réservée à la direction — le comptable peut corriger un
@@ -199,6 +200,7 @@ def detail(eleve_id):
         "finances/detail.html", eleve=eleve, resume=resume,
         paiements=paiements, modes=MODES_PAIEMENT, echeances=ECHEANCES,
         libelles_echeance=LIBELLES_ECHEANCE, peut_remise=current_user.role in ROLES_SUPPRESSION + ["developpeur"],
+        contacts_whatsapp=contacts_whatsapp(eleve),
     )
 
 

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_whatsapp.html" import boutons_whatsapp with context %}
+{% block title %}Relances WhatsApp{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Relances WhatsApp", None)) }}
+  {{ banniere("relances", "Relances WhatsApp", "Le message est déjà rédigé : cliquez sur un parent, WhatsApp s'ouvre, il ne reste qu'à appuyer sur Envoyer.") }}
+
+  {% if absences is not none %}
+    <section class="panneau relances-section" aria-labelledby="titre-absences">
+      <div class="panneau-tete">
+        <h2 id="titre-absences">Absences non justifiées</h2>
+        <form method="get" class="relances-date">
+          <label for="date">Jour</label>
+          <input type="date" id="date" name="date" value="{{ jour.isoformat() }}" onchange="this.form.submit()">
+          {% if paiements and paiements.tous %}<input type="hidden" name="tous" value="1">{% endif %}
+        </form>
+      </div>
+      <p class="tdb-sous-titre">{{ (jour|date_longue)|capitalize }}.</p>
+      {% if absences %}
+        <ul class="relances-liste">
+          {% for a in absences %}
+            <li>
+              <div class="relances-eleve">
+                <strong>{{ a.eleve.nom_complet }}</strong>
+                <span class="tdb-discret">{{ a.eleve.classe.nom }}</span>
+                {% if a.envoi %}
+                  <span class="badge badge-ok">Prévenu à {{ a.envoi.date_action.strftime("%H:%M") }}{% if a.envoi.utilisateur %} par {{ a.envoi.utilisateur.nom_complet }}{% endif %}</span>
+                {% else %}
+                  <span class="badge badge-attention">À prévenir</span>
+                {% endif %}
+              </div>
+              {{ boutons_whatsapp(a.eleve, "absence", a.contacts, jour) }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="tdb-vide">Aucune absence non justifiée ce jour-là.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if paiements is not none %}
+    <section class="panneau relances-section" aria-labelledby="titre-paiements">
+      <div class="panneau-tete">
+        <h2 id="titre-paiements">{{ "Soldes à régler" if paiements.tous else "Paiements en retard" }} <span class="tdb-discret relances-compte">{{ paiements.total }} élève{{ "s" if paiements.total > 1 }}</span></h2>
+        {% if paiements.tous %}
+          <a href="{{ url_for('relances.index', date=jour.isoformat()) }}">Seulement les retards</a>
+        {% else %}
+          <a href="{{ url_for('relances.index', date=jour.isoformat(), tous=1) }}">Tous les soldes non réglés</a>
+        {% endif %}
+      </div>
+      <p class="tdb-sous-titre">
+        {% if paiements.tous %}Élèves qui ont encore un montant à payer, les plus en retard en premier.
+        {% else %}Élèves dont une date limite de paiement est dépassée.{% endif %}
+      </p>
+      {% if paiements.lignes %}
+        <ul class="relances-liste">
+          {% for l in paiements.lignes %}
+            <li>
+              <div class="relances-eleve">
+                <a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}"><strong>{{ l.eleve.nom_complet }}</strong></a>
+                <span class="tdb-discret">{{ l.eleve.classe.nom }} · reste {{ l.resume.solde|fcfa }}{% if l.resume.retard %}, dont {{ l.resume.retard|fcfa }} en retard{% endif %}</span>
+                {% if l.envoi %}
+                  <span class="badge badge-ok">Relancé le {{ l.envoi.date_action.strftime("%d/%m à %H:%M") }}</span>
+                {% endif %}
+              </div>
+              {{ boutons_whatsapp(l.eleve, "relance", l.contacts) }}
+            </li>
+          {% endfor %}
+        </ul>
+        {% if paiements.nb_pages > 1 %}
+          <nav class="pagination" aria-label="Pages">
+            {% if paiements.page > 1 %}<a href="{{ url_for('relances.index', date=jour.isoformat(), tous=1 if paiements.tous else None, page=paiements.page - 1) }}">← Précédent</a>{% endif %}
+            <span class="pagination-resume">page {{ paiements.page }}/{{ paiements.nb_pages }}</span>
+            {% if paiements.page < paiements.nb_pages %}<a href="{{ url_for('relances.index', date=jour.isoformat(), tous=1 if paiements.tous else None, page=paiements.page + 1) }}">Suivant →</a>{% endif %}
+          </nav>
+        {% endif %}
+      {% elif paiements.tous %}
+        <p class="tdb-vide">Toutes les familles sont à jour.</p>
+      {% else %}
+        <p class="tdb-vide">Aucun paiement en retard. Si aucune date limite n'est fixée, rien ne peut être en retard : voir Administration › Établissement.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+{% endblock %}

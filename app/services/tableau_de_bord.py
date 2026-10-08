@@ -176,6 +176,16 @@ def _taches(role, eleves, finances):
                 "nombre": nb, "niveau": "critique", "titre": "Élèves en alerte",
                 "detail": "Absences non justifiées répétées", "endpoint": "alertes.tableau", "params": {},
             })
+    if _a_acces(role, "absences"):
+        from app.services.temps import aujourd_hui
+        from app.services.whatsapp import absences_a_prevenir
+        nb = sum(1 for a in absences_a_prevenir(aujourd_hui(), {e.id for e in eleves}) if not a["envoi"])
+        if nb:
+            taches.append({
+                "nombre": nb, "niveau": "attention", "titre": "Parents à prévenir",
+                "detail": "Absences non justifiées du jour, à signaler sur WhatsApp",
+                "endpoint": "relances.index", "params": {},
+            })
     if _a_acces(role, "secretariat"):
         nb = User.query.filter_by(statut="en_attente").count()
         if nb:

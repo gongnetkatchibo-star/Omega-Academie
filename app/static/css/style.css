@@ -2830,3 +2830,132 @@ img.initiales-rondes {
   font-weight: 600;
   color: var(--navy);
 }
+
+/* ========== Relances WhatsApp (oct. 2026) ========== */
+
+.whatsapp-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+form.whatsapp-form {
+  display: block;
+  margin: 0;
+}
+
+.bouton-whatsapp,
+.bouton-whatsapp:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  background: #fff;
+  color: var(--encre);
+  border: 1px solid #A8DDB8;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.bouton-whatsapp:hover {
+  background: #EAF8EF;
+  border-color: #25A35A;
+}
+
+.bouton-whatsapp svg.icone {
+  width: 20px;
+  height: 20px;
+  color: #1F9D55;
+}
+
+.bouton-whatsapp small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--encre-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.whatsapp-sans-numero {
+  font-size: 13.5px;
+  color: var(--encre-3);
+  font-style: italic;
+}
+
+.relances-section {
+  margin-bottom: 18px;
+}
+
+.relances-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.relances-liste li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-top: 1px solid var(--trait);
+}
+
+.relances-liste li:first-child {
+  border-top: 0;
+}
+
+.relances-eleve {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.relances-eleve .tdb-discret {
+  display: inline;
+}
+
+.relances-eleve a {
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.relances-compte {
+  display: inline;
+  font-family: var(--police-texte);
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+form.relances-date {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+}
+
+form.relances-date label {
+  flex-direction: row;
+  font-size: 14px;
+  color: var(--encre-2);
+}
+
+form.relances-date input {
+  margin: 0;
+  padding: 5px 8px;
+  font-size: 14px;
+}
+
+.relances-fiche {
+  margin: 16px 0;
+}
+
+form.relances-email {
+  margin: 0;
+}

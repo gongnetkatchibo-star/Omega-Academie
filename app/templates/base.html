@@ -110,6 +110,9 @@
         {% if current_user.role == "parent" or acces("secretaire", *direction, module="messagerie") %}
           <a href="{{ url_for('messagerie.index') }}">{{ icone("messagerie") }} Messages</a>
         {% endif %}
+        {% if acces("responsable_pedagogique", "secretaire", *direction, module="absences") or acces("comptable", "fondateur", "administrateur_general", module="finances") %}
+          <a href="{{ url_for('relances.index') }}" {% if module_actif == "relances" %}class="lien-actif"{% endif %}>{{ icone("relances") }} Relances WhatsApp</a>
+        {% endif %}
         <a href="{{ url_for('communication.liste') }}">{{ icone("annonces") }} Annonces</a>
         <a href="{{ url_for('bibliotheque.liste') }}">{{ icone("bibliotheque") }} Bibliothèque</a>
         <a href="{{ url_for('assistant.index') }}">{{ icone("assistant") }} Assistant</a>
