@@ -20,7 +20,7 @@
             <td>{{ encaisse[f.id]|fcfa }}</td>
             <td>
               {% if acces("fondateur", "administrateur_general") and not encaisse[f.id] %}
-                <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm('{{ _("Supprimer ce frais ?") }}');">
+                <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm({{ _("Supprimer ce frais ?")|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
                 </form>

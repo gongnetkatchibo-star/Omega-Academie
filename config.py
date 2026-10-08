@@ -85,6 +85,10 @@ class Config:
         if SQLALCHEMY_DATABASE_URI.startswith("postgresql") else {}
     )
 
+    # Jamais en production : un lien de réinitialisation ou un code affiché
+    # à l'écran permettrait à n'importe qui de prendre un compte.
+    AFFICHER_SECRETS_SANS_EMAIL = False
+
     # Déconnexion automatique après ce temps sans activité.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_HEURES", "4")))
     # Blocage d'un compte après des mots de passe faux répétés.
@@ -94,6 +98,9 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    # Sans service d'email, le code de vérification et le lien « mot de
+    # passe oublié » s'affichent à l'écran — en développement uniquement.
+    AFFICHER_SECRETS_SANS_EMAIL = True
 
 
 class ProductionConfig(Config):
@@ -110,6 +117,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_ENGINE_OPTIONS = {}
     PERMISSIONS_CACHE_SECONDES = 0  # toujours relues : un test voit tout de suite ses changements
+    AFFICHER_SECRETS_SANS_EMAIL = True
 
 
 config = {

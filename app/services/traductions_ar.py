@@ -1052,3 +1052,22 @@ DOCUMENTS = {
     "Vocabulaire": "المفردات",
     "Coran": "القرآن الكريم",
 }
+
+
+# --- Messages ajoutés par l'audit de sécurité (oct. 2026) --------------------
+INTERFACE.update({
+    "Requête invalide": "طلب غير صالح",
+    "La demande envoyée n'a pas pu être traitée.": "تعذّرت معالجة الطلب المرسَل.",
+    "La page a expiré. Recharge-la, puis recommence.": "انتهت صلاحية الصفحة. أعد تحميلها ثم أعد المحاولة.",
+    "Une valeur envoyée est invalide.": "إحدى القيم المرسلة غير صالحة.",
+    "L'email de vérification n'a pas pu partir. Utilise « Renvoyer le code » dans quelques minutes.":
+        "تعذّر إرسال بريد التحقق. استخدم « إعادة إرسال الرمز » بعد بضع دقائق.",
+    "L'email n'a pas pu partir. Réessaie dans quelques minutes ou contacte l'école.":
+        "تعذّر إرسال البريد. أعد المحاولة بعد بضع دقائق أو اتصل بالمدرسة.",
+    "Si un compte existe avec cet identifiant, un lien de réinitialisation a été envoyé "
+    "(au parent pour un compte élève). Sans email, adresse-toi au secrétariat.":
+        "إذا كان هناك حساب بهذا المعرّف، فقد أُرسل رابط لإعادة تعيين كلمة المرور "
+        "(إلى وليّ الأمر بالنسبة لحساب التلميذ). في حال عدم وجود بريد إلكتروني، توجّه إلى الأمانة.",
+    "Le mot de passe doit faire au moins 8 caractères.": "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
+    "Relance envoyée.": "تم إرسال التذكير.",
+})

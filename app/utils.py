@@ -130,6 +130,17 @@ def html_vers_pdf(html):
     return tampon.read()
 
 
+DEBUTS_FORMULE = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _cellule_csv(valeur):
+    """Un texte saisi qui commence comme une formule (« =… ») resterait
+    une formule à l'ouverture dans Excel : on le neutralise."""
+    if isinstance(valeur, str) and valeur.startswith(DEBUTS_FORMULE):
+        return "'" + valeur
+    return valeur
+
+
 def export_csv(entetes, lignes, nom_fichier):
     """Génère une réponse Flask téléchargeable au format CSV.
     `lignes` est une liste de tuples/listes, dans le même ordre que
@@ -141,7 +152,7 @@ def export_csv(entetes, lignes, nom_fichier):
     tampon = StringIO()
     writer = csv.writer(tampon, delimiter=";")
     writer.writerow(entetes)
-    writer.writerows(lignes)
+    writer.writerows([[_cellule_csv(v) for v in ligne] for ligne in lignes])
     return Response(
         tampon.getvalue().encode("utf-8-sig"),  # BOM pour un bon affichage des accents dans Excel
         mimetype="text/csv",
@@ -166,6 +177,11 @@ def export_xlsx(entetes, lignes, nom_fichier, titre_feuille="Export"):
         cell.fill = PatternFill(start_color="00387B", end_color="00387B", fill_type="solid")
     for ligne in lignes:
         ws.append(list(ligne))
+        for cellule in ws[ws.max_row]:
+            # Un texte qui commence par « = » est enregistré comme texte,
+            # jamais comme formule.
+            if isinstance(cellule.value, str) and cellule.value.startswith(DEBUTS_FORMULE):
+                cellule.data_type = "s"
     for col in ws.columns:
         longueur = max((len(str(c.value)) for c in col if c.value is not None), default=10)
         ws.column_dimensions[col[0].column_letter].width = min(longueur + 2, 45)
@@ -207,6 +223,41 @@ EXTENSIONS_IMAGES = {"jpg", "jpeg", "png", "gif", "webp"}
 EXTENSIONS_VIDEOS = {"mp4", "webm", "mov"}
 EXTENSIONS_BIBLIOTHEQUE = EXTENSIONS_DOCUMENTS | EXTENSIONS_IMAGES | EXTENSIONS_VIDEOS
 EXTENSIONS_PIECE_JOINTE = EXTENSIONS_DOCUMENTS | EXTENSIONS_IMAGES
+
+
+# Type de contenu déduit de l'extension (jamais celui annoncé par le
+# navigateur de l'utilisateur, qui pourrait faire passer une page HTML
+# pour une image et l'exécuter sur le site).
+TYPES_MIME = {
+    "pdf": "application/pdf", "doc": "application/msword",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "ppt": "application/vnd.ms-powerpoint",
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "xls": "application/vnd.ms-excel",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "txt": "text/plain; charset=utf-8", "csv": "text/csv; charset=utf-8",
+    "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "gif": "image/gif", "webp": "image/webp",
+    "mp4": "video/mp4", "webm": "video/webm", "mov": "video/quicktime",
+}
+
+
+def type_mime_sur(nom_fichier):
+    extension = nom_fichier.rsplit(".", 1)[-1].lower() if "." in (nom_fichier or "") else ""
+    return TYPES_MIME.get(extension, "application/octet-stream")
+
+
+def nom_fichier_sur(nom_fichier):
+    """Nom sans danger pour le stockage, en gardant l'extension même quand
+    le nom d'origine n'a aucun caractère latin (« دروس.pdf »)."""
+    from werkzeug.utils import secure_filename
+
+    if "." in nom_fichier:
+        base, extension = nom_fichier.rsplit(".", 1)
+        extension = secure_filename(extension.lower())
+    else:
+        base, extension = nom_fichier, ""
+    base = secure_filename(base) or "fichier"
+    return f"{base}.{extension}" if extension else base
 
 
 def extension_autorisee(nom_fichier, extensions_autorisees):

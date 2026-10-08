@@ -725,6 +725,7 @@ textarea {
   .stats-sidebar {
     flex: none;
     width: 100%;
+    box-sizing: border-box; /* la marge intérieure ne fait plus déborder l'écran */
     flex-direction: row;
     flex-wrap: wrap;
   }

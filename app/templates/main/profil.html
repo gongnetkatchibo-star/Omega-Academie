@@ -46,7 +46,7 @@
             <span>{{ _("Airtel Tchad" if n.operateur == "airtel" else "Moov Africa Tchad") }}{% if n.libelle %} · {{ n.libelle }}{% endif %}</span>
           </div>
           <div class="actions">
-            <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm('{{ _("Supprimer ce numéro ?") }}');">
+            <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm({{ _("Supprimer ce numéro ?")|tojson|forceescape }});">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
             </form>

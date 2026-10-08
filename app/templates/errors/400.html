@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Requête invalide") }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Requête invalide") }}</h1>
+  <p>{{ _(message) if message else _("La demande envoyée n'a pas pu être traitée.") }}</p>
+  <p class="lien-secondaire"><a href="{{ url_for('main.index') }}">{{ _("Retour au tableau de bord") }}</a></p>
+{% endblock %}

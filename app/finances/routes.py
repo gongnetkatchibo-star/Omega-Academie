@@ -166,7 +166,9 @@ def detail(eleve_id):
     eleve = db.get_or_404(Eleve, eleve_id)
 
     est_lie_comme_parent = current_user in eleve.parents
-    est_gestionnaire = current_user.role in ROLES_GESTION or current_user.role == "developpeur"
+    from app.services.permissions import role_a_acces
+    # Respecte la matrice des permissions, comme la liste des finances.
+    est_gestionnaire = role_a_acces(current_user.role, "finances", ROLES_GESTION)
 
     if not est_gestionnaire and not est_lie_comme_parent:
         abort(403)

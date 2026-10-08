@@ -46,7 +46,7 @@
               </form>
             {% endif %}
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") or (current_user.role == "enseignant" and r.ajoute_par_id == current_user.id) %}
-              <form method="post" action="{{ url_for('bibliotheque.supprimer', ressource_id=r.id) }}" style="display:inline;" onsubmit="return confirm('{{ _("Supprimer définitivement cette ressource ?") }}');">
+              <form method="post" action="{{ url_for('bibliotheque.supprimer', ressource_id=r.id) }}" style="display:inline;" onsubmit="return confirm({{ _("Supprimer définitivement cette ressource ?")|tojson|forceescape }});">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
               </form>

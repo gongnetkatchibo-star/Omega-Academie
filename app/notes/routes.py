@@ -187,7 +187,10 @@ def _acces_bulletin(eleve):
     est_lie_comme_parent = current_user in eleve.parents
     est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id
     supervision = current_user.role == "developpeur" or role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION)
-    if current_user.role != "enseignant" and not supervision and not est_lie_comme_parent and not est_soi_meme:
+    # Un enseignant voit les bulletins des classes où il enseigne, pas ceux de toute l'école.
+    profil = current_user.profil_enseignant if current_user.role == "enseignant" else None
+    enseigne_dans_la_classe = bool(profil and any(a.classe_id == eleve.classe_id for a in profil.affectations))
+    if not (supervision or enseigne_dans_la_classe or est_lie_comme_parent or est_soi_meme):
         abort(403)
     cycle = cycle_du_role(current_user.role)
     if cycle and not classe_dans_le_cycle(eleve.classe, cycle):

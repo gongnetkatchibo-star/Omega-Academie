@@ -55,7 +55,7 @@
             <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }}</span>
           </div>
           {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire") or (current_user.role == "enseignant" and a.auteur_id == current_user.id) %}
-            <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm('{{ _("Supprimer cette annonce ?") }}');">
+            <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm({{ _("Supprimer cette annonce ?")|tojson|forceescape }});">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
             </form>

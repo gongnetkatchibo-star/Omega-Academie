@@ -62,6 +62,44 @@ def create_app(config_name=None):
     csrf.init_app(app)
     limiter.init_app(app)
 
+    def page_400(message=None):
+        db.session.rollback()
+        return render_template("errors/400.html", message=message), 400
+
+    @app.errorhandler(400)
+    def erreur_400(e):
+        return page_400()
+
+    from flask_wtf.csrf import CSRFError
+
+    @app.errorhandler(CSRFError)
+    def erreur_csrf(e):
+        # Page restée ouverte trop longtemps (session expirée) : on explique
+        # au lieu d'afficher l'erreur brute.
+        return page_400("La page a expiré. Recharge-la, puis recommence.")
+
+    from sqlalchemy.exc import DataError
+
+    @app.errorhandler(OverflowError)
+    @app.errorhandler(DataError)
+    def erreur_valeur(e):
+        # Nombre démesuré envoyé dans un formulaire (identifiant, montant…) :
+        # la base le refuse ; on répond « requête invalide » plutôt que 500.
+        return page_400("Une valeur envoyée est invalide.")
+
+    @app.route("/sante")
+    @limiter.exempt
+    def sante():
+        """Pour la surveillance du serveur : 200 si l'application et la base
+        répondent, 503 sinon. Aucune donnée n'y est exposée."""
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("SELECT 1"))
+            return {"etat": "ok"}, 200
+        except Exception:
+            db.session.rollback()
+            return {"etat": "base indisponible"}, 503
+
     @app.errorhandler(403)
     def erreur_403(e):
         db.session.rollback()
@@ -95,7 +133,9 @@ def create_app(config_name=None):
         reponse.headers["X-Content-Type-Options"] = "nosniff"
         reponse.headers["X-Frame-Options"] = "DENY"
         reponse.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        reponse.headers["Content-Security-Policy"] = (
+        # Une page peut fixer une politique plus stricte (fichier de la
+        # bibliothèque ouvert dans le navigateur) : on ne l'écrase pas.
+        reponse.headers.setdefault("Content-Security-Policy", (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
@@ -103,7 +143,7 @@ def create_app(config_name=None):
             "object-src 'none'; "
             "base-uri 'self'; "
             "frame-ancestors 'none';"
-        )
+        ))
         if request.is_secure:
             reponse.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return reponse

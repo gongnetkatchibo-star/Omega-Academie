@@ -34,15 +34,32 @@ def _serializer():
     return URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
 
+def _empreinte(user):
+    """Change dès que le mot de passe change : un lien déjà utilisé (ou
+    émis avant un changement de mot de passe) ne fonctionne plus."""
+    return (user.mot_de_passe_hash or "")[-16:]
+
+
 def generer_token_reset(user):
-    return _serializer().dumps(user.email, salt="reset-mot-de-passe")
+    return _serializer().dumps({"e": user.email, "v": _empreinte(user)}, salt="reset-mot-de-passe")
 
 
-def email_depuis_token(token, max_age=DUREE_VALIDITE_TOKEN):
+def compte_depuis_token(token, max_age=DUREE_VALIDITE_TOKEN):
+    """Compte visé par un lien de réinitialisation encore valable, ou None."""
     try:
-        return _serializer().loads(token, salt="reset-mot-de-passe", max_age=max_age)
+        donnees = _serializer().loads(token, salt="reset-mot-de-passe", max_age=max_age)
     except (BadSignature, SignatureExpired):
         return None
+    if not isinstance(donnees, dict):
+        return None
+    user = _comptes().filter_by(email=donnees.get("e")).first()
+    if user is None or _empreinte(user) != donnees.get("v"):
+        return None
+    return user
+
+
+def _secrets_a_l_ecran():
+    return current_app.config.get("AFFICHER_SECRETS_SANS_EMAIL", False)
 
 
 def _nom_ecole(user):
@@ -172,6 +189,8 @@ def _inscription_eleve():
 @auth_bp.route("/inscription", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
 def inscription():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
     if request.method == "POST":
         role = request.form.get("role")
         if role == "eleve":
@@ -204,6 +223,8 @@ def inscription():
             erreurs.append("Merci de remplir tous les champs obligatoires.")
         if mot_de_passe and mot_de_passe != confirmation:
             erreurs.append("Les mots de passe ne correspondent pas.")
+        if mot_de_passe and len(mot_de_passe) < 8:
+            erreurs.append("Le mot de passe doit faire au moins 8 caractères.")
         if role not in ROLES_INSCRIPTION:
             erreurs.append("Profil invalide.")
         if email and _comptes().filter_by(email=email).first():
@@ -244,7 +265,11 @@ def inscription():
         envoye = _envoyer_code_verification(user, code)
         session["id_en_attente_verification"] = user.id
         if not envoye:
-            flash(f"Aucun service d'email configuré — code de vérification : {code}", "info")
+            if _secrets_a_l_ecran():
+                flash(f"Aucun service d'email configuré — code de vérification : {code}", "info")
+            else:
+                current_app.logger.warning("Code de vérification non envoyé à %s", user.email)
+                flash("L'email de vérification n'a pas pu partir. Utilise « Renvoyer le code » dans quelques minutes.", "error")
         return redirect(url_for("auth.verification_email"))
 
     return render_template("auth/inscription.html", roles=ROLES_INSCRIPTION, ecoles=_ecoles_ouvertes())
@@ -312,7 +337,7 @@ def connexion():
         # chemin interne, jamais une adresse externe, pour ne pas servir
         # de rebond vers un autre site (sept. 2026).
         destination = request.args.get("next") or request.form.get("next")
-        if destination and destination.startswith("/") and not destination.startswith("//"):
+        if destination and destination.startswith("/") and not destination.startswith("//") and "\\" not in destination:
             return redirect(destination)
         return redirect(url_for("main.index"))
 
@@ -320,6 +345,7 @@ def connexion():
 
 
 @auth_bp.route("/verification-inscription", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def verification_email(): 
     user_id = session.get("id_en_attente_verification")
     if not user_id:
@@ -348,6 +374,7 @@ def verification_email():
 
 
 @auth_bp.route("/verification-inscription/renvoyer", methods=["POST"])
+@limiter.limit("3 per minute")
 def renvoyer_code_verification():
     user_id = session.get("id_en_attente_verification")
     user = _comptes().get(user_id) if user_id else None
@@ -359,8 +386,11 @@ def renvoyer_code_verification():
     envoye = _envoyer_code_verification(user, code)
     if envoye:
         flash(f"Nouveau code envoyé à {user.email}.", "info")
-    else:
+    elif _secrets_a_l_ecran():
         flash(f"Aucun service d'email configuré — code de vérification : {code}", "info")
+    else:
+        current_app.logger.warning("Code de vérification non renvoyé à %s", user.email)
+        flash("L'email n'a pas pu partir. Réessaie dans quelques minutes ou contacte l'école.", "error")
     return redirect(url_for("auth.verification_email"))
 
 
@@ -387,6 +417,7 @@ def _destinataires_reset(user):
 
 
 @auth_bp.route("/mot-de-passe-oublie", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
 def mot_de_passe_oublie():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
@@ -409,19 +440,12 @@ def mot_de_passe_oublie():
             token = generer_token_reset(user)
             lien = url_for("auth.reinitialiser", token=token, _external=True)
 
-            if not destinataires:
-                # Compte élève sans parent lié : personne à qui l'envoyer.
-                # On affiche quand même le lien (utile si c'est le
-                # secrétariat qui agit pour l'élève), sans jamais révéler
-                # que c'est ce cas précis qui s'est produit (voir message
-                # neutre plus bas).
-                lien_reset = lien
-                current_app.logger.info("Lien de réinitialisation (aucun parent lié) pour %s : %s", user.email, lien)
-            else:
+            if destinataires:
                 email_envoye = _envoyer_email_reset_multi(destinataires, user, lien)
-                if not email_envoye:
+            if not email_envoye:
+                current_app.logger.warning("Lien de réinitialisation non envoyé pour %s", user.email)
+                if _secrets_a_l_ecran():
                     lien_reset = lien
-                    current_app.logger.info("Lien de réinitialisation pour %s : %s", user.email, lien)
 
         # Message volontairement identique que le compte existe ou non,
         # et quelle qu'en soit la raison — ne jamais laisser deviner si un
@@ -429,8 +453,11 @@ def mot_de_passe_oublie():
         if email_envoye:
             flash("Un email de réinitialisation vient de t'être envoyé.", "info")
         elif not lien_reset:
+            # Même message que le compte existe ou non : on ne révèle pas
+            # quelles adresses sont inscrites.
             flash(
-                "Si un compte existe, un lien de réinitialisation vient d'être généré.", "info",
+                "Si un compte existe avec cet identifiant, un lien de réinitialisation a été envoyé "
+                "(au parent pour un compte élève). Sans email, adresse-toi au secrétariat.", "info",
             )
 
     return render_template("auth/mot_de_passe_oublie.html", lien_reset=lien_reset)
@@ -441,12 +468,7 @@ def reinitialiser(token):
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
 
-    email = email_depuis_token(token)
-    if email is None:
-        flash("Ce lien de réinitialisation est invalide ou a expiré.", "error")
-        return redirect(url_for("auth.mot_de_passe_oublie"))
-
-    user = _comptes().filter_by(email=email).first()
+    user = compte_depuis_token(token)
     if user is None:
         flash("Ce lien de réinitialisation est invalide ou a expiré.", "error")
         return redirect(url_for("auth.mot_de_passe_oublie"))
@@ -492,6 +514,9 @@ def premiere_configuration():
             return render_template("auth/premiere_configuration.html")
         if mot_de_passe != confirmation:
             flash("Les mots de passe ne correspondent pas.", "error")
+            return render_template("auth/premiere_configuration.html")
+        if len(mot_de_passe) < 8:
+            flash("Le mot de passe doit faire au moins 8 caractères.", "error")
             return render_template("auth/premiere_configuration.html")
 
         # Re-vérifié juste avant l'écriture, au cas où deux personnes

@@ -22,6 +22,10 @@ def demandes():
 @roles_required(*ROLES_VALIDATION, module="secretariat")
 def approuver(user_id):
     user = db.get_or_404(User, user_id)
+    if user.statut != "en_attente":
+        # Un compte verrouillé ou refusé ne se rouvre pas d'ici.
+        flash(f"Le compte de {user.nom_complet} n'est pas en attente de validation.", "error")
+        return redirect(url_for("secretariat.demandes"))
     user.statut = "actif"
     db.session.commit()
     flash(f"Compte de {user.nom_complet} approuvé.", "info")
@@ -33,6 +37,9 @@ def approuver(user_id):
 @roles_required(*ROLES_VALIDATION, module="secretariat")
 def refuser(user_id):
     user = db.get_or_404(User, user_id)
+    if user.statut != "en_attente":
+        flash(f"Le compte de {user.nom_complet} n'est pas en attente de validation.", "error")
+        return redirect(url_for("secretariat.demandes"))
     user.statut = "refuse"
     db.session.commit()
     flash(f"Demande de {user.nom_complet} refusée.", "info")

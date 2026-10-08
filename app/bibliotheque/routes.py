@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models.ressource import Ressource, TYPES_RESSOURCE
 from app.bibliotheque import bibliotheque_bp
-from app.utils import roles_required, EXTENSIONS_BIBLIOTHEQUE, extension_autorisee
+from app.utils import roles_required, EXTENSIONS_BIBLIOTHEQUE, extension_autorisee, nom_fichier_sur, type_mime_sur
 from app.services.journal import journaliser
 
 ROLES_GESTION = ["bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant"]
@@ -47,10 +47,10 @@ def nouvelle():
             flash("Type de fichier non autorisé (document, image ou vidéo uniquement).", "error")
             return render_template("bibliotheque/nouvelle.html", types=TYPES_RESSOURCE)
 
-        nom_securise = secure_filename(fichier.filename)
+        nom_securise = nom_fichier_sur(fichier.filename)
         db.session.add(Ressource(
             titre=titre, type=type_, matiere=matiere or None, description=description or None,
-            nom_fichier=nom_securise, contenu=fichier.read(), type_mime=fichier.mimetype,
+            nom_fichier=nom_securise, contenu=fichier.read(), type_mime=type_mime_sur(nom_securise),
             ajoute_par_id=current_user.id, consultation_sur_place=verrouillee,
         ))
         db.session.commit()
@@ -74,8 +74,13 @@ def telecharger(ressource_id):
         # Verrouillée par le bibliothécaire : consultable en ligne
         # (ouverture dans le navigateur), mais jamais enregistrable
         # comme un vrai téléchargement (sept. 2026).
-        return send_file(tampon, mimetype=ressource.type_mime, as_attachment=False, download_name=ressource.nom_fichier)
-    return send_file(tampon, mimetype=ressource.type_mime, as_attachment=True, download_name=ressource.nom_fichier)
+        reponse = send_file(tampon, mimetype=type_mime_sur(ressource.nom_fichier), as_attachment=False,
+                            download_name=ressource.nom_fichier)
+        # Ouvert dans le navigateur : sans script, isolé du reste du site.
+        reponse.headers["Content-Security-Policy"] = "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'"
+        return reponse
+    return send_file(tampon, mimetype=type_mime_sur(ressource.nom_fichier), as_attachment=True,
+                     download_name=ressource.nom_fichier)
 
 
 @bibliotheque_bp.route("/<int:ressource_id>/verrouiller", methods=["POST"])
@@ -136,11 +141,11 @@ def importer():
             if not extension_autorisee(fichier.filename, EXTENSIONS_BIBLIOTHEQUE):
                 nb_rejetes += 1
                 continue
-            nom_securise = secure_filename(fichier.filename)
-            titre = nom_securise.rsplit(".", 1)[0]
+            nom_securise = nom_fichier_sur(fichier.filename)
+            titre = fichier.filename.rsplit(".", 1)[0][:150] or nom_securise.rsplit(".", 1)[0]
             db.session.add(Ressource(
                 titre=titre, type=type_, matiere=matiere or None,
-                nom_fichier=nom_securise, contenu=fichier.read(), type_mime=fichier.mimetype,
+                nom_fichier=nom_securise, contenu=fichier.read(), type_mime=type_mime_sur(nom_securise),
                 ajoute_par_id=current_user.id, consultation_sur_place=verrouillee,
             ))
             nb_importes += 1

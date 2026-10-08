@@ -60,7 +60,7 @@
                   </form>
                 {% endif %}
                 {% if acces("fondateur", "administrateur_general") %}
-                  <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" onsubmit="return confirm('{{ _("Supprimer cette ligne de salaire ?") }}');">
+                  <form method="post" action="{{ url_for('salaires.supprimer', salaire_id=s.id) }}" onsubmit="return confirm({{ _("Supprimer cette ligne de salaire ?")|tojson|forceescape }});">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="bouton-danger">{{ _("Supprimer") }}</button>
                   </form>

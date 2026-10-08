@@ -99,7 +99,9 @@ def _lignes_export_eleves(classe_id=None, cycle=None):
     requete = Eleve.query.filter_by(actif=True)
     if classe_id:
         requete = requete.filter_by(classe_id=classe_id)
-    eleves = requete.order_by(Eleve.nom_complet).all()
+    from sqlalchemy.orm import selectinload
+    # Parents chargés en une fois (sinon une requête par élève).
+    eleves = requete.options(selectinload(Eleve.parents)).order_by(Eleve.nom_complet).all()
     if cycle:
         eleves = [e for e in eleves if classe_dans_le_cycle(e.classe, cycle)]
     entetes = ["Matricule", "Nom complet", "Genre", "Classe", "Téléphone parent", "Statut dossier", "Parent(s) lié(s)"]
@@ -160,7 +162,13 @@ def _appliquer_dossier(eleve):
 def _peut_voir(eleve):
     est_lie_comme_parent = current_user in eleve.parents
     est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id
-    return current_user.role in ROLES_LECTURE or current_user.role == "developpeur" or est_lie_comme_parent or est_soi_meme
+    if est_lie_comme_parent or est_soi_meme or current_user.role == "developpeur":
+        return True
+    if current_user.role not in ROLES_LECTURE:
+        return False
+    # Un directeur de cycle ne voit que les élèves de son cycle.
+    cycle = cycle_du_role(current_user.role)
+    return not cycle or classe_dans_le_cycle(eleve.classe, cycle)
 
 
 @eleves_bp.route("/<int:eleve_id>/photo")

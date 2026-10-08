@@ -106,7 +106,7 @@
               <td>
                 <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">{{ _("Corriger") }}</a>
                 {% if acces("fondateur", "administrateur_general") %}
-                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm('{{ _("Supprimer ce paiement et sa ligne de Caisse associée ?") }}');">
+                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm({{ _("Supprimer ce paiement et sa ligne de Caisse associée ?")|tojson|forceescape }});">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit">{{ _("Supprimer") }}</button>
                     </form>

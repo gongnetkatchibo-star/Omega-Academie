@@ -63,7 +63,7 @@
               {% if not l.mouvement.automatique %}
                 · <a href="{{ url_for('caisse.modifier', mouvement_id=l.mouvement.id) }}">{{ _("Corriger") }}</a>
                 {% if acces("fondateur", "administrateur_general") %}
-                  · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" style="display:inline;" onsubmit="return confirm('{{ _("Supprimer ce mouvement de caisse ?") }}');">
+                  · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" style="display:inline;" onsubmit="return confirm({{ _("Supprimer ce mouvement de caisse ?")|tojson|forceescape }});">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit">{{ _("Supprimer") }}</button>
                     </form>
