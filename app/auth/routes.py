@@ -57,7 +57,7 @@ def _envoyer_email_reset(user, lien_reset):
         f"Bonjour {user.nom_complet},\n\n"
         f"Voici le lien pour choisir un nouveau mot de passe "
         f"(valable 30 minutes) :\n{lien_reset}\n\n"
-        f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
+        f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message."
     )
     return envoyer_email([user.email], f"Réinitialisation de votre mot de passe — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
@@ -72,7 +72,7 @@ def _envoyer_email_reset_multi(destinataires, user, lien_reset):
         f"le compte de {user.nom_complet}.\n\n"
         f"Voici le lien pour choisir un nouveau mot de passe "
         f"(valable 30 minutes) :\n{lien_reset}\n\n"
-        f"Si tu n'es pas à l'origine de cette demande, ignore ce message."
+        f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message."
     )
     return envoyer_email(destinataires, f"Réinitialisation de mot de passe — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
@@ -83,12 +83,12 @@ def _envoyer_code_verification(user, code):
     ensuite à chaque connexion (décision de la direction, sept. 2026)."""
     corps = (
         f"Bonjour {user.nom_complet},\n\n"
-        f"Voici ton code de vérification d'inscription "
+        f"Voici votre code de vérification d'inscription "
         f"(valable 10 minutes) : {code}\n\n"
-        f"Une fois vérifié, ta demande de compte sera transmise "
+        f"Une fois votre email vérifié, votre demande de compte sera transmise "
         f"au secrétariat pour validation."
     )
-    return envoyer_email([user.email], f"Vérifie ton email — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
+    return envoyer_email([user.email], f"Vérifiez votre email — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
 
 
 DOMAINE_EMAIL_TECHNIQUE_ELEVE = ("@eleves.local", "@eleves.omega-academie.local")

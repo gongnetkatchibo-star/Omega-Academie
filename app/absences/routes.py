@@ -82,7 +82,7 @@ def saisie(classe_id):
         # Alerte automatique au parent dès que le seuil est franchi
         # (pile à ce moment, pas à chaque absence suivante — sept. 2026).
         from app.services.alertes import SEUIL_ABSENCES_INJUSTIFIEES
-        from app.services.notifications import notifier
+        from app.services.notifications import notifier, signature
         for eleve in eleves_nouvellement_absents:
             nb = Absence.query.filter_by(eleve_id=eleve.id, justifiee=False).count()
             if not eleve.parents:
@@ -97,7 +97,7 @@ def saisie(classe_id):
                         f"{eleve.nom_complet} a été noté(e) absent(e) le "
                         f"{date_selectionnee.strftime('%d/%m/%Y')} ({classe_obj.nom}), sans justification.\n"
                         f"Merci de contacter l'école pour justifier cette absence.\n\n"
-                        f"Ceci est une notification automatique."
+                        f"{signature()}"
                     ),
                 )
             else:
@@ -107,8 +107,8 @@ def saisie(classe_id):
                     (
                         f"Bonjour,\n\n"
                         f"{eleve.nom_complet} a atteint {nb} absences non justifiées "
-                        f"cette année. Nous t'invitons à contacter l'école si besoin.\n\n"
-                        f"Ceci est une notification automatique."
+                        f"cette année. Nous vous invitons à contacter l'école.\n\n"
+                        f"{signature()}"
                     ),
                 )
         flash(f"Absences enregistrées pour le {date_selectionnee.strftime('%d/%m/%Y')}.", "info")

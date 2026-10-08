@@ -8,6 +8,18 @@ notification ratée ne doit jamais empêcher un paiement d'être enregistré."""
 from app.extensions import envoyer_email
 
 
+def montant_fcfa(montant):
+    """85000 → « 85 000 FCFA », comme à l'écran."""
+    from flask import current_app
+    return current_app.jinja_env.filters["fcfa"](montant)
+
+
+def signature():
+    from app.services.tenant import ecole_courante
+    ecole = ecole_courante()
+    return ecole.nom if ecole else ""
+
+
 def notifier(destinataires, sujet, corps):
     """destinataires : liste d'emails (les entrées vides/None sont
     ignorées)."""
@@ -23,10 +35,11 @@ def notifier_paiement(paiement, eleve):
         f"Bonjour,\n\n"
         f"Un paiement vient d'être enregistré pour {eleve.nom_complet} :\n"
         f"- Échéance : {paiement.libelle_echeance}\n"
-        f"- Montant : {paiement.montant:.0f}\n"
+        f"- Montant : {montant_fcfa(paiement.montant)}\n"
         f"- Reçu : {paiement.numero_recu}\n"
         f"- Date : {paiement.date_paiement.strftime('%d/%m/%Y')}\n\n"
-        f"Ceci est une confirmation automatique — aucune action n'est nécessaire."
+        f"Ceci est une confirmation automatique : vous n'avez rien à faire.\n\n"
+        f"{signature()}"
     )
     return notifier(destinataires, f"Paiement enregistré — {eleve.nom_complet}", corps)
 

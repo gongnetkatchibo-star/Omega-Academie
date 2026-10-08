@@ -172,13 +172,13 @@ def marquer_paye(salaire_id):
     db.session.commit()
 
     if salaire.email_contact:
-        from app.services.notifications import notifier
+        from app.services.notifications import notifier, montant_fcfa
         notifier(
             [salaire.email_contact],
             f"Salaire versé — {salaire.libelle_periode}",
             (
                 f"Bonjour {salaire.personnel.nom_complet},\n\n"
-                f"Ton salaire de {salaire.libelle_periode} d'un montant de {salaire.montant:.0f} "
+                f"Votre salaire de {salaire.libelle_periode}, d'un montant de {montant_fcfa(salaire.montant)}, "
                 f"vient d'être enregistré comme versé.\n\n"
                 f"Ceci est une notification automatique de {nom_ecole_courante()}."
             ),

@@ -131,7 +131,7 @@ def relancer(eleve_id):
     """Relance manuelle — le comptable déclenche l'email quand il le
     juge utile, plutôt qu'un envoi automatique qui pourrait harceler une
     famille en cours d'arrangement avec l'école (sept. 2026)."""
-    from app.services.notifications import notifier
+    from app.services.notifications import notifier, montant_fcfa, signature
 
     eleve = db.get_or_404(Eleve, eleve_id)
     resume = resume_paiements(eleve)
@@ -149,11 +149,11 @@ def relancer(eleve_id):
         f"Rappel de paiement — {eleve.nom_complet}",
         (
             f"Bonjour,\n\n"
-            f"Nous te rappelons qu'un solde de {resume['solde']:.0f} reste à régler "
+            f"Nous vous rappelons qu'un solde de {montant_fcfa(resume['solde'])} reste à régler "
             f"pour la scolarité de {eleve.nom_complet}.\n\n"
             f"Merci de régulariser dès que possible, ou de contacter le secrétariat "
-            f"pour un arrangement.\n\n"
-            f"Ceci est une notification envoyée par l'école."
+            f"si vous souhaitez un arrangement.\n\n"
+            f"{signature()}"
         ),
     )
     flash("Relance envoyée." if envoye else "Échec de l'envoi — vérifie la configuration email.", "info" if envoye else "error")
