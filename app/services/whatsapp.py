@@ -14,7 +14,7 @@ from urllib.parse import quote
 from flask import current_app
 
 from app.models.journal import JournalAction
-from app.utils import normaliser_numero_tchad
+from app.services.numeros import normaliser_numero, numero_lisible as _numero_lisible
 
 ACTION_ABSENCE = "whatsapp_absence"
 ACTION_RELANCE = "whatsapp_relance"
@@ -25,10 +25,14 @@ def contacts(eleve):
     """Numéros mobiles joignables pour cet élève, sans doublon, dans
     l'ordre : parents liés (leurs numéros de profil), puis le téléphone
     parent et le contact d'urgence saisis dans le dossier."""
+    from app.services.tenant import ecole_courante
+
+    ecole = ecole_courante()
+    pays = ecole.pays if ecole else None  # numéros sans indicatif : ceux du pays de l'école
     resultat, vus = [], set()
 
     def ajouter(nom, saisie, libelle=None):
-        numero = normaliser_numero_tchad(saisie or "")
+        numero = normaliser_numero(saisie, pays)
         if numero and numero not in vus:
             vus.add(numero)
             resultat.append({"nom": nom, "numero": numero, "libelle": libelle})
@@ -43,9 +47,8 @@ def contacts(eleve):
 
 
 def numero_lisible(numero):
-    """+23566123456 → +235 66 12 34 56"""
-    chiffres = numero[4:]
-    return f"+235 {chiffres[:2]} {chiffres[2:4]} {chiffres[4:6]} {chiffres[6:]}"
+    """+23566123456 → +235 66 12 34 56 (tout pays, voir services/numeros.py)."""
+    return _numero_lisible(numero)
 
 
 def lien(numero, texte):

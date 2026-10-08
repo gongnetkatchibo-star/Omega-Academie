@@ -8,8 +8,10 @@
 #
 # Message du commit : « vN : description », N suivant le dernier commit.
 # La description vient du fichier .message_envoi (première ligne) s'il
-# existe à la racine du dossier ; sinon elle est rédigée automatiquement
-# à partir des fichiers modifiés.
+# existe à la racine du dossier ; sinon elle résume les parties de
+# l'application touchées (ex. « relances, whatsapp, style, tests »).
+#
+# Le script se relance tout seul quand il est mis à jour.
 #
 # Journal : .git/envoi_auto.log
 
@@ -55,6 +57,22 @@ age_derniere_modification() {
     if [ -z "$recent" ]; then echo 999999; else echo $(( $(date +%s) - recent )); fi
 }
 
+# Parties de l'application touchées par le commit en préparation, sans
+# doublon : nom du module, du service ou du modèle plutôt que « routes.py ».
+parties_touchees() {
+    git diff --cached --name-only | awk -F/ '
+        $1 == "app" && ($2 == "services" || $2 == "models") { sub(/\.py$/, "", $3); print $3; next }
+        $1 == "app" && $2 == "templates" && NF > 3 { print $3; next }
+        $1 == "app" && $2 == "templates" { sub(/\.html$/, "", $3); sub(/^_/, "", $3); print $3; next }
+        $1 == "app" && $2 == "static" { print "style"; next }
+        $1 == "app" && NF > 2 { print $2; next }
+        $1 == "app" { sub(/\.py$/, "", $2); print ($2 == "__init__" ? "application" : $2); next }
+        $1 == "tests" { print "tests"; next }
+        $1 == "outils" || $1 == "deploiement" { print $1; next }
+        { sub(/^\./, "", $NF); sub(/\.[^.]*$/, "", $NF); print $NF }
+    ' | awk '!vu[$0]++' | tr '_' ' '
+}
+
 SECRET_SIGNALE=0
 creer_commit() {
     git add -A || return 1
@@ -82,10 +100,13 @@ creer_commit() {
         description="$(head -n 1 "$MESSAGE" | tr -d '\r')"
     fi
     if [ -z "$description" ]; then
+        local parties total
         nombre="$(git diff --cached --name-only | wc -l)"
-        apercu="$(git diff --cached --name-only | head -3 | sed 's#.*/##' | paste -sd, - | sed 's/,/, /g')"
-        [ "$nombre" -gt 3 ] && apercu="$apercu…"
-        description="mise à jour automatique ($nombre fichier(s) : $apercu)"
+        parties="$(parties_touchees)"
+        total="$(printf '%s\n' "$parties" | grep -c .)"
+        apercu="$(printf '%s\n' "$parties" | head -6 | paste -sd, - | sed 's/,/, /g')"
+        [ "$total" -gt 6 ] && apercu="$apercu et $((total - 6)) autre(s)"
+        description="$apercu ($nombre fichier(s))"
     fi
 
     if git commit -q -m "${prefixe}${description}" >> "$JOURNAL" 2>&1; then
@@ -116,7 +137,18 @@ pousser() {
 
 journal "surveillance démarrée (vérification toutes les ${INTERVALLE}s, envoi après ${CALME}s de calme)"
 
+SCRIPT="${BASH_SOURCE[0]}"
+VERSION_SCRIPT="$(stat -c %Y "$SCRIPT" 2>/dev/null)"
+
 while true; do
+    # Script mis à jour (par exemple par un envoi GitHub) : on repart sur
+    # la nouvelle version, sans redémarrer le service à la main.
+    if [ "$(stat -c %Y "$SCRIPT" 2>/dev/null)" != "$VERSION_SCRIPT" ]; then
+        sleep 2
+        journal "nouvelle version du script : redémarrage"
+        exec 9>&-
+        exec /bin/bash "$SCRIPT"
+    fi
     if ! operation_git_en_cours; then
         if [ -n "$(git status --porcelain 2>/dev/null)" ] && [ "$(age_derniere_modification)" -ge "$CALME" ]; then
             creer_commit
