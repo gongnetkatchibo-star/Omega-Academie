@@ -23,10 +23,16 @@
       <select name="niveau" required>
         <option value="">{{ _("Choisir un niveau") }}</option>
         {% for position, nom_niveau in niveaux %}
-          <option value="{{ position }}">{{ nom_niveau }}</option>
+          <option value="{{ position }}">{{ _(nom_niveau) }}</option>
         {% endfor %}
       </select>
     </label>
+    {% if lycee %}
+      <label>{{ _("Série (classes de lycée)") }}
+        <input type="text" name="serie" maxlength="10" list="series-lycee" placeholder="A4, C, D…">
+        <datalist id="series-lycee">{% for s in series %}<option value="{{ s }}">{% endfor %}</datalist>
+      </label>
+    {% endif %}
     <label>{{ _("Année scolaire") }}
       <input type="text" name="annee_scolaire" required>
     </label>

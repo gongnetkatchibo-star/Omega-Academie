@@ -52,7 +52,10 @@ def liste():
 @login_required
 @roles_required(*ROLES_GESTION, module="classes")
 def nouvelle():
-    niveaux_numerotes = list(enumerate(NIVEAUX, start=1))
+    from app.services.niveaux import niveaux_disponibles, options_ecole, SERIES_PROPOSEES
+    niveaux_numerotes = niveaux_disponibles()
+    niveaux_valables = {n for n, _ in niveaux_numerotes}
+    lycee_propose = options_ecole()[1]
     cycle = cycle_du_role(current_user.role)
 
     if request.method == "POST":
@@ -63,18 +66,18 @@ def nouvelle():
         frais_tranche1 = _montant_formulaire("frais_tranche1") or 0
         frais_tranche2 = _montant_formulaire("frais_tranche2") or 0
 
-        if not nom or not niveau or not annee_scolaire:
+        if not nom or niveau not in niveaux_valables or not annee_scolaire:
             flash("Merci de remplir tous les champs.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
         classe_candidate = Classe(niveau=niveau, nom=nom)
         if not classe_dans_le_cycle(classe_candidate, cycle):
             flash("Ce niveau ne fait pas partie de ton cycle de supervision.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
         if Classe.query.filter_by(nom=nom, annee_scolaire=annee_scolaire).first():
             flash(f"La classe {nom} existe déjà pour l'année {annee_scolaire}.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
         # Si d'autres classes du même groupe (même échéancier, même année)
         # existent déjà et qu'aucun montant n'a été saisi ici, on hérite
@@ -87,8 +90,10 @@ def nouvelle():
             ref = membres_existants[0]
             frais_inscription, frais_tranche1, frais_tranche2 = ref.frais_inscription, ref.frais_tranche1, ref.frais_tranche2
 
+        from app.services.niveaux import est_lycee
+        serie = request.form.get("serie", "").strip().upper()[:10] if est_lycee(niveau) else ""
         nouvelle_classe = Classe(
-            nom=nom, niveau=niveau, annee_scolaire=annee_scolaire,
+            nom=nom[:20], niveau=niveau, annee_scolaire=annee_scolaire, serie=serie or None,
             frais_inscription=frais_inscription, frais_tranche1=frais_tranche1,
             frais_tranche2=frais_tranche2,
         )
@@ -100,7 +105,7 @@ def nouvelle():
         flash(f"Classe {nom} créée.", "info")
         return redirect(url_for("classes.liste"))
 
-    return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes)
+    return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
 
 @classes_bp.route("/<int:classe_id>/frais", methods=["POST"])
@@ -148,13 +153,18 @@ def demarrer_annee():
 
         classes_source = {c.nom: c for c in Classe.query.filter_by(annee_scolaire=annee_source).all()} if annee_source else {}
 
+        from app.services.niveaux import niveaux_disponibles
+        a_creer = list(niveaux_disponibles())
+        # Les classes de lycée à série (« 1ère D »…) de l'année source sont
+        # reprises telles quelles, en plus des niveaux standard.
+        a_creer += [(c.niveau, c.nom) for c in classes_source.values() if c.serie]
         creees = 0
-        for position, nom in enumerate(NIVEAUX, start=1):
+        for position, nom in a_creer:
             if Classe.query.filter_by(nom=nom, annee_scolaire=annee).first():
                 continue
             reference = classes_source.get(nom)
             db.session.add(Classe(
-                nom=nom, niveau=position, annee_scolaire=annee,
+                nom=nom, niveau=position, annee_scolaire=annee, serie=reference.serie if reference else None,
                 frais_inscription=reference.frais_inscription if reference else 0,
                 frais_tranche1=reference.frais_tranche1 if reference else 0,
                 frais_tranche2=reference.frais_tranche2 if reference else 0,
@@ -165,3 +175,81 @@ def demarrer_annee():
         return redirect(url_for("classes.liste", annee=annee))
 
     return render_template("classes/demarrer_annee.html", annees=annees_existantes, annee_suggeree=annee_suggeree)
+
+
+# ------------------------------------------------- structure de l'école
+ROLES_STRUCTURE = ["fondateur", "administrateur_general"]
+
+
+@classes_bp.route("/structure", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_STRUCTURE)
+def structure():
+    """Découpage de l'année, cycles proposés et liste des matières : des
+    réglages facultatifs, sans effet tant qu'on ne les change pas."""
+    from app.models.eleve import Eleve
+    from app.models.matiere import MatiereEcole
+    from app.models.note import Note
+    from app.models.parametre import ParametreEtablissement
+    from app.services.periodes import SYSTEMES, LIBELLES_SYSTEMES, periodes as codes_du_systeme
+    from app.services.journal import journaliser
+
+    parametre = ParametreEtablissement.get()
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "periodes":
+            systeme = request.form.get("systeme_periodes")
+            if systeme in SYSTEMES and systeme != parametre.systeme_periodes:
+                autorises = set(codes_du_systeme(systeme))
+                deja_notees = {
+                    code for (code,) in Note.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante())
+                    .with_entities(Note.trimestre).distinct()
+                }
+                if deja_notees - autorises:
+                    flash("Des notes de cette année sont déjà saisies dans l'ancien découpage : "
+                          "changez-le à la prochaine rentrée.", "error")
+                else:
+                    parametre.systeme_periodes = systeme
+                    journaliser("modification_structure", details=f"Découpage de l'année : {systeme}")
+                    db.session.commit()
+                    flash("Découpage de l'année enregistré.", "info")
+        elif action == "cycles":
+            parametre.cycle_maternelle = request.form.get("cycle_maternelle") == "on"
+            parametre.cycle_lycee = request.form.get("cycle_lycee") == "on"
+            db.session.commit()
+            flash("Cycles enregistrés.", "info")
+        elif action == "ajouter_matiere":
+            noms = [n.strip()[:80] for n in request.form.get("nom", "").replace(";", "\n").splitlines() if n.strip()]
+            existantes = {m.nom.lower() for m in MatiereEcole.query.all()}
+            rang = (db.session.query(db.func.max(MatiereEcole.ordre)).scalar() or 0)
+            for nom in noms:
+                if nom.lower() not in existantes:
+                    rang += 1
+                    db.session.add(MatiereEcole(nom=nom, ordre=rang))
+                    existantes.add(nom.lower())
+            db.session.commit()
+            flash("Liste des matières mise à jour.", "info")
+        elif action == "reprendre_matieres":
+            from app.models.enseignant import Affectation
+            utilisees = {a.matiere for a in Affectation.query.all()}
+            utilisees |= {m for (m,) in Note.query.with_entities(Note.matiere).distinct()}
+            existantes = {m.nom.lower() for m in MatiereEcole.query.all()}
+            rang = (db.session.query(db.func.max(MatiereEcole.ordre)).scalar() or 0)
+            for nom in sorted(utilisees):
+                if nom and nom.lower() not in existantes:
+                    rang += 1
+                    db.session.add(MatiereEcole(nom=nom[:80], ordre=rang))
+            db.session.commit()
+            flash("Liste des matières mise à jour.", "info")
+        elif action == "retirer_matiere":
+            matiere = db.session.get(MatiereEcole, request.form.get("matiere_id", type=int) or 0)
+            if matiere:
+                db.session.delete(matiere)
+                db.session.commit()
+                flash("Matière retirée de la liste.", "info")
+        return redirect(url_for("classes.structure"))
+
+    return render_template(
+        "classes/structure.html", parametre=parametre, systemes=LIBELLES_SYSTEMES,
+        matieres=MatiereEcole.query.order_by(MatiereEcole.ordre, MatiereEcole.nom).all(),
+    )

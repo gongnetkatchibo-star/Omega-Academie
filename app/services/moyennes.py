@@ -23,6 +23,8 @@ def seuil_reussite_pour_classe(classe):
     return 5 if est_primaire(classe) else 10
 
 
+# Codes des trimestres, gardés pour la compatibilité : les calculs
+# prennent toutes les périodes notées (trimestres, semestres, séquences).
 TRIMESTRES = ["T1", "T2", "T3"]
 
 
@@ -66,15 +68,15 @@ def _moyenne_annuelle(classe, notes, coefficients=None, poids_evaluation=None):
             {e.id: e.coefficient for e in Evaluation.query.filter(Evaluation.id.in_(ids)).all()} if ids else {}
         )
 
-    par_trimestre = {t: defaultdict(list) for t in TRIMESTRES}
+    par_trimestre = defaultdict(lambda: defaultdict(list))
     for n in notes:
-        if n.trimestre in par_trimestre and n.bareme:
+        if n.trimestre and n.bareme:
             par_trimestre[n.trimestre][n.matiere].append(
                 (n.valeur * bareme / n.bareme, poids_evaluation.get(n.evaluation_id, 1) or 1)
             )
 
     generales = []
-    for trimestre in TRIMESTRES:
+    for trimestre in sorted(par_trimestre):
         total = poids = 0.0
         for matiere, valeurs in par_trimestre[trimestre].items():
             poids_notes = sum(c for _, c in valeurs)

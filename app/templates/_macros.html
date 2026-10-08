@@ -16,6 +16,20 @@
          placeholder="{{ _("Montant exact") }}">
 {% endmacro %}
 
+{# Matière : choisie dans la liste de l'école s'il y en a une, sinon
+   saisie librement (comportement d'origine). #}
+{% macro champ_matiere(name="matiere") %}
+  {% set liste = matieres_officielles() %}
+  {% if liste %}
+    <select name="{{ name }}" required>
+      <option value="">{{ _("— Choisir —") }}</option>
+      {% for m in liste %}<option value="{{ m }}">{{ _(m) }}</option>{% endfor %}
+    </select>
+  {% else %}
+    <input type="text" name="{{ name }}" maxlength="80" required>
+  {% endif %}
+{% endmacro %}
+
 {% macro champ_mot_de_passe(name, autocomplete="new-password", required=True) %}
   <div class="champ-mdp-conteneur">
     <input type="password" name="{{ name }}" id="mdp-{{ name }}" autocomplete="{{ autocomplete }}" {% if required %}required{% endif %}>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import champ_matiere with context %}
 {% block title %}{{ _("Emploi du temps —") }} {{ classe.nom }}{% endblock %}
 {% block content %}
   <h1>{{ _("Emploi du temps —") }} {{ classe.nom }}</h1>
@@ -48,7 +49,7 @@
     <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>{{ _("Matière") }}
-        <input type="text" name="matiere" required>
+        {{ champ_matiere() }}
       </label>
       <label>{{ _("Enseignant") }}
         <select name="enseignant_id" class="recherche-nom">

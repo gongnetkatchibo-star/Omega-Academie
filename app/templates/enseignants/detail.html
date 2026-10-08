@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import champ_matiere with context %}
 {% block title %}{{ enseignant.nom_complet }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Enseignants", url_for('enseignants.liste')), (enseignant.nom_complet, None)) }}
@@ -40,7 +41,7 @@
         </select>
       </label>
       <label>{{ _("Matière") }}
-        <input type="text" name="matiere" required>
+        {{ champ_matiere() }}
       </label>
       <button type="submit">{{ _("Affecter") }}</button>
     </form>

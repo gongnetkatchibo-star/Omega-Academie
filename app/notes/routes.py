@@ -11,13 +11,12 @@ from app.services.moyennes import bareme_pour_classe
 from app.models.bulletin import AppreciationBulletin, CoefficientMatiere
 from app.models.evaluation import Evaluation, TYPES_EVALUATION, LIBELLES_TYPE
 from app.services.bulletins import bulletins_de_la_classe, matieres_de_la_classe, ANNUEL, LIBELLES_PERIODE
+from app.services.periodes import periodes as periodes_de_l_ecole, periodes_et_annee
 
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle
 from app.services.temps import maintenant
 
 ROLES_SUPERVISION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"]
-TRIMESTRES = ["T1", "T2", "T3"]
-PERIODES = TRIMESTRES + [ANNUEL]
 
 
 @notes_bp.route("/")
@@ -77,8 +76,8 @@ def saisie(classe_id):
         except ValueError:
             date_evaluation = None
 
-        if matiere not in matieres or trimestre not in TRIMESTRES:
-            flash("Merci de choisir une matière que vous enseignez et un trimestre valide.", "error")
+        if matiere not in matieres or trimestre not in periodes_de_l_ecole():
+            flash("Merci de choisir une matière que vous enseignez et une période valide.", "error")
         elif not titre or type_evaluation not in TYPES_EVALUATION or date_evaluation is None:
             flash("Le titre, le type et la date de l'évaluation sont obligatoires.", "error")
         elif coefficient is None or not 0 < coefficient <= 10:
@@ -101,7 +100,7 @@ def saisie(classe_id):
         )
     effectif = Eleve.query.filter_by(classe_id=classe_id, actif=True).count()
     return render_template(
-        "notes/saisie.html", classe=classe_obj, matieres=matieres, trimestres=TRIMESTRES, evaluations=evaluations,
+        "notes/saisie.html", classe=classe_obj, matieres=matieres, trimestres=periodes_de_l_ecole(), libelles=LIBELLES_PERIODE, evaluations=evaluations,
         types=TYPES_EVALUATION, libelles_type=LIBELLES_TYPE, effectif=effectif, bareme=bareme_pour_classe(classe_obj),
         aujourd_hui=maintenant().date().isoformat(),
     )
@@ -199,8 +198,9 @@ def _acces_bulletin(eleve):
 
 
 def _periode_demandee():
-    periode = request.values.get("trimestre", "T1")
-    return periode if periode in PERIODES else "T1"
+    valables = periodes_et_annee()
+    periode = request.values.get("trimestre", valables[0])
+    return periode if periode in valables else valables[0]
 
 
 def _supervision_de_la_classe(classe_id):
@@ -243,7 +243,7 @@ def bulletin(eleve_id):
     periode = _periode_demandee()
     calcul = bulletins_de_la_classe(eleve.classe, periode, eleve.classe.annee_scolaire)
     return render_template(
-        "notes/bulletin.html", eleve=eleve, periode=periode, periodes=PERIODES, libelles=LIBELLES_PERIODE,
+        "notes/bulletin.html", eleve=eleve, periode=periode, periodes=periodes_et_annee(), libelles=LIBELLES_PERIODE,
         calcul=calcul, bulletin=calcul["bulletins"].get(eleve.id), peut_apprecier=peut_apprecier,
     )
 
@@ -323,7 +323,7 @@ def bulletins_classe(classe_id):
         key=lambda paire: (paire[1] is None, paire[1]["rang"] if paire[1] else 0, paire[0].nom_complet),
     )
     return render_template(
-        "notes/bulletins_classe.html", classe=classe, periode=periode, periodes=PERIODES,
+        "notes/bulletins_classe.html", classe=classe, periode=periode, periodes=periodes_et_annee(),
         libelles=LIBELLES_PERIODE, calcul=calcul, lignes=lignes,
     )
 

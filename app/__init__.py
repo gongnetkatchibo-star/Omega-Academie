@@ -341,6 +341,11 @@ def create_app(config_name=None):
             return role_a_acces(current_user.role, module, roles)
         return current_user.role == "developpeur" or current_user.role in roles
 
+    from app.models.matiere import matieres_officielles
+    app.add_template_global(matieres_officielles, "matieres_officielles")
+    from app.services.periodes import libelle as libelle_periode
+    app.add_template_global(libelle_periode, "libelle_periode")
+
     @app.template_filter("role_libelle")
     def role_libelle(role):
         from app.models.user import LIBELLES_ROLES
@@ -546,6 +551,7 @@ def create_app(config_name=None):
         from app.models.calendrier import EvenementCalendrier  # noqa: F401
         from app.models.preinscription import PreInscription  # noqa: F401
         from app.models.livre import Livre, Pret  # noqa: F401
+        from app.models.matiere import MatiereEcole  # noqa: F401
 
         db.create_all()
         from app.services.auto_migration import ajouter_colonnes_manquantes

@@ -13,10 +13,9 @@ from app.models.bulletin import AppreciationBulletin, CoefficientMatiere
 from app.models.eleve import Eleve
 from app.models.note import Note
 from app.services.moyennes import bareme_pour_classe, seuil_reussite_pour_classe
+from app.services.periodes import ANNUEL, LIBELLES as LIBELLES_PERIODE, periodes as periodes_de_l_ecole, trier
 
-TRIMESTRES = ["T1", "T2", "T3"]
-ANNUEL = "AN"
-LIBELLES_PERIODE = {"T1": "1er trimestre", "T2": "2e trimestre", "T3": "3e trimestre", ANNUEL: "Année"}
+TRIMESTRES = ["T1", "T2", "T3"]  # compatibilité ; voir services/periodes.py
 
 # (part minimale du barème, mention)
 MENTIONS = [(0.9, "Excellent"), (0.8, "Très bien"), (0.7, "Bien"), (0.6, "Assez bien"), (0.5, "Passable")]
@@ -122,20 +121,21 @@ def _periode(notes_par_eleve, coefficients, bareme):
 
 
 def bulletins_de_la_classe(classe, periode, annee):
-    """Tous les bulletins de la classe pour une période ("T1".."T3" ou "AN").
+    """Tous les bulletins de la classe pour une période (ex. "T1", "S2",
+    "Q4") ou pour l'année ("AN").
     Retourne {"bareme", "seuil", "periode", "eleves": {eleve_id: bulletin}, …}."""
     bareme = bareme_pour_classe(classe)
     seuil = seuil_reussite_pour_classe(classe)
     coefficients = coefficients_de_la_classe(classe.id)
     eleves_actifs = {e.id for e in Eleve.query.filter_by(classe_id=classe.id, actif=True).all()}
 
-    par_trimestre = {t: defaultdict(lambda: defaultdict(list)) for t in TRIMESTRES}
+    par_trimestre = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     from app.models.evaluation import Evaluation
     poids_evaluation = {
         e.id: e.coefficient for e in Evaluation.query.filter_by(classe_id=classe.id, annee_scolaire=annee).all()
     }
     for n in Note.query.filter_by(classe_id=classe.id, annee_scolaire=annee).all():
-        if n.eleve_id in eleves_actifs and n.trimestre in par_trimestre and n.bareme:
+        if n.eleve_id in eleves_actifs and n.trimestre and n.bareme:
             par_trimestre[n.trimestre][n.eleve_id][n.matiere].append(
                 (n.valeur * bareme / n.bareme, poids_evaluation.get(n.evaluation_id, 1) or 1)
             )
@@ -150,13 +150,17 @@ def bulletins_de_la_classe(classe, periode, annee):
         if a.eleve_id in eleves_actifs
     }
 
-    if periode in TRIMESTRES:
+    # Périodes de l'école, plus celles d'un autre découpage déjà notées
+    # cette année-là (l'année reste la moyenne de toutes les périodes notées,
+    # comme dans services/moyennes.py).
+    codes = trier(list(periodes_de_l_ecole()) + list(par_trimestre))
+    if periode != ANNUEL:
         resultat = _periode(par_trimestre[periode], coefficients, bareme)
     else:
-        trimestres = {t: _periode(par_trimestre[t], coefficients, bareme) for t in TRIMESTRES}
+        trimestres = {t: _periode(par_trimestre[t], coefficients, bareme) for t in codes}
         annuelles, bulletins = {}, {}
         for eleve_id in eleves_actifs:
-            moyennes = {t: trimestres[t]["bulletins"].get(eleve_id, {}).get("moyenne") for t in TRIMESTRES}
+            moyennes = {t: trimestres[t]["bulletins"].get(eleve_id, {}).get("moyenne") for t in codes}
             connues = [m for m in moyennes.values() if m is not None]
             if connues:
                 annuelles[eleve_id] = _moyenne(connues)
@@ -180,7 +184,7 @@ def bulletins_de_la_classe(classe, periode, annee):
         bulletin["appreciation"] = appreciations.get(eleve_id, "")
 
     resultat.update({
-        "bareme": bareme, "seuil": seuil, "periode": periode, "libelle_periode": LIBELLES_PERIODE[periode],
+        "bareme": bareme, "seuil": seuil, "periode": periode, "libelle_periode": LIBELLES_PERIODE.get(periode, periode),
         "annee": annee,
     })
     return resultat

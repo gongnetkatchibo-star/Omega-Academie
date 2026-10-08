@@ -8,6 +8,7 @@ Niveaux (voir app/classes/routes.py NIVEAUX) :
 """
 
 GROUPES_NIVEAUX = [
+    set(range(-2, 1)),  # maternelle : petite, moyenne et grande section
     set(range(1, 5)),   # CP1 à CE2
     set(range(5, 7)),   # CM1 à CM2
     set(range(7, 10)),  # 6ème à 4ème

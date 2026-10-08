@@ -32,6 +32,7 @@
     <div class="barre-actions">
       <a class="bouton bouton-plein" href="{{ url_for('classes.nouvelle') }}">{{ icone("plus") }} {{ _("Nouvelle classe") }}</a>
       <a class="bouton" href="{{ url_for('classes.demarrer_annee') }}">{{ icone("calendrier") }} {{ _("Démarrer une nouvelle année scolaire") }}</a>
+      {% if acces("fondateur", "administrateur_general") %}<a class="bouton" href="{{ url_for('classes.structure') }}">{{ icone("reglages") }} {{ _("Structure de l'école") }}</a>{% endif %}
     </div>
   {% endif %}
 
@@ -40,8 +41,8 @@
       {% for c in classes %}
         <li class="carte-demande">
           <div class="infos">
-            <strong>{{ c.nom }}</strong>
-            <span>{{ c.annee_scolaire }} · {{ c.eleves.count() }} {{ _("élève(s) · total annuel") }} {{ c.frais_annuel|fcfa }}</span>
+            <strong>{{ c.nom }}{% if c.serie %} <span class="badge-retard">{{ _("série") }} {{ c.serie }}</span>{% endif %}</strong>
+            <span>{{ _(c.cycle) }} · {{ c.annee_scolaire }} · {{ c.eleves.count() }} {{ _("élève(s) · total annuel") }} {{ c.frais_annuel|fcfa }}</span>
             {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "comptable") %}
               <form method="post" action="{{ url_for('classes.modifier_frais', classe_id=c.id) }}" class="ligne-frais">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

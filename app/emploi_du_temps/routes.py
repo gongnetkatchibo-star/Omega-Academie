@@ -26,6 +26,11 @@ def _verifier_cycle(classe_obj):
             abort(403)
 
 
+def _matiere_acceptee(matiere):
+    from app.models.matiere import matiere_acceptee
+    return matiere_acceptee(matiere)
+
+
 def _construire_grille(creneaux):
     """Construit une grille jours (colonnes) x heures (lignes) à partir
     d'une liste de créneaux. Les lignes sont les plages horaires
@@ -107,6 +112,8 @@ def classe(classe_id):
             flash("Enseignant introuvable.", "error")
         elif not all([matiere, jour, heure_debut, heure_fin]):
             flash("Merci de remplir tous les champs.", "error")
+        elif not _matiere_acceptee(matiere):
+            flash("Cette matière ne fait pas partie de la liste de l'école.", "error")
         elif heure_fin <= heure_debut:
             flash("L'heure de fin doit être après l'heure de début.", "error")
         else:

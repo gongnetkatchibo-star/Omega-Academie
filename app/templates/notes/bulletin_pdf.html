@@ -67,7 +67,7 @@
     <table class="notes">
       <tr><th style="width:60%;">{{ bi("Période") }}</th><th style="width:40%;">{{ bi("Moyenne") }} /{{ calcul.bareme }}</th></tr>
       {% for t, m in b.trimestres.items() %}
-        <tr><td>{{ bi({"T1": "1er trimestre", "T2": "2e trimestre", "T3": "3e trimestre"}[t]) }}</td><td class="c">{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
+        <tr><td>{{ bi(libelle_periode(t)) }}</td><td class="c">{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
       {% endfor %}
     </table>
   {% endif %}

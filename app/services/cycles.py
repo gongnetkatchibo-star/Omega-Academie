@@ -1,7 +1,10 @@
 """Scission des accès Direction par cycle (document complémentaire, §5,
 sept. 2026) : un Directeur Primaire ne voit/gère que les classes CP à CM,
 un Directeur Collège que les classes 6e à 3e. Fondateur et administrateur
-général restent au-dessus de cette restriction (accès complet)."""
+général restent au-dessus de cette restriction (accès complet).
+
+La maternelle (niveaux 0 et moins) suit le directeur du primaire, le
+lycée (niveaux 11 et plus) celui du collège (services/niveaux.py)."""
 
 from app.services.moyennes import NIVEAU_LIMITE_PRIMAIRE
 

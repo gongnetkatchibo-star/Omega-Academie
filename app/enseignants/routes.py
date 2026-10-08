@@ -102,8 +102,11 @@ def affecter(enseignant_id):
     classe_id = request.form.get("classe_id", type=int)
     matiere = request.form.get("matiere", "").strip()
 
+    from app.models.matiere import matiere_acceptee
     if not classe_id or not matiere or db.session.get(Classe, classe_id) is None:
         flash("Merci de choisir une classe et une matière.", "error")
+    elif not matiere_acceptee(matiere):
+        flash("Cette matière ne fait pas partie de la liste de l'école.", "error")
     else:
         db.session.add(Affectation(enseignant_id=enseignant.id, classe_id=classe_id, matiere=matiere))
         db.session.commit()

@@ -16,6 +16,8 @@ class Classe(AppartientEcole, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nom = db.Column(db.String(20), nullable=False)
     niveau = db.Column(db.Integer, nullable=False)  # ordre pour le passage de classe
+    # Série au lycée (A4, C, D…) ; vide pour les autres classes.
+    serie = db.Column(db.String(10))
     annee_scolaire = db.Column(db.String(9), nullable=False)
 
     # Échéancier officiel 2026-2027 (fiche du fondateur) : les frais se
@@ -32,6 +34,11 @@ class Classe(AppartientEcole, db.Model):
         stocké directement ; conservé en lecture seule pour ne pas casser
         le reste du code qui affiche un total)."""
         return (self.frais_inscription or 0) + (self.frais_tranche1 or 0) + (self.frais_tranche2 or 0)
+
+    @property
+    def cycle(self):
+        from app.services.niveaux import nom_du_cycle
+        return nom_du_cycle(self.niveau)
 
     def __repr__(self):
         return f"<Classe {self.nom}>"

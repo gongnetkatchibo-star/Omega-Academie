@@ -14,7 +14,7 @@
         <tbody>
           {% for e in evaluations %}
             <tr>
-              <td>{{ e.trimestre }}</td>
+              <td>{{ _(libelles.get(e.trimestre, e.trimestre)) }}</td>
               <td>{{ e.matiere }}</td>
               <td><strong>{{ e.titre }}</strong></td>
               <td>{{ e.libelle_type }}</td>
@@ -41,7 +41,7 @@
       </label>
       <label>{{ _("Trimestre") }}
         <select name="trimestre" required>
-          {% for t in trimestres %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          {% for t in trimestres %}<option value="{{ t }}">{{ _(libelles[t]) }}</option>{% endfor %}
         </select>
       </label>
       <label>{{ _("Type") }}

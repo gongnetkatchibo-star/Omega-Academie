@@ -19,6 +19,11 @@ class ParametreEtablissement(AppartientEcole, db.Model):
     date_limite_inscription = db.Column(db.Date)
     date_limite_tranche_1 = db.Column(db.Date)
     date_limite_tranche_2 = db.Column(db.Date)
+    # Découpage de l'année (services/periodes.py) et cycles proposés à la
+    # création des classes, en plus du primaire et du collège (oct. 2026).
+    systeme_periodes = db.Column(db.String(20), nullable=False, default="trimestres")
+    cycle_maternelle = db.Column(db.Boolean, nullable=False, default=False)
+    cycle_lycee = db.Column(db.Boolean, nullable=False, default=False)
 
     @staticmethod
     def get():

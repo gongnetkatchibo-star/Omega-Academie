@@ -1376,3 +1376,59 @@ INTERFACE.update({
     "Livres non rendus": "كتب لم تُعد",
     "Prêts dont la date de retour est passée": "إعارات تجاوزت تاريخ الإرجاع",
 })
+
+
+# --- Structure de l'école : découpage, cycles, matières (oct. 2026)
+_PERIODES_AR = {
+    "1er semestre": "السداسي الأول",
+    "2e semestre": "السداسي الثاني",
+    "1re séquence": "المرحلة الأولى",
+    "2e séquence": "المرحلة الثانية",
+    "3e séquence": "المرحلة الثالثة",
+    "4e séquence": "المرحلة الرابعة",
+    "5e séquence": "المرحلة الخامسة",
+    "6e séquence": "المرحلة السادسة",
+}
+DOCUMENTS.update(_PERIODES_AR)
+INTERFACE.update(_PERIODES_AR)
+INTERFACE.update({
+    "Structure de l'école": "هيكلة المدرسة",
+    "Découpage de l'année, cycles proposés et liste des matières.": "تقسيم السنة، والأطوار المقترحة، وقائمة المواد.",
+    "Découpage de l'année": "تقسيم السنة الدراسية",
+    "Trimestres (3 par an)": "فصول (3 في السنة)",
+    "Semestres (2 par an)": "سداسيات (2 في السنة)",
+    "Séquences (6 par an)": "مراحل (6 في السنة)",
+    "Notes, bulletins et classements suivent ce découpage. L'année reste la moyenne des périodes notées. À changer avant la saisie des premières notes de l'année.":
+        "تتبع النقاط والكشوف والترتيب هذا التقسيم. تبقى السنة معدّل الفترات المنقطة. يُغيَّر قبل إدخال أولى نقاط السنة.",
+    "Des notes de cette année sont déjà saisies dans l'ancien découpage : changez-le à la prochaine rentrée.":
+        "سبق إدخال نقاط هذه السنة وفق التقسيم القديم : غيّروه في الدخول المدرسي القادم.",
+    "Découpage de l'année enregistré.": "حُفظ تقسيم السنة.",
+    "Cycles": "الأطوار",
+    "Cycles enregistrés.": "حُفظت الأطوار.",
+    "Primaire et collège sont toujours proposés.": "الابتدائي والإعدادي مقترحان دائمًا.",
+    "Maternelle (petite, moyenne et grande section)": "التعليم الأولي (القسم الصغير والمتوسط والكبير)",
+    "Lycée (2nde, 1ère, Terminale), avec des séries": "الثانوي (الأولى والثانية والنهائية)، مع الشعب",
+    "La maternelle relève du directeur du primaire (notes sur 10), le lycée du directeur du collège (notes sur 20).":
+        "يتبع التعليم الأولي مدير الابتدائي (النقاط على 10)، والثانوي مدير الإعدادي (النقاط على 20).",
+    "Matières de l'école": "مواد المدرسة",
+    "Les affectations et les emplois du temps se font dans cette liste.": "تتم الإسنادات وجداول الحصص من هذه القائمة.",
+    "Aucune liste : les matières se saisissent librement, comme aujourd'hui.": "لا توجد قائمة : تُكتب المواد بحرية، كما هو الحال اليوم.",
+    "Ajouter des matières (une par ligne)": "إضافة مواد (مادة في كل سطر)",
+    "Reprendre les matières déjà utilisées": "استرجاع المواد المستعملة سابقًا",
+    "Liste des matières mise à jour.": "حُدّثت قائمة المواد.",
+    "Matière retirée de la liste.": "حُذفت المادة من القائمة.",
+    "Cette matière ne fait pas partie de la liste de l'école.": "هذه المادة ليست ضمن قائمة المدرسة.",
+    "Merci de choisir une matière que vous enseignez et une période valide.": "يرجى اختيار مادة تدرّسونها وفترة صحيحة.",
+    "Série (classes de lycée)": "الشعبة (أقسام الثانوي)",
+    "série": "شعبة",
+    "Petite section": "القسم الصغير",
+    "Moyenne section": "القسم المتوسط",
+    "Grande section": "القسم الكبير",
+    "2nde": "الأولى ثانوي",
+    "1ère": "الثانية ثانوي",
+    "Terminale": "السنة النهائية",
+    "Maternelle": "التعليم الأولي",
+    "Primaire": "الابتدائي",
+    "Collège": "الإعدادي",
+    "Lycée": "الثانوي",
+})

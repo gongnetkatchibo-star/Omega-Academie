@@ -2,7 +2,7 @@
 {% block title %}{{ evaluation.titre }} — {{ classe.nom }}{% endblock %}
 {% block content %}
   {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, url_for('notes.saisie', classe_id=classe.id)), (evaluation.titre, None)) }}
-  {{ banniere("notes", evaluation.titre, classe.nom ~ " · " ~ evaluation.matiere ~ " · " ~ evaluation.trimestre ~ " · " ~ evaluation.libelle_type ~ " du " ~ evaluation.date.strftime("%d/%m/%Y") ~ " · coefficient " ~ "%g"|format(evaluation.coefficient)) }}
+  {{ banniere("notes", evaluation.titre, classe.nom ~ " · " ~ evaluation.matiere ~ " · " ~ libelle_periode(evaluation.trimestre) ~ " · " ~ evaluation.libelle_type ~ " du " ~ evaluation.date.strftime("%d/%m/%Y") ~ " · coefficient " ~ "%g"|format(evaluation.coefficient)) }}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
