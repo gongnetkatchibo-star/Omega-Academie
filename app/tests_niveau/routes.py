@@ -85,7 +85,7 @@ def decision(test_id):
     """La note seule décide : admis au-dessus du seuil du cycle, refusé
     en dessous. Un candidat admis est inscrit tout de suite dans la
     classe demandée."""
-    test = TestNiveau.query.get_or_404(test_id)
+    test = db.get_or_404(TestNiveau, test_id)
     if not classe_dans_le_cycle(test.classe_demandee, cycle_du_role(current_user.role)):
         abort(403)
 

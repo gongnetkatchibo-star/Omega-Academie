@@ -113,7 +113,7 @@ def detail(annonce_id):
     """Page d'une seule annonce — cible du lien « Voir plus » envoyé par
     email (sept. 2026). Si la personne n'est pas connectée, elle est
     d'abord renvoyée vers la connexion, puis ramenée ici."""
-    annonce = Annonce.query.get_or_404(annonce_id)
+    annonce = db.get_or_404(Annonce, annonce_id)
 
     destinee_a_moi = annonce.destinataire in ("tous", current_user.role)
     if not destinee_a_moi and current_user.role != "developpeur":
@@ -125,7 +125,7 @@ def detail(annonce_id):
 @communication_bp.route("/<int:annonce_id>/supprimer", methods=["POST"])
 @login_required
 def supprimer(annonce_id):
-    annonce = Annonce.query.get_or_404(annonce_id)
+    annonce = db.get_or_404(Annonce, annonce_id)
 
     # Volontairement PAS la même liste que pour publier (ROLES_GESTION
     # inclut "enseignant" en général) — ici, un enseignant ne peut
@@ -149,7 +149,7 @@ def supprimer(annonce_id):
 @communication_bp.route("/<int:annonce_id>/fichier")
 @login_required
 def telecharger(annonce_id):
-    annonce = Annonce.query.get_or_404(annonce_id)
+    annonce = db.get_or_404(Annonce, annonce_id)
     if current_user.role != "developpeur" and annonce.destinataire != "tous" and annonce.destinataire != current_user.role:
         abort(403)
     if not annonce.nom_fichier:

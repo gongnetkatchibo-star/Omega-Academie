@@ -21,7 +21,7 @@ def demandes():
 @login_required
 @roles_required(*ROLES_VALIDATION, module="secretariat")
 def approuver(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     user.statut = "actif"
     db.session.commit()
     flash(f"Compte de {user.nom_complet} approuvé.", "info")
@@ -32,7 +32,7 @@ def approuver(user_id):
 @login_required
 @roles_required(*ROLES_VALIDATION, module="secretariat")
 def refuser(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     user.statut = "refuse"
     db.session.commit()
     flash(f"Demande de {user.nom_complet} refusée.", "info")

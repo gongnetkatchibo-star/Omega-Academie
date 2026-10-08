@@ -82,7 +82,7 @@ def index():
 @login_required
 @roles_required(*ROLES_LECTURE)
 def classe(classe_id):
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     _verifier_cycle(classe_obj)
     enseignants = sorted(Enseignant.query.all(), key=lambda e: e.nom_complet)
 
@@ -128,7 +128,7 @@ def classe(classe_id):
 @login_required
 @roles_required(*ROLES_LECTURE)
 def classe_pdf(classe_id):
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     _verifier_cycle(classe_obj)
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()
     from app.services.documents_officiels import contexte_entete_officiel
@@ -161,7 +161,7 @@ def moi_classe(classe_id):
     profil = current_user.profil_enseignant
     if not profil:
         abort(403)
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     # L'enseignant ne peut consulter que les classes où il intervient.
     if not Creneau.query.filter_by(classe_id=classe_id, enseignant_id=profil.id).first():
         abort(403)
@@ -180,7 +180,7 @@ def moi_classe_pdf(classe_id):
     profil = current_user.profil_enseignant
     if not profil:
         abort(403)
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     if not Creneau.query.filter_by(classe_id=classe_id, enseignant_id=profil.id).first():
         abort(403)
     creneaux = Creneau.query.filter_by(classe_id=classe_id).order_by(Creneau.heure_debut).all()

@@ -27,7 +27,7 @@ def tableau():
 @login_required
 @roles_required("enseignant", *ROLES_SUPERVISION)
 def classe(classe_id):
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     cycle = cycle_du_role(current_user.role)
     if cycle and not classe_dans_le_cycle(classe_obj, cycle):
         flash("Cette classe ne relève pas de ton cycle.", "error")

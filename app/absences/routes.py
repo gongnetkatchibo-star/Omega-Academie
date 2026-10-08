@@ -35,7 +35,7 @@ def index():
 @login_required
 @roles_required("enseignant")
 def saisie(classe_id):
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     profil = current_user.profil_enseignant
     enseigne_ici = profil and any(a.classe_id == classe_id for a in profil.affectations)
     if not enseigne_ici:
@@ -123,7 +123,7 @@ def saisie(classe_id):
 @absences_bp.route("/eleve/<int:eleve_id>")
 @login_required
 def historique(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
 
     est_lie_comme_parent = current_user in eleve.parents
     est_soi_meme = current_user.role == "eleve" and eleve.user_id == current_user.id

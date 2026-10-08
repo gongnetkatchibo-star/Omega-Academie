@@ -89,7 +89,7 @@ def nouveau():
 @login_required
 @roles_required(*ROLES_LECTURE)
 def detail(enseignant_id):
-    enseignant = Enseignant.query.get_or_404(enseignant_id)
+    enseignant = db.get_or_404(Enseignant, enseignant_id)
     classes = Classe.query.order_by(Classe.niveau).all()
     return render_template("enseignants/detail.html", enseignant=enseignant, classes=classes)
 
@@ -98,7 +98,7 @@ def detail(enseignant_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="enseignants")
 def affecter(enseignant_id):
-    enseignant = Enseignant.query.get_or_404(enseignant_id)
+    enseignant = db.get_or_404(Enseignant, enseignant_id)
     classe_id = request.form.get("classe_id", type=int)
     matiere = request.form.get("matiere", "").strip()
 

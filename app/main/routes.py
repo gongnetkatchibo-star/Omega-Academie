@@ -264,7 +264,7 @@ def ajouter_numero():
 @main_bp.route("/profil/numero/<int:numero_id>/supprimer", methods=["POST"])
 @login_required
 def supprimer_numero(numero_id):
-    numero = NumeroTelephone.query.get_or_404(numero_id)
+    numero = db.get_or_404(NumeroTelephone, numero_id)
     if numero.user_id != current_user.id:
         from flask import abort
         abort(403)

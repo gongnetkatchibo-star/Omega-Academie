@@ -59,7 +59,7 @@ def saisie(classe_id):
     création d'une nouvelle évaluation."""
     from datetime import datetime
 
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     profil, matieres = _matieres_enseignees(classe_id)
     if current_user.role == "enseignant" and not matieres:
         flash("Vous n'enseignez pas dans cette classe.", "error")
@@ -108,7 +108,7 @@ def saisie(classe_id):
 
 
 def _evaluation_de_l_enseignant(evaluation_id):
-    evaluation = Evaluation.query.get_or_404(evaluation_id)
+    evaluation = db.get_or_404(Evaluation, evaluation_id)
     profil, matieres = _matieres_enseignees(evaluation.classe_id)
     if profil is None or evaluation.matiere not in matieres:
         abort(403)
@@ -203,7 +203,7 @@ def _periode_demandee():
 def _supervision_de_la_classe(classe_id):
     from app.services.permissions import role_a_acces
 
-    classe = Classe.query.get_or_404(classe_id)
+    classe = db.get_or_404(Classe, classe_id)
     if current_user.role != "developpeur" and not role_a_acces(current_user.role, "notes_supervision", ROLES_SUPERVISION):
         abort(403)
     if not classe_dans_le_cycle(classe, cycle_du_role(current_user.role)):
@@ -230,7 +230,7 @@ def _pdf_bulletins(classe, periode, eleves, nom_fichier):
 @notes_bp.route("/bulletin/<int:eleve_id>")
 @login_required
 def bulletin(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     peut_apprecier = _acces_bulletin(eleve)
     periode = _periode_demandee()
     calcul = bulletins_de_la_classe(eleve.classe, periode, eleve.classe.annee_scolaire)
@@ -243,7 +243,7 @@ def bulletin(eleve_id):
 @notes_bp.route("/bulletin/<int:eleve_id>/pdf")
 @login_required
 def bulletin_pdf(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     _acces_bulletin(eleve)
     periode = _periode_demandee()
     reponse = _pdf_bulletins(eleve.classe, periode, [eleve], f"bulletin_{eleve.matricule}_{periode}")
@@ -256,7 +256,7 @@ def bulletin_pdf(eleve_id):
 @notes_bp.route("/bulletin/<int:eleve_id>/appreciation", methods=["POST"])
 @login_required
 def appreciation(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     if not _acces_bulletin(eleve):
         abort(403)
     periode = _periode_demandee()

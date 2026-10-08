@@ -39,7 +39,7 @@ def basculer_verrouillage_utilisateur(user_id):
     """Bloque ou débloque l'accès d'un compte instantanément, sans le
     supprimer ni perdre son historique — distinct de la suppression, qui
     reste réservée au développeur seul (sept. 2026)."""
-    utilisateur = User.query.get_or_404(user_id)
+    utilisateur = db.get_or_404(User, user_id)
 
     if utilisateur.id == current_user.id:
         flash("Tu ne peux pas verrouiller ton propre compte.", "error")
@@ -65,7 +65,7 @@ def basculer_verrouillage_utilisateur(user_id):
 @login_required
 @roles_required("developpeur", module="gestion_roles")
 def modifier_utilisateur(user_id):
-    utilisateur = User.query.get_or_404(user_id)
+    utilisateur = db.get_or_404(User, user_id)
 
     nouveau_role = request.form.get("role")
     nouveau_statut = request.form.get("statut")
@@ -124,7 +124,7 @@ def supprimer_utilisateur(user_id):
     from app.models.journal import JournalAction
     from sqlalchemy import or_
 
-    utilisateur = User.query.get_or_404(user_id)
+    utilisateur = db.get_or_404(User, user_id)
 
     if utilisateur.id == current_user.id:
         flash("Tu ne peux pas supprimer ton propre compte depuis cet écran.", "error")

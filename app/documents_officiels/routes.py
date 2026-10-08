@@ -33,7 +33,7 @@ def signataire_depuis_formulaire():
 
 def _generer(eleve_id, type_doc):
     code, libelle, modele, prefixe_fichier = DOCUMENTS[type_doc]
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
 
     if request.method == "GET":
         return render_template(

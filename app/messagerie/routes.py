@@ -59,7 +59,7 @@ def envoyer():
 @login_required
 @roles_required(*ROLES_GESTION, module="messagerie")
 def fil(parent_id):
-    parent = User.query.get_or_404(parent_id)
+    parent = db.get_or_404(User, parent_id)
     messages = Message.query.filter_by(parent_id=parent_id).order_by(Message.date_envoi).all()
     Message.query.filter_by(parent_id=parent_id, lu_par_ecole=False).update({"lu_par_ecole": True})
     db.session.commit()
@@ -70,7 +70,7 @@ def fil(parent_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="messagerie")
 def repondre(parent_id):
-    parent = User.query.get_or_404(parent_id)
+    parent = db.get_or_404(User, parent_id)
     contenu = request.form.get("contenu", "").strip()
     if not contenu:
         flash("Le message ne peut pas être vide.", "error")

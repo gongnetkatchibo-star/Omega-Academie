@@ -56,7 +56,7 @@ def liste():
 def remise(eleve_id):
     """Remise sur la scolarité : réservée à la direction, comme la
     suppression d'un paiement."""
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     pourcent = request.form.get("remise_pourcent", type=float)
     if pourcent is None or not 0 <= pourcent <= 100:
         flash("La remise doit être comprise entre 0 et 100 %.", "error")
@@ -112,7 +112,7 @@ def frais_annexes():
 def supprimer_frais_annexe(frais_id):
     from app.models.frais_annexe import FraisAnnexe
 
-    frais = FraisAnnexe.query.get_or_404(frais_id)
+    frais = db.get_or_404(FraisAnnexe, frais_id)
     if Paiement.query.filter_by(frais_annexe_id=frais.id).count():
         flash("Impossible de supprimer ce frais : des paiements y sont déjà rattachés.", "error")
     else:
@@ -132,7 +132,7 @@ def relancer(eleve_id):
     famille en cours d'arrangement avec l'école (sept. 2026)."""
     from app.services.notifications import notifier
 
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     resume = resume_paiements(eleve)
 
     if resume["solde"] <= 0:
@@ -162,7 +162,7 @@ def relancer(eleve_id):
 @finances_bp.route("/<int:eleve_id>", methods=["GET", "POST"])
 @login_required
 def detail(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
 
     est_lie_comme_parent = current_user in eleve.parents
     est_gestionnaire = current_user.role in ROLES_GESTION or current_user.role == "developpeur"
@@ -206,7 +206,7 @@ def detail(eleve_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="finances")
 def modifier_paiement(paiement_id):
-    paiement = Paiement.query.get_or_404(paiement_id)
+    paiement = db.get_or_404(Paiement, paiement_id)
     eleve = paiement.eleve
 
     if request.method == "POST":
@@ -258,7 +258,7 @@ def modifier_paiement(paiement_id):
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
 def supprimer_paiement(paiement_id):
-    paiement = Paiement.query.get_or_404(paiement_id)
+    paiement = db.get_or_404(Paiement, paiement_id)
     eleve_id = paiement.eleve_id
     numero = paiement.numero_recu
 

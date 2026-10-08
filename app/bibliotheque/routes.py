@@ -63,7 +63,7 @@ def nouvelle():
 @bibliotheque_bp.route("/<int:ressource_id>/telecharger")
 @login_required
 def telecharger(ressource_id):
-    ressource = Ressource.query.get_or_404(ressource_id)
+    ressource = db.get_or_404(Ressource, ressource_id)
 
     if not ressource.contenu:
         flash("Ce fichier n'est plus disponible — il a été ajouté avant la mise en place du stockage permanent. Merci de le réimporter.", "error")
@@ -82,7 +82,7 @@ def telecharger(ressource_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="bibliotheque")
 def basculer_verrouillage(ressource_id):
-    ressource = Ressource.query.get_or_404(ressource_id)
+    ressource = db.get_or_404(Ressource, ressource_id)
     ressource.consultation_sur_place = not ressource.consultation_sur_place
     db.session.commit()
     etat = "verrouillée (consultation sur place)" if ressource.consultation_sur_place else "déverrouillée (téléchargeable)"
@@ -96,7 +96,7 @@ def supprimer(ressource_id):
     """Le bibliothécaire et la direction peuvent supprimer n'importe
     quelle ressource ; un enseignant ne peut supprimer que celles qu'il
     a lui-même ajoutées (même logique que les annonces, sept. 2026)."""
-    ressource = Ressource.query.get_or_404(ressource_id)
+    ressource = db.get_or_404(Ressource, ressource_id)
 
     ROLES_SUPPRESSION_LIBRE = ["bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "developpeur"]
     est_auteur = ressource.ajoute_par_id == current_user.id

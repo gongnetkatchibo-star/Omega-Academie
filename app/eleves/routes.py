@@ -167,7 +167,7 @@ def _peut_voir(eleve):
 def photo(eleve_id):
     from flask import Response
 
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     if not _peut_voir(eleve) or not eleve.photo:
         abort(404)
     reponse = Response(eleve.photo, mimetype=eleve.photo_mime or "image/jpeg")
@@ -179,7 +179,7 @@ def photo(eleve_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
 def modifier(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     if not classe_dans_le_cycle(eleve.classe, cycle_du_role(current_user.role)):
         abort(403)
 
@@ -286,7 +286,7 @@ def nouveau():
 @eleves_bp.route("/<int:eleve_id>")
 @login_required
 def detail(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     # Accès basé sur la relation, pas sur le rôle : n'importe quel compte
     # (personnel compris) peut être parent d'un élève. Le personnel de
     # gestion voit toujours tout ; les autres doivent être un parent lié.
@@ -314,7 +314,7 @@ def detail(eleve_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
 def ajouter_parent(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     parent_id = request.form.get("parent_id", type=int)
 
     # Tout compte actif peut être lié comme parent (personnel compris),
@@ -343,8 +343,8 @@ def ajouter_parent(eleve_id):
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
 def retirer_parent(eleve_id, parent_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
-    parent = User.query.get_or_404(parent_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
+    parent = db.get_or_404(User, parent_id)
     if parent in eleve.parents:
         eleve.parents.remove(parent)
         eleve.actualiser_statut_dossier()
@@ -437,7 +437,7 @@ def passage_en_masse():
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
 def passage(eleve_id):
-    eleve = Eleve.query.get_or_404(eleve_id)
+    eleve = db.get_or_404(Eleve, eleve_id)
     classe_actuelle = eleve.classe
     annee = Eleve.annee_scolaire_courante()
 

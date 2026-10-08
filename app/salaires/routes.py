@@ -147,7 +147,7 @@ def marquer_paye(salaire_id):
     """Enregistre le versement — crée automatiquement la dépense
     correspondante dans la Caisse, même principe que les paiements de
     scolarité (Option A, sept. 2026) : jamais de ressaisie."""
-    salaire = Salaire.query.get_or_404(salaire_id)
+    salaire = db.get_or_404(Salaire, salaire_id)
     if salaire.statut == "paye":
         flash("Ce salaire est déjà marqué comme payé.", "error")
         return redirect(url_for("salaires.liste"))
@@ -192,7 +192,7 @@ def marquer_paye(salaire_id):
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
 def supprimer(salaire_id):
-    salaire = Salaire.query.get_or_404(salaire_id)
+    salaire = db.get_or_404(Salaire, salaire_id)
     journaliser("suppression_salaire", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode}", cible_type="Salaire", cible_id=salaire.id)
     MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).delete()
     db.session.delete(salaire)

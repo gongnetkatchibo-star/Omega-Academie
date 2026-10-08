@@ -107,7 +107,7 @@ def nouvelle():
 @login_required
 @roles_required(*ROLES_FRAIS)
 def modifier_frais(classe_id):
-    classe_obj = Classe.query.get_or_404(classe_id)
+    classe_obj = db.get_or_404(Classe, classe_id)
     if not classe_dans_le_cycle(classe_obj, cycle_du_role(current_user.role)):
         abort(403)
     inscription = _montant_formulaire("frais_inscription")

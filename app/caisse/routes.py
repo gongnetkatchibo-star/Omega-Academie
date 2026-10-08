@@ -112,7 +112,7 @@ def modifier(mouvement_id):
     """Correction d'un mouvement saisi manuellement uniquement — une ligne
     automatique (paiement de scolarité) se corrige depuis Finances, pour
     ne jamais avoir deux écrans qui modifient la même donnée."""
-    mouvement = MouvementCaisse.query.get_or_404(mouvement_id)
+    mouvement = db.get_or_404(MouvementCaisse, mouvement_id)
     if mouvement.automatique:
         flash("Cette ligne vient d'un paiement de scolarité : corrige-la depuis la fiche Finances de l'élève.", "error")
         return redirect(url_for("caisse.liste"))
@@ -163,7 +163,7 @@ def modifier(mouvement_id):
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
 def supprimer(mouvement_id):
-    mouvement = MouvementCaisse.query.get_or_404(mouvement_id)
+    mouvement = db.get_or_404(MouvementCaisse, mouvement_id)
     if mouvement.automatique:
         flash("Cette ligne vient d'un paiement de scolarité : supprime le paiement depuis Finances plutôt que la ligne de Caisse.", "error")
         return redirect(url_for("caisse.liste"))
@@ -211,7 +211,7 @@ def recu_pdf(mouvement_id):
     """Reçu téléchargeable pour une ligne de caisse — exigé par la
     direction pour les paiements de scolarité, utile aussi pour toute
     autre ligne officielle."""
-    m = MouvementCaisse.query.get_or_404(mouvement_id)
+    m = db.get_or_404(MouvementCaisse, mouvement_id)
     from app.services.documents_officiels import contexte_entete_officiel
     html = render_template("caisse/recu_pdf.html", etablissement=nom_ecole_courante(), m=m, **contexte_entete_officiel())
     reponse = make_response(html_vers_pdf(html))
