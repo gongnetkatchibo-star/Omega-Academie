@@ -1183,3 +1183,89 @@ INTERFACE.update({
     "Fin de scolarité": "نهاية الدراسة",
     "Sortant (fin d'année)": "مغادر (نهاية السنة)",
 })
+
+
+# --- Réglages par école : permissions, connexion, couleurs, paie (oct. 2026)
+INTERFACE.update({
+    "Réglage propre à l'école :": "إعداد خاص بالمدرسة :",
+    "Cette école a ses propres réglages.": "لهذه المدرسة إعداداتها الخاصة.",
+    "Cette école suit le réglage commun à toutes les écoles.": "تتبع هذه المدرسة الإعداد المشترك بين كل المدارس.",
+    "Seules les cases qui diffèrent du réglage commun sont retenues pour l'école ; le reste suit le réglage commun.":
+        "لا تُحفظ للمدرسة إلا الخانات المختلفة عن الإعداد المشترك، والباقي يتبع الإعداد المشترك.",
+    "Réglage commun à toutes les écoles : il s'applique partout où une école n'a rien décidé elle-même.":
+        "الإعداد المشترك بين كل المدارس : يُطبَّق حيثما لم تقرر المدرسة شيئًا بنفسها.",
+    "Voir le réglage commun à toutes les écoles": "عرض الإعداد المشترك بين كل المدارس",
+    "Voir le réglage de l'école en cours": "عرض إعداد المدرسة الحالية",
+    "Les zones techniques (rôles, journaux, sauvegarde) se règlent avec le développeur de la plateforme.":
+        "تُضبط المناطق التقنية (الأدوار، السجلات، النسخ الاحتياطي) مع مطوّر المنصة.",
+    "Revenir au réglage commun": "العودة إلى الإعداد المشترك",
+    "Effacer les réglages propres à cette école ?": "حذف الإعدادات الخاصة بهذه المدرسة؟",
+    "L'école suit de nouveau le réglage commun.": "عادت المدرسة إلى اتباع الإعداد المشترك.",
+    "Couleurs de l'interface": "ألوان الواجهة",
+    "Le menu, les en-têtes et les boutons prennent les couleurs de l'école. Une couleur trop claire est refusée : le texte blanc doit rester lisible.":
+        "تأخذ القائمة والعناوين والأزرار ألوان المدرسة. يُرفض اللون الفاتح جدًا : يجب أن يبقى النص الأبيض مقروءًا.",
+    "Couleur principale": "اللون الرئيسي",
+    "Couleur d'accent": "لون التمييز",
+    "Garder les couleurs de la plateforme": "الإبقاء على ألوان المنصة",
+    "Couleur principale : format attendu #RRVVBB.": "اللون الرئيسي : الصيغة المطلوبة #RRVVBB.",
+    "Couleur d'accent : format attendu #RRVVBB.": "لون التمييز : الصيغة المطلوبة #RRVVBB.",
+    "Couleur principale trop claire : le texte blanc serait illisible. Choisis une teinte plus foncée.":
+        "اللون الرئيسي فاتح جدًا : سيصبح النص الأبيض غير مقروء. اختر درجة أغمق.",
+    "Couleur d'accent trop claire : le texte blanc serait illisible. Choisis une teinte plus foncée.":
+        "لون التمييز فاتح جدًا : سيصبح النص الأبيض غير مقروء. اختر درجة أغمق.",
+    "Sécurité des connexions": "أمان تسجيل الدخول",
+    "Code par email à chaque connexion de la direction et de la comptabilité": "رمز عبر البريد الإلكتروني عند كل دخول للإدارة والمحاسبة",
+    "Avant d'activer : vérifie que les emails partent bien (journal des emails) et que chaque membre de la direction a une adresse email qu'il consulte. Un appareil peut être marqué « de confiance » pendant 30 jours.":
+        "قبل التفعيل : تأكد من أن الرسائل تُرسل فعلًا (سجل البريد) وأن لكل عضو في الإدارة بريدًا يطّلع عليه. يمكن اعتبار جهاز « موثوقًا » لمدة 30 يومًا.",
+    "Code de connexion": "رمز الدخول",
+    "Pour protéger les comptes de la direction, un code à 6 chiffres vient d'être envoyé à":
+        "لحماية حسابات الإدارة، أُرسل للتو رمز من 6 أرقام إلى",
+    "Code reçu par email": "الرمز المستلم عبر البريد",
+    "Faire confiance à cet appareil pendant 30 jours": "الوثوق بهذا الجهاز لمدة 30 يومًا",
+    "À ne cocher que sur ton propre téléphone ou ordinateur, jamais sur un appareil partagé.":
+        "لا تحدد هذا الخيار إلا على هاتفك أو حاسوبك الخاص، وليس على جهاز مشترك أبدًا.",
+    "Le code de connexion n'a pas pu partir par email. Réessaie dans quelques minutes.":
+        "تعذّر إرسال رمز الدخول عبر البريد. أعد المحاولة بعد بضع دقائق.",
+    "Trop de codes faux. Reconnecte-toi pour recevoir un nouveau code.": "رموز خاطئة كثيرة. سجّل الدخول من جديد لتلقي رمز جديد.",
+    "Code invalide ou expiré.": "الرمز غير صالح أو منتهي الصلاحية.",
+    "Nouveau code envoyé.": "أُرسل رمز جديد.",
+    "Retour à la connexion": "العودة إلى تسجيل الدخول",
+    "Fiche de paie (PDF)": "كشف الراتب (PDF)",
+    "Mes fiches de paie": "كشوف رواتبي",
+    "Net à payer": "صافي الأجر",
+    "Aucun salaire enregistré à ton nom.": "لا يوجد راتب مسجل باسمك.",
+    "Primes et retenues (facultatif)": "العلاوات والاقتطاعات (اختياري)",
+    "Primes et indemnités": "العلاوات والتعويضات",
+    "Motif des primes": "سبب العلاوات",
+    "Retenues (avance, absences…)": "الاقتطاعات (تسبيق، غيابات…)",
+    "Motif des retenues": "سبب الاقتطاعات",
+    "Net à payer = somme ci-dessus + primes − retenues. La fiche de paie détaille chaque ligne.":
+        "صافي الأجر = المبلغ أعلاه + العلاوات − الاقتطاعات. يفصّل كشف الراتب كل سطر.",
+    "Les retenues dépassent le salaire : le net à payer doit rester positif.":
+        "الاقتطاعات تتجاوز الراتب : يجب أن يبقى صافي الأجر موجبًا.",
+    "Fiche": "الكشف",
+})
+
+
+# --- Noms des rôles et des modules de la matrice des permissions (oct. 2026)
+INTERFACE.update({
+    "Développeur": "المطوّر",
+    "Super-administrateur": "المشرف العام للمنصة",
+    "Fondateur": "المؤسس",
+    "Administrateur général": "المدير العام",
+    "Directeur du primaire": "مدير الابتدائي",
+    "Directeur du collège": "مدير الإعدادي",
+    "Secrétaire": "الكاتب",
+    "Comptable": "المحاسب",
+    "Responsable pédagogique": "المسؤول التربوي",
+    "Bibliothécaire": "أمين المكتبة",
+    "Bulletins (consultation)": "كشوف الدرجات (اطلاع)",
+    "Annonces (publication)": "الإعلانات (نشر)",
+    "Validation des comptes": "المصادقة على الحسابات",
+    "Alertes (absences/moyennes)": "التنبيهات (الغيابات/المعدلات)",
+    "Messagerie parent-école": "المراسلة بين الأولياء والمدرسة",
+    "Cahier de textes (consultation)": "دفتر النصوص (اطلاع)",
+    "Calendrier scolaire (modification)": "الرزنامة المدرسية (تعديل)",
+    "Attribution des rôles": "إسناد الأدوار",
+    "Sauvegarde des données": "النسخ الاحتياطي للبيانات",
+})

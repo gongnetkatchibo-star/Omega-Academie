@@ -29,7 +29,7 @@
       </select>
     </label>
     <label>{{ _("Année") }}
-      <input type="number" name="annee" value="2026" required>
+      <input type="number" name="annee" value="{{ annee_courante }}" min="2000" max="2100" required>
     </label>
 
     <div>
@@ -41,6 +41,15 @@
       <p><strong>{{ _("Total :") }} <span id="total-billets">0</span></strong></p>
       <input type="hidden" name="montant" id="champ-montant-total" value="0">
     </div>
+
+    <details>
+      <summary>{{ _("Primes et retenues (facultatif)") }}</summary>
+      <label>{{ _("Primes et indemnités") }}<input type="number" name="primes" min="0" step="1" value="0"></label>
+      <label>{{ _("Motif des primes") }}<input type="text" name="motif_primes" maxlength="150"></label>
+      <label>{{ _("Retenues (avance, absences…)") }}<input type="number" name="retenues" min="0" step="1" value="0"></label>
+      <label>{{ _("Motif des retenues") }}<input type="text" name="motif_retenues" maxlength="150"></label>
+      <p class="lien-secondaire">{{ _("Net à payer = somme ci-dessus + primes − retenues. La fiche de paie détaille chaque ligne.") }}</p>
+    </details>
 
     <label>{{ _("Email de contact (pour l'avis de paiement)") }}
       <input type="email" name="email_contact" id="champ-email-contact">

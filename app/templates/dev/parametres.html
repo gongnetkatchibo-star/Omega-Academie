@@ -20,6 +20,8 @@
     <label>{{ _("Filigrane des documents") }}{% if etab.filigrane %} <img src="{{ url_for('main.image_ecole', image='filigrane') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
       <input type="file" name="filigrane" accept="image/png,image/jpeg,image/webp"></label>
 
+    {% include "dev/_couleurs_securite.html" %}
+
     <h2>{{ _("Signataire des documents") }}</h2>
     <label>{{ _("Nom") }}<input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}"></label>
     <label>{{ _("Qualité") }}<input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or 'Directeur' }}"></label>

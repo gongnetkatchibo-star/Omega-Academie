@@ -49,10 +49,11 @@
             <td>{{ s.telephone_contact or "—" }}</td>
             <td>{{ s.libelle_periode }}</td>
             <td>{{ s.montant|fcfa }}</td>
-            <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ s.statut }}</td>
+            <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ _("Payé" if s.statut == "paye" else "Impayé") }}</td>
             <td>{{ s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "—" }}</td>
             <td>
               <div class="actions-tableau">
+                <a href="{{ url_for('salaires.fiche', salaire_id=s.id) }}" title="{{ _('Fiche de paie (PDF)') }}">{{ icone("telecharger") }} {{ _("Fiche") }}</a>
                 {% if s.statut == "impaye" %}
                   <form method="post" action="{{ url_for('salaires.marquer_paye', salaire_id=s.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -1,0 +1,13 @@
+<h2>{{ _("Couleurs de l'interface") }}</h2>
+<p class="lien-secondaire">{{ _("Le menu, les en-têtes et les boutons prennent les couleurs de l'école. Une couleur trop claire est refusée : le texte blanc doit rester lisible.") }}</p>
+<div class="ligne-couleurs">
+  <label>{{ _("Couleur principale") }}<input type="color" name="couleur_theme" value="{{ (etab.couleur_theme if etab else None) or '#0F5FA6' }}"></label>
+  <label>{{ _("Couleur d'accent") }}<input type="color" name="couleur_accent" value="{{ (etab.couleur_accent if etab else None) or '#00A99D' }}"></label>
+</div>
+<label class="ligne-case"><input type="checkbox" name="couleurs_plateforme" {% if not etab or (not etab.couleur_theme and not etab.couleur_accent) %}checked{% endif %}>
+  {{ _("Garder les couleurs de la plateforme") }}</label>
+
+<h2>{{ _("Sécurité des connexions") }}</h2>
+<label class="ligne-case"><input type="checkbox" name="double_authentification" {% if etab and etab.double_authentification %}checked{% endif %}>
+  {{ _("Code par email à chaque connexion de la direction et de la comptabilité") }}</label>
+<p class="lien-secondaire">{{ _("Avant d'activer : vérifie que les emails partent bien (journal des emails) et que chaque membre de la direction a une adresse email qu'il consulte. Un appareil peut être marqué « de confiance » pendant 30 jours.") }}</p>

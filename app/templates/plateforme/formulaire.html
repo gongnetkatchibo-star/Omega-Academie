@@ -22,6 +22,8 @@
     <label>{{ _("Filigrane des documents") }}{% if etab and etab.filigrane %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='filigrane') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
       <input type="file" name="filigrane" accept="image/png,image/jpeg,image/webp"></label>
 
+    {% include "dev/_couleurs_securite.html" %}
+
     {% if not etab %}
       <h2>{{ _("Premier compte fondateur") }}</h2>
       <label>{{ _("Nom complet") }}<input type="text" name="fondateur_nom" value="{{ form.get('fondateur_nom', '') }}" required></label>

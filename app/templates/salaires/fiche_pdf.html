@@ -1,0 +1,44 @@
+{% from "documents_officiels/_bilingue.html" import ar with context %}
+<html>
+<head><meta charset="utf-8">
+<style>
+  @page { size: 595pt 842pt; margin: 40pt 50pt 40pt 50pt; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #000; font-size: 11pt; }
+  .titre { text-align: center; font-weight: bold; font-size: 15pt; margin: 14pt 0 2pt 0; }
+  .sous { text-align: center; color: #555; font-size: 10pt; margin: 0 0 14pt 0; }
+  table.infos, table.lignes { width: 100%; border-collapse: collapse; }
+  table.infos td { padding: 4pt 6pt; font-size: 10.5pt; }
+  table.infos td.label { color: #555; width: 30%; }
+  table.lignes { margin-top: 14pt; }
+  table.lignes th { background: #EEF2F5; text-align: left; padding: 6pt; font-size: 10pt; border-bottom: 1pt solid #999; }
+  table.lignes td { padding: 6pt; border-bottom: 0.5pt solid #ccc; font-size: 10.5pt; }
+  td.montant, th.montant { text-align: right; width: 28%; }
+  tr.net td { font-weight: bold; font-size: 12pt; border-top: 1pt solid #000; border-bottom: none; }
+</style>
+</head>
+<body>
+  {% include "documents_officiels/_entete.html" %}
+  <p class="titre">FICHE DE PAIE{% if bilingue %} &nbsp; {{ ar("كشف الراتب", "font-size:14pt;") }}{% endif %}</p>
+  <p class="sous">{{ s.libelle_periode }} · N° {{ reference }}</p>
+
+  <table class="infos">
+    <tr><td class="label">Bénéficiaire</td><td><strong>{{ s.personnel.nom_complet }}</strong></td></tr>
+    {% if s.fonction %}<tr><td class="label">Fonction</td><td>{{ s.fonction }}</td></tr>{% endif %}
+    {% if s.telephone_contact %}<tr><td class="label">Téléphone</td><td>{{ s.telephone_contact }}</td></tr>{% endif %}
+    <tr><td class="label">Période</td><td>{{ s.libelle_periode }}</td></tr>
+    <tr><td class="label">Statut</td><td>{% if s.statut == "paye" %}Payé{% if s.date_paiement %} le {{ s.date_paiement.strftime("%d/%m/%Y") }}{% endif %}{% else %}Non encore payé{% endif %}</td></tr>
+  </table>
+
+  <table class="lignes">
+    <thead><tr><th>Élément</th><th class="montant">Montant</th></tr></thead>
+    <tbody>
+      <tr><td>Salaire de base</td><td class="montant">{{ s.base|fcfa }}</td></tr>
+      {% if s.primes %}<tr><td>Primes et indemnités{% if s.motif_primes %} — {{ s.motif_primes }}{% endif %}</td><td class="montant">+ {{ s.primes|fcfa }}</td></tr>{% endif %}
+      {% if s.retenues %}<tr><td>Retenues{% if s.motif_retenues %} — {{ s.motif_retenues }}{% endif %}</td><td class="montant">− {{ s.retenues|fcfa }}</td></tr>{% endif %}
+      <tr class="net"><td>Net à payer{% if bilingue %} &nbsp; {{ ar("صافي الأجر", "font-size:11pt;") }}{% endif %}</td><td class="montant">{{ s.montant|fcfa }}</td></tr>
+    </tbody>
+  </table>
+
+  {% include "documents_officiels/_signature.html" %}
+</body>
+</html>

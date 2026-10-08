@@ -88,6 +88,9 @@ class Config:
     # Jamais en production : un lien de réinitialisation ou un code affiché
     # à l'écran permettrait à n'importe qui de prendre un compte.
     AFFICHER_SECRETS_SANS_EMAIL = False
+    # Code par email à chaque connexion du compte développeur (super-
+    # administrateur) — à activer une fois l'envoi d'emails vérifié.
+    DOUBLE_AUTH_DEVELOPPEUR = os.environ.get("DOUBLE_AUTH_DEVELOPPEUR", "").lower() in ("1", "oui", "true")
 
     # Déconnexion automatique après ce temps sans activité.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_HEURES", "4")))

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Mes fiches de paie") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Mon profil", url_for('main.profil')), ("Mes fiches de paie", None)) }}
+  {{ banniere("salaires", "Mes fiches de paie") }}
+  {% if salaires %}
+    <table class="table">
+      <thead><tr><th>{{ _("Période") }}</th><th>{{ _("Net à payer") }}</th><th>{{ _("Statut") }}</th><th></th></tr></thead>
+      <tbody>
+        {% for s in salaires %}
+          <tr>
+            <td>{{ s.libelle_periode }}</td>
+            <td>{{ s.montant|fcfa }}</td>
+            <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ _("Payé" if s.statut == "paye" else "Impayé") }}</td>
+            <td><a href="{{ url_for('salaires.fiche', salaire_id=s.id) }}">{{ icone("telecharger") }} {{ _("Fiche de paie (PDF)") }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucun salaire enregistré à ton nom.") }}
+  {% endif %}
+{% endblock %}

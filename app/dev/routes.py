@@ -210,44 +210,90 @@ def journal():
     )
 
 
+def _portee_permissions():
+    """École dont on règle les permissions, ou None pour le réglage commun
+    à toutes les écoles (développeur seulement)."""
+    from app.services.tenant import ecole_courante_id
+
+    if current_user.role == "developpeur" and request.values.get("portee") == "commune":
+        return None
+    return ecole_courante_id()
+
+
 @dev_bp.route("/permissions")
 @login_required
-@roles_required("developpeur")
+@roles_required("developpeur", "fondateur")
 def permissions():
+    from app.models.permission import MODULES_TECHNIQUES
+    from app.services.tenant import ecole_courante
+
     modules_cles = [cle for cle, _ in MODULES]
-    etat = toutes_les_permissions(ROLES_MATRICE, modules_cles)
+    ecole_id = _portee_permissions()
+    etat = toutes_les_permissions(ROLES_MATRICE, modules_cles, ecole_id)
+    personnalise = ecole_id is not None and Permission.query.filter_by(ecole_id=ecole_id).first() is not None
     return render_template(
         "dev/permissions.html", roles=ROLES_MATRICE, modules=MODULES, etat=etat,
-        roles_par_defaut=ROLES_PAR_DEFAUT,
+        roles_par_defaut=ROLES_PAR_DEFAUT, portee="commune" if ecole_id is None else "ecole",
+        ecole_reglee=ecole_courante() if ecole_id else None, personnalise=personnalise,
+        verrouilles=[] if current_user.role == "developpeur" else MODULES_TECHNIQUES,
     )
 
 
 @dev_bp.route("/permissions/enregistrer", methods=["POST"])
 @login_required
-@roles_required("developpeur")
+@roles_required("developpeur", "fondateur")
 def enregistrer_permissions():
-    """Une case cochée = accès autorisé pour ce rôle sur ce module ; une
-    case décochée envoyée = accès explicitement refusé. On enregistre une
-    ligne Permission pour CHAQUE couple (rôle, module) affiché — qu'elle
-    confirme ou inverse la valeur par défaut — pour que l'écran affiche
-    toujours l'état réel, sans ambiguïté."""
+    """Une case cochée = accès autorisé pour ce rôle sur ce module.
+
+    Réglage commun : une ligne par couple (rôle, module) affiché.
+    Réglage d'une école : on ne garde que ce qui diffère du réglage
+    commun, pour que l'école suive les changements communs ultérieurs
+    sur tout ce qu'elle n'a pas modifié elle-même."""
+    from app.models.permission import MODULES_TECHNIQUES
+
     modules_cles = [cle for cle, _ in MODULES]
+    if current_user.role != "developpeur":
+        # Le fondateur ne touche pas aux zones techniques.
+        modules_cles = [m for m in modules_cles if m not in MODULES_TECHNIQUES]
+    ecole_id = _portee_permissions()
+    commun = toutes_les_permissions(ROLES_MATRICE, modules_cles, None)
+    lignes = {(p.role, p.module): p for p in Permission.query.filter_by(ecole_id=ecole_id).all()}
 
     for role in ROLES_MATRICE:
         for module in modules_cles:
-            case = f"{role}__{module}"
-            autorise = request.form.get(case) == "on"
-
-            ligne = Permission.query.filter_by(role=role, module=module).first()
-            if ligne:
+            autorise = request.form.get(f"{role}__{module}") == "on"
+            ligne = lignes.get((role, module))
+            if ecole_id is not None and autorise == commun[(role, module)]:
+                if ligne:
+                    db.session.delete(ligne)
+            elif ligne:
                 ligne.autorise = autorise
             else:
-                db.session.add(Permission(role=role, module=module, autorise=autorise))
+                db.session.add(Permission(ecole_id=ecole_id, role=role, module=module, autorise=autorise))
 
-    journaliser("modification_permissions", details="Matrice de permissions mise à jour")
+    journaliser("modification_permissions", details=(
+        "Réglage commun des permissions" if ecole_id is None else "Permissions de l'école mises à jour"
+    ))
     db.session.commit()
     vider_cache()
     flash("Permissions mises à jour.", "info")
+    return redirect(url_for("dev.permissions", portee="commune" if ecole_id is None else None))
+
+
+@dev_bp.route("/permissions/reinitialiser", methods=["POST"])
+@login_required
+@roles_required("developpeur", "fondateur")
+def reinitialiser_permissions():
+    """L'école reprend le réglage commun à toutes les écoles."""
+    from app.services.tenant import ecole_courante_id
+
+    ecole_id = ecole_courante_id()
+    if ecole_id is not None:
+        Permission.query.filter_by(ecole_id=ecole_id).delete()
+        journaliser("modification_permissions", details="Permissions de l'école ramenées au réglage commun")
+        db.session.commit()
+        vider_cache()
+        flash("L'école suit de nouveau le réglage commun.", "info")
     return redirect(url_for("dev.permissions"))
 
 
@@ -297,6 +343,9 @@ def parametres():
                 images[champ] = (contenu, info)
             elif info:
                 erreurs.append(f"{champ.capitalize()} : {info}")
+        from app.services.theme import lire_couleurs_formulaire
+        couleurs, erreurs_couleurs = lire_couleurs_formulaire(request.form)
+        erreurs += erreurs_couleurs
         if erreurs:
             for e in erreurs:
                 flash(e, "error")
@@ -309,6 +358,8 @@ def parametres():
         ecole.nom_arabe = request.form.get("nom_arabe", "").strip() or None
         ecole.ville_arabe = request.form.get("ville_arabe", "").strip() or None
         parametre.documents_bilingues = request.form.get("documents_bilingues") == "on"
+        ecole.couleur_theme, ecole.couleur_accent = couleurs["couleur_theme"], couleurs["couleur_accent"]
+        ecole.double_authentification = request.form.get("double_authentification") == "on"
         for champ, (contenu, mime) in images.items():
             setattr(ecole, champ, contenu)
             setattr(ecole, f"{champ}_mime", mime)

@@ -188,6 +188,19 @@ def create_app(config_name=None):
     }
 
     @app.template_global()
+    def theme_ecole():
+        """Feuille de style des couleurs choisies par l'école, ou "" pour
+        garder celles de la plateforme."""
+        from app.services.tenant import ecole_courante
+        from app.services.theme import variables_css
+
+        variables = variables_css(ecole_courante())
+        if not variables:
+            return ""
+        regles = "".join(f"{nom}:{valeur};" for nom, valeur in variables.items())
+        return Markup(f"<style>:root{{{regles}}}</style>")
+
+    @app.template_global()
     def icone(cle):
         """Icône d'un module, dessinée en SVG (fichier _icones.html inclus
         une fois par base.html). `cle` peut aussi être directement le nom
@@ -326,6 +339,11 @@ def create_app(config_name=None):
             from app.services.permissions import role_a_acces
             return role_a_acces(current_user.role, module, roles)
         return current_user.role == "developpeur" or current_user.role in roles
+
+    @app.template_filter("role_libelle")
+    def role_libelle(role):
+        from app.models.user import LIBELLES_ROLES
+        return LIBELLES_ROLES.get(role, role)
 
     @app.template_filter("initiales")
     def initiales(nom_complet):
@@ -525,8 +543,9 @@ def create_app(config_name=None):
         ajouter_colonnes_manquantes(app, db)
         from app.services.auto_migration import creer_index_manquants
         creer_index_manquants(app, db)
-        from app.services.migration_saas import migrer_vers_multi_etablissements
+        from app.services.migration_saas import migrer_vers_multi_etablissements, migrer_permissions_par_ecole
         migrer_vers_multi_etablissements(app, db)
+        migrer_permissions_par_ecole(app, db)
         from app.services.evaluations import rattacher_notes_sans_evaluation
         rattacher_notes_sans_evaluation(app)
 

@@ -9,6 +9,10 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
+  {% if current_user.role not in ("parent", "eleve") %}
+    <p class="lien-secondaire"><a href="{{ url_for('salaires.mes_fiches') }}">{{ icone("billets") }} {{ _("Mes fiches de paie") }}</a></p>
+  {% endif %}
+
   <h2>{{ _("Genre") }}</h2>
   <form method="post" action="{{ url_for('main.modifier_genre') }}" class="formulaire-filtre">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

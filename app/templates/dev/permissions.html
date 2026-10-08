@@ -1,29 +1,46 @@
 {% extends "base.html" %}
 {% block title %}{{ _("Permissions") }}{% endblock %}
 {% block content %}
+  {{ fil_ariane(("Permissions par rôle", None)) }}
   <h1>{{ _("Permissions par rôle") }}</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
+  {% if portee == "ecole" %}
+    <p>{{ _("Réglage propre à l'école :") }} <strong>{{ ecole_reglee.nom if ecole_reglee else "—" }}</strong>.
+      {% if personnalise %}{{ _("Cette école a ses propres réglages.") }}{% else %}{{ _("Cette école suit le réglage commun à toutes les écoles.") }}{% endif %}</p>
+    <p class="lien-secondaire">{{ _("Seules les cases qui diffèrent du réglage commun sont retenues pour l'école ; le reste suit le réglage commun.") }}</p>
+  {% else %}
+    <p>{{ _("Réglage commun à toutes les écoles : il s'applique partout où une école n'a rien décidé elle-même.") }}</p>
+  {% endif %}
+  {% if current_user.role == "developpeur" %}
+    <p class="lien-secondaire">
+      {% if portee == "ecole" %}<a href="{{ url_for('dev.permissions', portee='commune') }}">{{ _("Voir le réglage commun à toutes les écoles") }}</a>
+      {% else %}<a href="{{ url_for('dev.permissions') }}">{{ _("Voir le réglage de l'école en cours") }}</a>{% endif %}
+    </p>
+  {% endif %}
+
   <form method="post" action="{{ url_for('dev.enregistrer_permissions') }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="portee" value="{{ portee }}">
     <div style="overflow-x:auto;">
       <table class="table-dev">
         <thead>
           <tr>
             <th>{{ _("Rôle") }}</th>
-            {% for cle, libelle in modules %}<th>{{ libelle }}</th>{% endfor %}
+            {% for cle, libelle in modules %}<th>{{ _(libelle) }}</th>{% endfor %}
           </tr>
         </thead>
         <tbody>
           {% for role in roles %}
             <tr>
-              <td>{{ role }}</td>
+              <td>{{ _(role|role_libelle) }}</td>
               {% for cle, libelle in modules %}
                 <td style="text-align:center;">
-                  <input type="checkbox" name="{{ role }}__{{ cle }}" {% if etat[(role, cle)] %}checked{% endif %}>
+                  <input type="checkbox" name="{{ role }}__{{ cle }}" aria-label="{{ _(role|role_libelle) }} — {{ _(libelle) }}"
+                    {% if etat[(role, cle)] %}checked{% endif %} {% if cle in verrouilles %}disabled{% endif %}>
                 </td>
               {% endfor %}
             </tr>
@@ -31,6 +48,14 @@
         </tbody>
       </table>
     </div>
-    <button type="submit" style="margin-top:16px;">{{ _("Enregistrer les permissions") }}</button>
+    {% if verrouilles %}<p class="lien-secondaire">{{ _("Les zones techniques (rôles, journaux, sauvegarde) se règlent avec le développeur de la plateforme.") }}</p>{% endif %}
+    <button type="submit" class="bouton bouton-plein" style="margin-top:16px;">{{ _("Enregistrer les permissions") }}</button>
   </form>
+
+  {% if portee == "ecole" and personnalise %}
+    <form method="post" action="{{ url_for('dev.reinitialiser_permissions') }}" onsubmit="return confirm({{ _('Effacer les réglages propres à cette école ?')|tojson|forceescape }});" style="margin-top:12px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">{{ _("Revenir au réglage commun") }}</button>
+    </form>
+  {% endif %}
 {% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Code de connexion") }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Code de connexion") }}</h1>
+  <p>{{ _("Pour protéger les comptes de la direction, un code à 6 chiffres vient d'être envoyé à") }} <strong>{{ email }}</strong>.</p>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" autocomplete="off" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Code reçu par email") }}
+      <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus>
+    </label>
+    <label class="ligne-case"><input type="checkbox" name="se_souvenir"> {{ _("Faire confiance à cet appareil pendant 30 jours") }}</label>
+    <p class="lien-secondaire">{{ _("À ne cocher que sur ton propre téléphone ou ordinateur, jamais sur un appareil partagé.") }}</p>
+    <button type="submit" class="bouton bouton-plein">{{ _("Valider") }}</button>
+  </form>
+  <form method="post" action="{{ url_for('auth.renvoyer_code_connexion') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit">{{ _("Renvoyer le code") }}</button>
+  </form>
+  <p class="lien-secondaire"><a href="{{ url_for('auth.connexion') }}">{{ _("Retour à la connexion") }}</a></p>
+{% endblock %}

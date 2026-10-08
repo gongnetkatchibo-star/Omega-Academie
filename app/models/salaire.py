@@ -36,8 +36,20 @@ class Salaire(AppartientEcole, db.Model):
     email_contact = db.Column(db.String(150))
     telephone_contact = db.Column(db.String(30))
 
+    # Détail de la fiche de paie (oct. 2026) : net = base + primes - retenues.
+    # Vides sur les salaires plus anciens : la base est alors le montant.
+    salaire_base = db.Column(db.Float)
+    primes = db.Column(db.Float)
+    motif_primes = db.Column(db.String(150))
+    retenues = db.Column(db.Float)
+    motif_retenues = db.Column(db.String(150))
+
     personnel = db.relationship("User", foreign_keys=[personnel_id])
     responsable = db.relationship("User", foreign_keys=[responsable_id])
+
+    @property
+    def base(self):
+        return self.salaire_base if self.salaire_base is not None else self.montant
 
     @property
     def libelle_periode(self):

@@ -29,7 +29,7 @@ def _charger():
     if etat is None or time.monotonic() - etat["lu_le"] >= duree:
         etat = {
             "lu_le": time.monotonic(),
-            "valeurs": {(p.role, p.module): p.autorise for p in Permission.query.all()},
+            "valeurs": {(p.ecole_id, p.role, p.module): p.autorise for p in Permission.query.all()},
         }
         current_app.extensions[_CLE] = etat
     return etat["valeurs"]
@@ -47,22 +47,27 @@ def role_a_acces(role, module, roles_par_defaut):
     erreur depuis cette matrice."""
     if role == "developpeur":
         return True
-    overrides = _charger()
-    cle = (role, module)
-    if cle in overrides:
-        return overrides[cle]
+    from app.services.tenant import ecole_courante_id
+
+    return _decision(_charger(), ecole_courante_id(), role, module, roles_par_defaut)
+
+
+def _decision(reglages, ecole_id, role, module, roles_par_defaut):
+    """Réglage de l'école, sinon réglage commun, sinon valeur par défaut."""
+    for cle in ((ecole_id, role, module), (None, role, module)):
+        if cle in reglages:
+            return reglages[cle]
     return role in roles_par_defaut
 
 
-def toutes_les_permissions(roles, modules):
-    """Pour l'écran de la matrice : l'état actuel (effectif) de chaque
-    couple (rôle, module), qu'il vienne d'une permission explicite ou de
-    la valeur par défaut du module."""
+def toutes_les_permissions(roles, modules, ecole_id=None):
+    """Pour l'écran de la matrice : l'état effectif de chaque couple
+    (rôle, module) dans une école — ou, sans école, le réglage commun à
+    toutes les écoles."""
     from app.services.modules_par_defaut import ROLES_PAR_DEFAUT
 
-    etat = {}
-    for role in roles:
-        for module in modules:
-            defaut = ROLES_PAR_DEFAUT.get(module, [])
-            etat[(role, module)] = role_a_acces(role, module, defaut)
-    return etat
+    reglages = _charger()
+    return {
+        (role, module): _decision(reglages, ecole_id, role, module, ROLES_PAR_DEFAUT.get(module, []))
+        for role in roles for module in modules
+    }

@@ -1078,7 +1078,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 18px;
-  background: linear-gradient(135deg, var(--navy), #00A99D);
+  background: linear-gradient(135deg, var(--navy), var(--gold));
   border-radius: 12px;
   padding: 22px 26px;
   margin-bottom: 18px;
@@ -2044,6 +2044,7 @@ button:hover {
 
 .sidebar-lien-plateforme {
   background: rgba(0, 169, 157, 0.22);
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
   box-shadow: inset 3px 0 0 var(--accent-vif);
 }
 
@@ -3182,6 +3183,7 @@ form.relances-email {
   padding: 9px 12px;
   width: calc(100% - 28px);
   background: rgba(0, 169, 157, 0.22);
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 10px;
@@ -3190,7 +3192,7 @@ form.relances-email {
   cursor: pointer;
 }
 
-.bouton-installer:hover { background: rgba(0, 169, 157, 0.38); }
+.bouton-installer:hover { background: rgba(0, 169, 157, 0.38); background: color-mix(in srgb, var(--gold) 38%, transparent); }
 .bouton-installer:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .bouton-installer .icone { width: 18px; height: 18px; }
 
@@ -3211,3 +3213,8 @@ form.relances-email {
 .hors-ligne p { margin: 0; line-height: 1.6; }
 .hors-ligne-arabe { padding-top: 12px; border-top: 1px solid var(--trait); font-family: var(--police-texte); }
 .hors-ligne-actions { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px; }
+
+/* Paramètres : les deux sélecteurs de couleur de l'école côte à côte */
+.ligne-couleurs { display: flex; gap: 16px; flex-wrap: wrap; }
+.ligne-couleurs label { flex: 0 0 auto; }
+.ligne-couleurs input[type=color] { width: 72px; height: 40px; padding: 2px; cursor: pointer; }

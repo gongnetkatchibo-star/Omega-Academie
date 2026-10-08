@@ -97,3 +97,38 @@ def migrer_vers_multi_etablissements(app, db):
             app.logger.info("Données existantes rattachées à l'établissement %s (%s)", ecole.id, ecole.nom)
 
     _remplacer_contraintes(app, db)
+
+
+def migrer_permissions_par_ecole(app, db):
+    """Les permissions deviennent réglables école par école (oct. 2026) :
+    l'ancienne règle « un seul réglage par (rôle, module) » est remplacée
+    par « un seul réglage par (école, rôle, module) ». Les lignes déjà
+    enregistrées restent le réglage commun à toutes les écoles."""
+    inspecteur = inspect(db.engine)
+    if "permissions" not in inspecteur.get_table_names():
+        return
+    existantes = {c["name"] for c in inspecteur.get_unique_constraints("permissions")}
+    if "uq_permission_role_module" not in existantes:
+        return
+    if db.engine.dialect.name == "postgresql":
+        with db.engine.begin() as cx:
+            cx.execute(text('ALTER TABLE "permissions" DROP CONSTRAINT "uq_permission_role_module"'))
+            if "uq_permission_ecole_role_module" not in existantes:
+                cx.execute(text('ALTER TABLE "permissions" ADD CONSTRAINT "uq_permission_ecole_role_module" '
+                                "UNIQUE (ecole_id, role, module)"))
+    else:
+        # SQLite ne sait pas retirer une contrainte : on reconstruit la
+        # petite table des permissions à l'identique, sans l'ancienne règle.
+        table = db.metadata.tables["permissions"]
+        index_existants = [i["name"] for i in inspecteur.get_indexes("permissions") if i.get("name")]
+        with db.engine.begin() as cx:
+            for nom in index_existants:
+                cx.execute(text(f'DROP INDEX IF EXISTS "{nom}"'))
+            cx.execute(text('ALTER TABLE "permissions" RENAME TO "permissions_avant_ecoles"'))
+            table.create(cx)
+            cx.execute(text(
+                'INSERT INTO "permissions" (id, ecole_id, role, module, autorise) '
+                'SELECT id, NULL, role, module, autorise FROM "permissions_avant_ecoles"'
+            ))
+            cx.execute(text('DROP TABLE "permissions_avant_ecoles"'))
+    app.logger.info("Permissions : réglage par école activé")

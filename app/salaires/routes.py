@@ -112,24 +112,33 @@ def nouveau():
         personnel_id = request.form.get("personnel_id", type=int)
         mois = request.form.get("mois", type=int)
         annee = request.form.get("annee", type=int)
-        montant = request.form.get("montant", type=float)
+        base = request.form.get("montant", type=float)
+        primes = max(request.form.get("primes", type=float) or 0, 0)
+        retenues = max(request.form.get("retenues", type=float) or 0, 0)
+        montant = (base or 0) + primes - retenues
         fonction = request.form.get("fonction", "").strip()
         email_contact = request.form.get("email_contact", "").strip()
         telephone_contact = request.form.get("telephone_contact", "").strip()
 
         employe = db.session.get(User, personnel_id) if personnel_id else None
         erreur = None
-        if not employe or not mois or not annee or not montant or montant <= 0:
+        if not employe or not mois or not 1 <= mois <= 12 or not annee or not base or base <= 0:
             erreur = "Merci de remplir tous les champs avec des valeurs valides."
+        elif montant <= 0:
+            erreur = "Les retenues dépassent le salaire : le net à payer doit rester positif."
         elif Salaire.query.filter_by(personnel_id=personnel_id, mois=mois, annee=annee).first():
             erreur = f"Un salaire existe déjà pour {employe.nom_complet} sur cette période."
 
         if erreur:
             flash(erreur, "error")
-            return render_template("salaires/nouveau.html", personnel=personnel, mois_libelles=MOIS_LIBELLES)
+            return render_template("salaires/nouveau.html", personnel=personnel, mois_libelles=MOIS_LIBELLES,
+                                   annee_courante=maintenant().year)
 
         db.session.add(Salaire(
-            personnel_id=personnel_id, mois=mois, annee=annee, montant=montant,
+            personnel_id=personnel_id, mois=mois, annee=annee, montant=montant, salaire_base=base,
+            primes=primes or None, retenues=retenues or None,
+            motif_primes=request.form.get("motif_primes", "").strip()[:150] or None if primes else None,
+            motif_retenues=request.form.get("motif_retenues", "").strip()[:150] or None if retenues else None,
             responsable_id=current_user.id, fonction=fonction or None,
             email_contact=email_contact or employe.email, telephone_contact=telephone_contact or employe.telephone,
         ))
@@ -137,7 +146,8 @@ def nouveau():
         flash(f"Salaire de {employe.nom_complet} enregistré pour {MOIS_LIBELLES[mois-1]} {annee} — statut impayé.", "info")
         return redirect(url_for("salaires.liste"))
 
-    return render_template("salaires/nouveau.html", personnel=personnel, mois_libelles=MOIS_LIBELLES)
+    return render_template("salaires/nouveau.html", personnel=personnel, mois_libelles=MOIS_LIBELLES,
+                           annee_courante=maintenant().year)
 
 
 @salaires_bp.route("/<int:salaire_id>/payer", methods=["POST"])
@@ -199,3 +209,55 @@ def supprimer(salaire_id):
     db.session.commit()
     flash("Ligne de salaire supprimée (et sa dépense de Caisse associée si elle existait).", "info")
     return redirect(url_for("salaires.liste"))
+
+
+def _fiche_pdf(salaire):
+    from flask import make_response
+    from app.services.documents_officiels import contexte_entete_officiel
+    from app.services.verification import emettre, bloc_verification
+    from app.utils import html_vers_pdf
+    from app.services.notifications import montant_fcfa
+
+    reference = f"PAIE-{salaire.annee}{salaire.mois:02d}-{salaire.id}"
+    document = emettre(
+        "fiche_paie", f"fiche_paie:{salaire.id}", "Fiche de paie", reference=reference,
+        details=[
+            ("Bénéficiaire", salaire.personnel.nom_complet),
+            ("Période", salaire.libelle_periode),
+            ("Net à payer", montant_fcfa(salaire.montant)),
+            ("Statut", LIBELLES_STATUT_SALAIRE.get(salaire.statut, salaire.statut)),
+        ],
+    )
+    db.session.commit()
+    html = render_template(
+        "salaires/fiche_pdf.html", s=salaire, reference=reference, verification=bloc_verification(document),
+        **contexte_entete_officiel(),
+    )
+    reponse = make_response(html_vers_pdf(html))
+    reponse.headers["Content-Type"] = "application/pdf"
+    reponse.headers["Content-Disposition"] = f"attachment; filename=fiche_paie_{reference}.pdf"
+    return reponse
+
+
+@salaires_bp.route("/<int:salaire_id>/fiche")
+@login_required
+def fiche(salaire_id):
+    """Fiche de paie : pour la comptabilité, et pour la personne payée."""
+    from flask import abort
+    from app.services.permissions import role_a_acces
+
+    salaire = db.get_or_404(Salaire, salaire_id)
+    if salaire.personnel_id != current_user.id and not role_a_acces(current_user.role, "salaires", ROLES_GESTION):
+        abort(403)
+    return _fiche_pdf(salaire)
+
+
+@salaires_bp.route("/mes-fiches")
+@login_required
+def mes_fiches():
+    """Les fiches de paie de la personne connectée."""
+    salaires = (
+        Salaire.query.filter_by(personnel_id=current_user.id)
+        .order_by(Salaire.annee.desc(), Salaire.mois.desc()).all()
+    )
+    return render_template("salaires/mes_fiches.html", salaires=salaires)

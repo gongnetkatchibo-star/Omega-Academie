@@ -6,12 +6,13 @@
   <title>{% block title %}{{ nom_plateforme() }}{% endblock %}</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <link rel="manifest" href="{{ url_for('main.manifeste') }}">
-  <meta name="theme-color" content="#0F5FA6">
+  <meta name="theme-color" content="{{ (ecole().couleur_theme if ecole() else None) or '#0F5FA6' }}">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Toumaï">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/application/icone-apple-180.png') }}">
   <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
+  {{ theme_ecole() }}
 </head>
 <body data-connecte="{{ 'oui' if current_user.is_authenticated else 'non' }}">
 {% include "_icones.html" %}
@@ -140,12 +141,14 @@
         {% set peut_roles = acces("developpeur", module="gestion_roles") %}
         {% set peut_etablissement = acces("developpeur", "fondateur", module="gestion_roles") %}
         {% set peut_sauvegarde = acces("developpeur", module="sauvegarde") %}
-        {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde %}
+        {% set peut_permissions = acces("fondateur") %}
+        {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde or peut_permissions %}
           <details class="sidebar-deroulant" {% if module_actif in ["secretariat", "dev", "sauvegarde"] %}open{% endif %}>
             <summary>{{ icone("administration") }} {{ _("Administration") }}</summary>
             {% if peut_demandes %}<a href="{{ url_for('secretariat.demandes') }}">{{ _("Demandes de comptes") }}</a>{% endif %}
             {% if peut_roles %}<a href="{{ url_for('dev.utilisateurs') }}">{{ _("Comptes et rôles") }}</a>{% endif %}
             {% if peut_etablissement %}<a href="{{ url_for('dev.parametres') }}">{{ _("Établissement") }}</a>{% endif %}
+            {% if peut_permissions %}<a href="{{ url_for('dev.permissions') }}">{{ _("Permissions") }}</a>{% endif %}
             {% if peut_sauvegarde %}<a href="{{ url_for('sauvegarde.exporter') }}">{{ _("Télécharger une sauvegarde") }}</a>{% endif %}
           </details>
         {% endif %}

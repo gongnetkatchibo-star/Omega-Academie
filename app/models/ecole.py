@@ -22,6 +22,14 @@ class Ecole(db.Model):
     prefixe_matricule = db.Column(db.String(20), unique=True)
     couleur_principale = db.Column(db.String(7), default="#00387B")
     couleur_secondaire = db.Column(db.String(7), default="#DEA230")
+    # Couleurs de l'interface choisies par l'école (oct. 2026). Vides : les
+    # couleurs de la plateforme. Les deux colonnes ci-dessus, plus
+    # anciennes, ne sont pas utilisées par l'interface.
+    couleur_theme = db.Column(db.String(7))
+    couleur_accent = db.Column(db.String(7))
+    # Code envoyé par email à chaque connexion de la direction et de la
+    # comptabilité (sauf sur un appareil de confiance).
+    double_authentification = db.Column(db.Boolean, nullable=False, default=False)
     logo_path = db.Column(db.String(255))
     logo = db.Column(db.LargeBinary)
     logo_mime = db.Column(db.String(50))

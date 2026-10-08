@@ -24,6 +24,14 @@ ROLES = [
     "parent",
 ]
 
+LIBELLES_ROLES = {
+    "developpeur": "Développeur", "super_administrateur": "Super-administrateur", "fondateur": "Fondateur",
+    "administrateur_general": "Administrateur général", "directeur_primaire": "Directeur du primaire",
+    "directeur_college": "Directeur du collège", "secretaire": "Secrétaire", "comptable": "Comptable",
+    "responsable_pedagogique": "Responsable pédagogique", "bibliothecaire": "Bibliothécaire",
+    "personnel": "Personnel", "enseignant": "Enseignant", "eleve": "Élève", "parent": "Parent",
+}
+
 # Rôles dont on considère qu'ils font partie de la direction / administration
 # générale de l'école (accès large aux modules de gestion).
 ROLES_DIRECTION = [

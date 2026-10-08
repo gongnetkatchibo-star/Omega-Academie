@@ -328,20 +328,133 @@ def connexion():
             flash("Ce compte a été verrouillé. Contacte le développeur ou la direction pour le débloquer.", "error")
             return render_template("auth/connexion.html")
 
-        login_user(user)
-        session.permanent = True  # déconnexion automatique après inactivité
-        flash(f"Bienvenue, {user.nom_complet}.", "info")
-
         # Retour direct à la page demandée avant la connexion (ex. le
         # lien « Voir plus » d'un email d'annonce). On n'accepte qu'un
         # chemin interne, jamais une adresse externe, pour ne pas servir
         # de rebond vers un autre site (sept. 2026).
         destination = request.args.get("next") or request.form.get("next")
-        if destination and destination.startswith("/") and not destination.startswith("//") and "\\" not in destination:
-            return redirect(destination)
-        return redirect(url_for("main.index"))
+        if not (destination and destination.startswith("/") and not destination.startswith("//") and "\\" not in destination):
+            destination = None
+
+        if exige_double_authentification(user) and not appareil_de_confiance(user):
+            return _demander_code_connexion(user, destination)
+        return _ouvrir_session(user, destination)
 
     return render_template("auth/connexion.html")
+
+
+# ---------------------------------------------------- double authentification
+ROLES_DOUBLE_AUTH = ["fondateur", "administrateur_general", "directeur_primaire", "directeur_college", "comptable"]
+COOKIE_APPAREIL = "appareil_confiance"
+DUREE_APPAREIL_JOURS = 30
+ESSAIS_CODE_MAX = 5
+
+
+def exige_double_authentification(user):
+    """Direction et comptabilité d'une école qui a activé l'option (et le
+    développeur si la plateforme l'exige, DOUBLE_AUTH_DEVELOPPEUR)."""
+    if user.role == "developpeur":
+        return bool(current_app.config.get("DOUBLE_AUTH_DEVELOPPEUR"))
+    return user.role in ROLES_DOUBLE_AUTH and bool(user.ecole and user.ecole.double_authentification)
+
+
+def appareil_de_confiance(user):
+    jeton = request.cookies.get(COOKIE_APPAREIL)
+    if not jeton:
+        return False
+    try:
+        donnees = _serializer().loads(jeton, salt="appareil-confiance", max_age=DUREE_APPAREIL_JOURS * 86400)
+    except (BadSignature, SignatureExpired):
+        return False
+    # Changer de mot de passe retire la confiance à tous les appareils.
+    return isinstance(donnees, dict) and donnees.get("u") == user.id and donnees.get("v") == _empreinte(user)
+
+
+def _ouvrir_session(user, destination=None, se_souvenir_appareil=False):
+    login_user(user)
+    session.permanent = True  # déconnexion automatique après inactivité
+    flash(f"Bienvenue, {user.nom_complet}.", "info")
+    reponse = redirect(destination or url_for("main.index"))
+    if se_souvenir_appareil:
+        reponse.set_cookie(
+            COOKIE_APPAREIL, _serializer().dumps({"u": user.id, "v": _empreinte(user)}, salt="appareil-confiance"),
+            max_age=DUREE_APPAREIL_JOURS * 86400, httponly=True, samesite="Lax",
+            secure=current_app.config.get("SESSION_COOKIE_SECURE", False),
+        )
+    return reponse
+
+
+def _envoyer_code_connexion(user):
+    code = user.generer_code_2fa()
+    db.session.commit()
+    corps = (
+        f"Bonjour {user.nom_complet},\n\n"
+        f"Voici votre code de connexion (valable 10 minutes) : {code}\n\n"
+        f"Si vous n'êtes pas en train de vous connecter, changez votre mot de passe "
+        f"et prévenez la direction : quelqu'un connaît votre mot de passe."
+    )
+    envoye = envoyer_email([user.email], f"Code de connexion — {_nom_ecole(user)}", corps, nom_expediteur=_nom_ecole(user))
+    if not envoye and _secrets_a_l_ecran():
+        flash(f"Aucun service d'email configuré — code de connexion : {code}", "info")
+        return True
+    return envoye
+
+
+def _demander_code_connexion(user, destination):
+    if not _envoyer_code_connexion(user):
+        current_app.logger.warning("Code de connexion non envoyé à %s", user.email)
+        flash("Le code de connexion n'a pas pu partir par email. Réessaie dans quelques minutes.", "error")
+        return render_template("auth/connexion.html")
+    session["double_auth"] = {"id": user.id, "next": destination, "essais": 0}
+    return redirect(url_for("auth.code_connexion"))
+
+
+def _compte_en_double_auth():
+    etat = session.get("double_auth")
+    if not isinstance(etat, dict):
+        return None, None
+    user = _comptes().filter_by(id=etat.get("id")).first() if etat.get("id") else None
+    if user is None or not user.is_active:
+        session.pop("double_auth", None)
+        return None, None
+    return user, etat
+
+
+@auth_bp.route("/code-connexion", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+def code_connexion():
+    user, etat = _compte_en_double_auth()
+    if user is None:
+        return redirect(url_for("auth.connexion"))
+    if request.method == "POST":
+        if user.verifier_code_2fa(request.form.get("code", "")):
+            user.invalider_code_2fa()
+            db.session.commit()
+            session.pop("double_auth", None)
+            return _ouvrir_session(user, etat.get("next"), request.form.get("se_souvenir") == "on")
+        etat["essais"] = etat.get("essais", 0) + 1
+        session["double_auth"] = etat
+        if etat["essais"] >= ESSAIS_CODE_MAX:
+            user.invalider_code_2fa()
+            db.session.commit()
+            session.pop("double_auth", None)
+            flash("Trop de codes faux. Reconnecte-toi pour recevoir un nouveau code.", "error")
+            return redirect(url_for("auth.connexion"))
+        flash("Code invalide ou expiré.", "error")
+    return render_template("auth/code_connexion.html", email=user.email)
+
+
+@auth_bp.route("/code-connexion/renvoyer", methods=["POST"])
+@limiter.limit("3 per minute")
+def renvoyer_code_connexion():
+    user, _etat = _compte_en_double_auth()
+    if user is None:
+        return redirect(url_for("auth.connexion"))
+    if _envoyer_code_connexion(user):
+        flash("Nouveau code envoyé.", "info")
+    else:
+        flash("Le code de connexion n'a pas pu partir par email. Réessaie dans quelques minutes.", "error")
+    return redirect(url_for("auth.code_connexion"))
 
 
 @auth_bp.route("/verification-inscription", methods=["GET", "POST"])

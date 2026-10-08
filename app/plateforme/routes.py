@@ -61,9 +61,14 @@ def _appliquer_formulaire(ecole):
             setattr(ecole, f"{champ}_mime", info)
         elif info:
             erreurs.append(f"{champ.capitalize()} : {info}")
+    from app.services.theme import lire_couleurs_formulaire
+    couleurs, erreurs_couleurs = lire_couleurs_formulaire(request.form)
+    erreurs += erreurs_couleurs
     if not erreurs:
         for champ, valeur in valeurs.items():
             setattr(ecole, champ, prefixe if champ == "prefixe_matricule" else (valeur or None))
+        ecole.couleur_theme, ecole.couleur_accent = couleurs["couleur_theme"], couleurs["couleur_accent"]
+        ecole.double_authentification = request.form.get("double_authentification") == "on"
     return erreurs
 
 
