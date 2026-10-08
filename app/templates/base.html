@@ -5,11 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ nom_plateforme() }}{% endblock %}</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="manifest" href="{{ url_for('main.manifeste') }}">
+  <meta name="theme-color" content="#0F5FA6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Toumaï">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/application/icone-apple-180.png') }}">
   <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
 </head>
-<body>
+<body data-connecte="{{ 'oui' if current_user.is_authenticated else 'non' }}">
 {% include "_icones.html" %}
+<div id="bandeau-hors-ligne" class="bandeau-hors-ligne" role="status" hidden>
+  <strong>{{ _("Pas de connexion.") }}</strong>
+  {{ _("Vous consultez une copie enregistrée sur ce téléphone. Rien ne peut être enregistré avant le retour du réseau.") }}
+</div>
 {% if current_user.is_authenticated %}
   <button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('sidebar-ouverte'); document.getElementById('sidebar-overlay').classList.toggle('actif');" aria-label="{{ _('Ouvrir le menu') }}">{{ icone("menu") }}</button>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('sidebar-ouverte'); this.classList.remove('actif');"></div>
@@ -134,6 +143,7 @@
         <a href="{{ url_for('main.profil') }}">{{ icone("profil") }} {{ _("Mon profil") }}</a>
         <a href="{{ url_for('auth.deconnexion') }}">{{ icone("deconnexion") }} {{ _("Déconnexion") }}</a>
       </nav>
+      <button type="button" id="bouton-installer" class="bouton-installer" hidden>{{ icone("telecharger") }} {{ _("Installer l'application") }}</button>
       <div class="sidebar-pied">{{ _("Propulsé par") }} <strong>{{ nom_plateforme() }}</strong></div>
     </aside>
     <div class="contenu-principal">
@@ -168,5 +178,6 @@
   </div>
 {% endif %}
   <script src="{{ url_for('static', filename='js/recherche-nom.js') }}?v={{ version_fichier_statique('js/recherche-nom.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/application.js') }}?v={{ version_fichier_statique('js/application.js') }}"></script>
 </body>
 </html>

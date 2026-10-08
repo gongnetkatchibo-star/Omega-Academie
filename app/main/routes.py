@@ -345,3 +345,66 @@ def changer_langue(code):
     if not retour or (cible.netloc and cible.netloc != request.host):
         return redirect(url_for("main.index"))
     return redirect(cible.path + (f"?{cible.query}" if cible.query else ""))
+
+
+# --- Application installable (oct. 2026) --------------------------------------
+# Le site s'installe sur le téléphone comme une application (icône sur
+# l'écran d'accueil, plein écran) et garde une copie des pages consultées
+# pour les relire sans connexion. Aucun magasin d'applications.
+
+FICHIERS_A_PRECHARGER = (
+    "css/style.css", "js/application.js", "js/recherche-nom.js",
+    "fonts/figtree.woff2", "fonts/bricolage-grotesque.woff2", "fonts/noto-sans-arabic.woff2",
+    "images/application/icone-192.png",
+)
+
+
+@main_bp.route("/manifest.webmanifest")
+def manifeste():
+    from flask import current_app, jsonify
+    from app.services.langues import langue_courante
+
+    nom = current_app.config.get("PLATEFORME_NOM", "Toumaï Edu School")
+    icone = lambda fichier: url_for("static", filename=f"images/application/{fichier}")  # noqa: E731
+    reponse = jsonify({
+        "name": nom,
+        "short_name": "Toumaï",
+        "description": "Gestion scolaire : élèves, notes, paiements, absences.",
+        "lang": langue_courante(),
+        "dir": "rtl" if langue_courante() == "ar" else "ltr",
+        "start_url": url_for("main.index") + "?source=application",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#F4F1EA",
+        "theme_color": "#0F5FA6",
+        "icons": [
+            {"src": icone("icone-192.png"), "sizes": "192x192", "type": "image/png"},
+            {"src": icone("icone-512.png"), "sizes": "512x512", "type": "image/png"},
+            {"src": icone("icone-masquable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    })
+    reponse.mimetype = "application/manifest+json"
+    return reponse
+
+
+@main_bp.route("/sw.js")
+def service_worker():
+    """Servi depuis la racine : un service worker ne gère que les pages
+    situées sous son propre dossier."""
+    from flask import current_app, make_response
+
+    versions = {f: current_app.jinja_env.globals["version_fichier_statique"](f) for f in FICHIERS_A_PRECHARGER}
+    a_precharger = [url_for("static", filename=f) + (f"?v={v}" if f.endswith((".css", ".js")) else "")
+                    for f, v in versions.items()]
+    contenu = render_template("application/sw.js", version=max(versions.values()), a_precharger=a_precharger)
+    reponse = make_response(contenu)
+    reponse.mimetype = "text/javascript"
+    reponse.headers["Cache-Control"] = "no-cache"
+    reponse.headers["Service-Worker-Allowed"] = "/"
+    return reponse
+
+
+@main_bp.route("/hors-ligne")
+def hors_ligne():
+    """Affichée quand une page n'a jamais été ouverte avec une connexion."""
+    return render_template("application/hors_ligne.html")

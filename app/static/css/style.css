@@ -3143,3 +3143,70 @@ form.relances-email {
 
 /* Cellule de tableau qui ne se coupe pas (dates, montants, références). */
 .sans-coupure { white-space: nowrap; }
+
+/* --- Application installable et hors ligne (oct. 2026) --- */
+.bandeau-hors-ligne {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 1000;
+  padding: 10px 18px;
+  background: var(--attention-pale);
+  color: var(--encre);
+  border-bottom: 2px solid var(--attention);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.bandeau-hors-ligne.bandeau-insiste { animation: bandeau-insiste 0.45s ease-in-out; }
+
+@keyframes bandeau-insiste {
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeau-hors-ligne.bandeau-insiste { animation: none; }
+}
+
+/* Sans connexion, les boutons d'envoi paraissent désactivés. */
+.hors-ligne-actif form button[type="submit"],
+.hors-ligne-actif form input[type="submit"] { opacity: 0.45; cursor: not-allowed; }
+
+.bouton-installer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 14px 0;
+  padding: 9px 12px;
+  width: calc(100% - 28px);
+  background: rgba(0, 169, 157, 0.22);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.bouton-installer:hover { background: rgba(0, 169, 157, 0.38); }
+.bouton-installer:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.bouton-installer .icone { width: 18px; height: 18px; }
+
+.page-hors-ligne { background: var(--cream); }
+
+.hors-ligne {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 12vh 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--encre);
+}
+
+.hors-ligne img { border-radius: 16px; }
+.hors-ligne h1, .hors-ligne h2 { margin: 0; color: var(--navy); font-family: var(--police-titres); }
+.hors-ligne p { margin: 0; line-height: 1.6; }
+.hors-ligne-arabe { padding-top: 12px; border-top: 1px solid var(--trait); font-family: var(--police-texte); }
+.hors-ligne-actions { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px; }

@@ -1,0 +1,28 @@
+<!doctype html>
+{# Page autonome, sans base.html : elle reste en mémoire sur le téléphone
+   après la déconnexion, elle ne doit donc rien montrer d'un compte.
+   Écrite dans les deux langues, car elle est enregistrée une seule fois. #}
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0F5FA6">
+  <title>Pas de connexion · {{ nom_plateforme() }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
+</head>
+<body class="page-hors-ligne">
+  <main class="hors-ligne">
+    <img src="{{ url_for('static', filename='images/application/icone-192.png') }}" alt="" width="72" height="72">
+    <h1>Pas de connexion</h1>
+    <p>Cette page n'a pas encore été ouverte sur ce téléphone, elle n'est donc pas disponible hors ligne. Les pages déjà consultées restent lisibles : revenez en arrière ou rouvrez-les depuis le menu.</p>
+    <div dir="rtl" lang="ar" class="hors-ligne-arabe">
+      <h2>لا يوجد اتصال</h2>
+      <p>لم تُفتح هذه الصفحة من قبل على هذا الهاتف، لذا فهي غير متاحة دون اتصال. الصفحات التي اطّلعتم عليها سابقًا تبقى مقروءة: ارجعوا إلى الخلف أو افتحوها من القائمة.</p>
+    </div>
+    <p class="hors-ligne-actions">
+      <button type="button" class="bouton" onclick="history.back()">Retour · رجوع</button>
+      <button type="button" class="bouton bouton-plein" onclick="location.reload()">Réessayer · إعادة المحاولة</button>
+    </p>
+  </main>
+</body>
+</html>
