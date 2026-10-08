@@ -1,10 +1,29 @@
 :root {
-  --navy: #0F5FA6;        /* bleu vif de l'en-tête, comme Moodle */
-  --gold: #00A99D;        /* sarcelle — accent, onglets actifs (remplace l'or) */
-  --cream: #F4F1EA;       /* fond général */
-  --carte: #E8F6F8;       /* fond bleu clair des cartes de module */
-  --sombre: #3C4858;      /* pied de page fonce */
-  --alerte-fond: #E4F7F7; /* bandeau d'alerte clair */
+  /* Charte oct. 2026 : indigo et ocre, tirés du logo de l'école.
+     Les anciens noms (navy, gold…) sont gardés : tout le fichier s'en sert. */
+  --navy: #23306B;        /* indigo — menu, titres, boutons */
+  --gold: #C9820F;        /* ocre — accent, élément actif, focus */
+  --cream: #F3F4F8;       /* fond général, gris légèrement bleuté */
+  --carte: #EEF0F8;       /* fond clair des encadrés */
+  --sombre: #3C4858;      /* pied de page foncé */
+  --alerte-fond: #FFF6E5; /* bandeau d'alerte clair */
+
+  --encre: #181D33;
+  --encre-2: #565C76;
+  --encre-3: #8A8FA6;
+  --trait: #E2E5EF;
+  --surface: #FFFFFF;
+  --piste: #E6E9F3;
+  --ocre-vif: #E8A33A;
+  --ocre-pale: #FCF1DC;
+  --ok: #1D7A51;
+  --ok-pale: #E1F2E9;
+  --attention: #A9600A;
+  --attention-pale: #FCEFD8;
+  --critique: #B23A28;
+  --critique-pale: #FBE5E0;
+  --police-titres: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --police-texte: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 body {

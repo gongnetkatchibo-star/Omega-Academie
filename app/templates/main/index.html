@@ -1,19 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Tableau de bord{% endblock %}
 {% block content %}
-  <section class="accueil-carte-ecole">
-    {% if ecole() and ecole().logo %}
-      <span class="accueil-carte-ecole-logo"><img src="{{ url_for('main.image_ecole', image='logo') }}" alt=""></span>
-    {% endif %}
-    <div>
-      <h1>{{ ecole().nom if ecole() else nom_plateforme() }}</h1>
-      <p>{{ description_plateforme }}</p>
-    </div>
-  </section>
+<div class="accueil" id="tableau-de-bord">
+  {% set direction = ("directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
+  {% if tableau %}
+    <header class="tdb-entete">
+      <div>
+        <h1>Bonjour, {{ user.nom_complet.split()[0] }}</h1>
+        <p>{{ (aujourd_hui|date_longue)|capitalize }} · année scolaire {{ tableau.annee }}</p>
+      </div>
+      <div class="tdb-actions">
+        {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
+          <a class="bouton bouton-plein" href="{{ url_for('caisse.nouveau_paiement') }}">{{ icone("plus") }} Encaisser un paiement</a>
+        {% elif tableau.finances %}
+          <a class="bouton bouton-plein" href="{{ url_for('finances.liste') }}">{{ icone("plus") }} Encaisser un paiement</a>
+        {% endif %}
+        {% if acces("secretaire", *direction, module="eleves") %}
+          <a class="bouton" href="{{ url_for('eleves.nouveau') }}">{{ icone("plus") }} Inscrire un élève</a>
+        {% endif %}
+      </div>
+    </header>
+  {% else %}
+    <section class="accueil-carte-ecole">
+      {% if ecole() and ecole().logo %}
+        <span class="accueil-carte-ecole-logo"><img src="{{ url_for('main.image_ecole', image='logo') }}" alt=""></span>
+      {% endif %}
+      <div>
+        <h1>{{ ecole().nom if ecole() else nom_plateforme() }}</h1>
+        <p>{{ description_plateforme }}</p>
+      </div>
+    </section>
+  {% endif %}
 
   {% if alerte_sauvegarde %}
-    <div class="carte-attente" style="border-left: 4px solid #a32d2d;">
-      <p><strong>⚠ Sauvegarde recommandée.</strong> {{ alerte_sauvegarde }}
+    <div class="carte-attente carte-attente-critique">
+      <p><strong>Sauvegarde recommandée.</strong> {{ alerte_sauvegarde }}
         <a href="{{ url_for('sauvegarde.exporter') }}">Télécharger une sauvegarde maintenant</a>.</p>
     </div>
   {% endif %}
@@ -25,19 +46,201 @@
     {{ etat_vide("Aucun dossier élève n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
   {% endif %}
 
+  {% if tableau %}
+    {% set f = tableau.finances %}
+    {% set a = tableau.absences %}
+    {% set eff = tableau.effectifs %}
+
+    <section class="tdb-indicateurs" aria-label="Indicateurs clés">
+      {% if f %}
+        <div class="tdb-indicateur">
+          <span class="tdb-indicateur-titre">{{ icone("portefeuille") }} Encaissé en {{ (aujourd_hui|date_longue(False)).split()[1] }}</span>
+          <span class="tdb-indicateur-valeur">{{ f.encaisse_mois|fcfa(False) }}<small>FCFA</small></span>
+          <span class="tdb-indicateur-detail">
+            {% if f.evolution_mois is not none %}
+              <span class="{{ 'tdb-hausse' if f.evolution_mois >= 0 else 'tdb-baisse' }}">{{ "%+d"|format(f.evolution_mois) }} %</span> par rapport à l'an dernier
+            {% else %}
+              Depuis le 1<sup>er</sup> du mois
+            {% endif %}
+          </span>
+        </div>
+        <div class="tdb-indicateur">
+          <span class="tdb-indicateur-titre">{{ icone("tendance") }} Recouvrement de l'année</span>
+          <span class="tdb-indicateur-valeur">{{ f.taux_recouvrement }} %<small>du total attendu</small></span>
+          <span class="tdb-jauge" aria-hidden="true"><span style="width: {{ [f.taux_recouvrement, 100]|min }}%"></span></span>
+          <span class="tdb-indicateur-detail">Reste <strong>{{ f.reste_a_recouvrer|fcfa }}</strong></span>
+        </div>
+      {% endif %}
+      {% if eff %}
+        <div class="tdb-indicateur">
+          <span class="tdb-indicateur-titre">{{ icone("eleves") }} Élèves inscrits</span>
+          <span class="tdb-indicateur-valeur">{{ eff.total }}</span>
+          <span class="tdb-indicateur-detail">{{ eff.filles }} filles · {{ eff.garcons }} garçons · {{ eff.classes }} classe{{ "s" if eff.classes > 1 }}</span>
+        </div>
+      {% endif %}
+      {% if a %}
+        <div class="tdb-indicateur">
+          <span class="tdb-indicateur-titre">{{ icone("calendrier") }} Absents aujourd'hui</span>
+          <span class="tdb-indicateur-valeur">{{ a.absents }}</span>
+          <span class="tdb-indicateur-detail">
+            {% if a.absents %}dont {{ a.non_justifies }} non justifié{{ "s" if a.non_justifies > 1 }}{% else %}Aucune absence signalée{% endif %}
+          </span>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="tdb-grille">
+      {% if f %}
+        <section class="tdb-panneau" aria-labelledby="titre-echeancier">
+          <div class="tdb-panneau-tete">
+            <h2 id="titre-echeancier">Échéancier de la scolarité</h2>
+            <a href="{{ url_for('finances.liste', retard=1) }}">Voir les retards</a>
+          </div>
+          <p class="tdb-sous-titre">Montant encaissé par rapport au montant attendu, pour chaque échéance.</p>
+          <div class="tdb-echeances">
+            {% for e in f.echeancier %}
+              <div class="tdb-echeance">
+                <div class="tdb-echeance-haut">
+                  <span><strong>{{ e.libelle }}</strong>
+                    {% if e.date_limite %}<span class="tdb-discret">limite le {{ e.date_limite|date_longue(False) }}</span>{% endif %}</span>
+                  <span class="tdb-chiffres"><strong>{{ e.paye|fcfa }}</strong> sur {{ e.attendu|fcfa }} · {{ e.taux }} %</span>
+                </div>
+                <div class="tdb-piste" style="width: {{ e.largeur }}%" role="img" aria-label="{{ e.libelle }} : {{ e.taux }} % encaissé">
+                  <span style="width: {{ [e.taux, 100]|min }}%"></span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="tdb-legende">
+            <span><i class="tdb-legende-encaisse"></i>Encaissé</span>
+            <span><i class="tdb-legende-reste"></i>Reste à encaisser</span>
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="tdb-panneau" aria-labelledby="titre-taches">
+        <div class="tdb-panneau-tete"><h2 id="titre-taches">À traiter</h2></div>
+        {% if tableau.taches %}
+          <ul class="tdb-taches">
+            {% for t in tableau.taches %}
+              <li><a href="{{ url_for(t.endpoint, **t.params) }}">
+                <span class="tdb-pastille tdb-pastille-{{ t.niveau }}">{{ t.nombre }}</span>
+                <span><strong>{{ t.titre }}</strong><span class="tdb-discret">{{ t.detail }}</span></span>
+                {{ icone("chevron") }}
+              </a></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="tdb-vide">Rien en attente. Tout est à jour.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    {% if f or a %}
+      <div class="tdb-grille">
+        {% if f %}
+          <section class="tdb-panneau" aria-labelledby="titre-classes">
+            <div class="tdb-panneau-tete">
+              <h2 id="titre-classes">Recouvrement par classe</h2>
+              {% if acces("comptable", "fondateur", "administrateur_general", "directeur_primaire", "directeur_college", module="statistiques") %}
+                <a href="{{ url_for('statistiques.tableau') }}">Toutes les statistiques</a>
+              {% endif %}
+            </div>
+            <p class="tdb-sous-titre">Part du total dû déjà payée. Les classes les plus en retard en premier.</p>
+            {% if f.classes %}
+              <div class="tdb-defile">
+                <table class="tdb-table">
+                  <thead><tr><th>Classe</th><th class="nombre">Élèves</th><th>Taux</th><th class="nombre">Reste dû</th><th>État</th></tr></thead>
+                  <tbody>
+                    {% for l in f.classes %}
+                      <tr>
+                        <td><strong>{{ l.classe.nom }}</strong></td>
+                        <td class="nombre">{{ l.effectif }}</td>
+                        <td><span class="tdb-taux"><span class="tdb-jauge"><span style="width: {{ [l.taux, 100]|min }}%"></span></span><strong>{{ l.taux }} %</strong></span></td>
+                        <td class="nombre">{{ l.reste|fcfa }}</td>
+                        <td><span class="badge {{ l.badge }}">{{ l.etat }}</span></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% if f.nb_classes_masquees %}<p class="tdb-discret">Et {{ f.nb_classes_masquees }} autre{{ "s" if f.nb_classes_masquees > 1 }} classe{{ "s" if f.nb_classes_masquees > 1 }} mieux recouvrée{{ "s" if f.nb_classes_masquees > 1 }}.</p>{% endif %}
+            {% else %}
+              <p class="tdb-vide">Aucun frais de scolarité n'est encore fixé pour cette année.</p>
+            {% endif %}
+          </section>
+        {% endif %}
+
+        {% if a %}
+          <section class="tdb-panneau" aria-labelledby="titre-absences">
+            <div class="tdb-panneau-tete">
+              <h2 id="titre-absences">Absences du jour</h2>
+              <a href="{{ url_for('absences.index') }}">Faire l'appel</a>
+            </div>
+            {% if a.par_classe %}
+              <ul class="tdb-absences">
+                {% for l in a.par_classe %}
+                  <li><span>{{ l.classe.nom }}</span><strong>{{ l.absents }} absent{{ "s" if l.absents > 1 }}<span class="tdb-discret"> sur {{ l.effectif }}</span></strong></li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="tdb-vide">Aucune absence n'a été signalée aujourd'hui.</p>
+            {% endif %}
+          </section>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if f %}
+      <section class="tdb-panneau" aria-labelledby="titre-paiements">
+        <div class="tdb-panneau-tete">
+          <h2 id="titre-paiements">Derniers paiements</h2>
+          {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}
+            <a href="{{ url_for('caisse.liste') }}">Journal de caisse</a>
+          {% endif %}
+        </div>
+        {% if f.derniers_paiements %}
+          <div class="tdb-defile">
+            <table class="tdb-table">
+              <thead><tr><th>Élève</th><th>Objet</th><th>Mode</th><th class="nombre">Montant</th><th>Reçu</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for p in f.derniers_paiements %}
+                  <tr>
+                    <td><a class="tdb-eleve" href="{{ url_for('finances.detail', eleve_id=p.eleve_id) }}">
+                      <span class="tdb-initiales">{{ p.eleve.nom_complet|initiales }}</span>
+                      <span>{{ p.eleve.nom_complet }}<small>{{ p.eleve.classe.nom if p.eleve.classe }}</small></span>
+                    </a></td>
+                    <td>{{ p.libelle_echeance }}</td>
+                    <td><span class="tdb-mode tdb-mode-{{ p.mode }}">{{ tableau.libelles_mode.get(p.mode, p.mode) }}</span></td>
+                    <td class="nombre"><strong>{{ p.montant|fcfa }}</strong></td>
+                    <td class="tdb-discret">{{ p.numero_recu or "—" }}</td>
+                    <td class="tdb-discret">{{ p.date_paiement.strftime("%d/%m à %H:%M") if p.date_paiement }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="tdb-vide">Aucun paiement enregistré pour le moment.</p>
+        {% endif %}
+      </section>
+    {% endif %}
+  {% endif %}
+
   {% if guides %}
     <h2 class="accueil-titre-guides">Guides d'utilisation</h2>
-    <div class="grille-guides">
+    <div class="grille-guides{% if tableau %} grille-guides-compacte{% endif %}">
       {% for g in guides %}
         <a class="carte-guide" href="{{ url_for('main.guide', cle=g.cle) }}">
           <span class="carte-guide-icone">{{ icone(g.icone) }}</span>
           <span class="carte-guide-texte">
             <strong>{{ g.titre }}</strong>
-            <span>{{ g.apercu }}</span>
+            {% if not tableau %}<span>{{ g.apercu }}</span>{% endif %}
           </span>
-          <span class="carte-guide-lien">Lire le guide →</span>
+          {% if not tableau %}<span class="carte-guide-lien">Lire le guide →</span>{% endif %}
         </a>
       {% endfor %}
     </div>
   {% endif %}
+</div>
 {% endblock %}
