@@ -3135,3 +3135,8 @@ form.relances-email {
   direction: ltr;
   text-align: right;
 }
+
+[dir="rtl"] .tdb-indicateur-valeur small {
+  margin-left: 0;
+  margin-right: 5px;
+}

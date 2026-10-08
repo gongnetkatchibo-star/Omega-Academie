@@ -7,7 +7,7 @@
     <header class="tdb-entete">
       <div>
         <h1>{{ _("Bonjour, {prenom}", prenom=user.nom_complet.split()[0]) }}</h1>
-        <p>{{ (aujourd_hui|date_longue)|capitalize }} · {{ _("année scolaire {annee}", annee=tableau.annee) }}</p>
+        <p>{{ (aujourd_hui|date_longue)|capitalize }} · {{ _("année scolaire {annee}", annee=tableau.annee|ltr) }}</p>
       </div>
       <div class="tdb-actions">
         {% if acces("comptable", "fondateur", "administrateur_general", module="caisse") %}

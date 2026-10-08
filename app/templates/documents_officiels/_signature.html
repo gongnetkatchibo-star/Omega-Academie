@@ -1,4 +1,4 @@
-<table style="width:100%; margin-top:40pt;">
+<table style="width:100%; margin-top:{{ '12pt' if bilingue else '40pt' }};">
   <tr>
     <td style="width:45%; border:none; background:none; vertical-align:bottom; color:#000;">
       {% if verification %}
@@ -10,7 +10,8 @@
               <img src="{{ verification.qr }}" style="width:66pt; height:66pt;">
             </td>
             <td style="border:none; background:none; padding:0 0 0 6pt; font-size:7.5pt; line-height:1.35; color:#333;">
-              <strong>Vérifier ce document</strong>{% if bilingue %} <span class="ar" style="font-size:8.5pt;">{{ "تحقق من صحة الوثيقة"|arabe_pdf }}</span>{% endif %}<br>
+              <strong>Vérifier ce document</strong><br>
+              {% if bilingue %}<span class="ar" style="font-size:8.5pt;">{{ "تحقق من صحة الوثيقة"|arabe_pdf }}</span><br>{% endif %}
               Scannez le QR code ou saisissez le code<br>
               <strong style="font-size:9pt; color:#000;">{{ verification.code }}</strong><br>
               sur {{ verification.adresse }}
@@ -20,12 +21,16 @@
       {% endif %}
     </td>
     <td style="width:55%; text-align:center; padding-right:10pt; border:none; background:none; color:#000;">
-      <p style="margin:0 0 {{ '4pt' if bilingue else '14pt' }} 0; font-weight:bold;">{{ lieu_et_date }}.</p>
-      {% if bilingue %}<p style="margin:0 0 10pt 0;"><span class="ar" style="font-size:11pt;">{{ lieu_et_date_arabe|arabe_pdf }}</span></p>{% endif %}
-      <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}</p>
-      {% set qualite_arabe = signataire.qualite|trad_doc %}
-      {% if bilingue and qualite_arabe %}<p style="margin:0;"><span class="ar-gras" style="font-size:12pt;">{{ qualite_arabe|arabe_pdf }}</span></p>{% endif %}
-      <p style="margin:0; padding-top:{{ '60pt' if bilingue else '75pt' }}; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
+      {% if bilingue %}
+        {# Une seule ligne par information : français puis arabe. #}
+        {% set qualite_arabe = signataire.qualite|trad_doc %}
+        <p style="margin:0 0 8pt 0; font-weight:bold;">{{ lieu_et_date }}. &nbsp; <span class="ar" style="font-size:10.5pt; font-weight:normal;">{{ lieu_et_date_arabe|arabe_pdf }}</span></p>
+        <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}{% if qualite_arabe %} &nbsp; <span class="ar-gras" style="font-size:12pt;">{{ qualite_arabe|arabe_pdf }}</span>{% endif %}</p>
+      {% else %}
+        <p style="margin:0 0 14pt 0; font-weight:bold;">{{ lieu_et_date }}.</p>
+        <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}</p>
+      {% endif %}
+      <p style="margin:0; padding-top:{{ '34pt' if bilingue else '75pt' }}; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
     </td>
   </tr>
 </table>

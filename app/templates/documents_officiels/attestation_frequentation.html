@@ -8,6 +8,11 @@
   .numero { text-align:center; color:#c0392b; font-weight:bold; margin-bottom:2px; }
   .titre { text-align:center; font-weight:bold; font-size:16pt; margin-bottom:26px; text-decoration: underline; }
   .corps { line-height: 1.8; text-align: justify; }
+  {% if bilingue %}
+  @page { size: 595pt 842pt; margin: 34pt 56pt 30pt 56pt; }
+  .titre { margin-bottom: 4px; }
+  .corps { line-height: 1.45; }
+  {% endif %}
 </style>
 </head>
 <body>
@@ -15,7 +20,7 @@
   {% set f = eleve.sexe == "F" %}
   <p class="numero">N° {{ numero }}</p>
   <p class="titre">ATTESTATION DE FRÉQUENTATION</p>
-  {% if bilingue %}<p class="titre" style="text-decoration:none; margin-top:-18px;"><span class="ar-gras" style="font-size:16pt;">{{ "شهادة مواظبة"|arabe_pdf }}</span></p>{% endif %}
+  {% if bilingue %}<p class="titre" style="text-decoration:none; margin:0 0 14px 0;"><span class="ar-gras" style="font-size:16pt;">{{ "شهادة مواظبة"|arabe_pdf }}</span></p>{% endif %}
 
   <div class="corps">
     <p>

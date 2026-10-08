@@ -14,6 +14,12 @@
   .c { text-align:center; }
   table.identite td, table.synthese td { border:none; padding:2pt 0; font-size:10pt; }
   .cadre { border:0.5pt solid #888; padding:6pt 8pt; margin-top:10pt; }
+  {% if bilingue %}
+  table.identite td, table.synthese td { padding:1pt 0; font-size:9.5pt; }
+  table.notes .ar { font-size:8pt; }
+  .sous-titre { margin-bottom: 6pt; }
+  .cadre { margin-top: 6pt; }
+  {% endif %}
 </style>
 </head>
 <body>
@@ -41,15 +47,15 @@
   {% if b.lignes %}
     <table class="notes">
       <tr>
-        <th style="width:23%;">{{ bi("Matière", separateur="<br>") }}</th><th style="width:11%;">{{ bi("Moy. /" ~ calcul.bareme, "المعدل", "<br>") }}</th><th style="width:8%;">{{ bi("Coef.", separateur="<br>") }}</th>
-        <th style="width:10%;">{{ bi("Points", separateur="<br>") }}</th><th style="width:8%;">{{ bi("Rang", separateur="<br>") }}</th><th style="width:11%;">{{ bi("Moy. classe", separateur="<br>") }}</th>
-        <th style="width:13%;">{{ bi("Min – Max", separateur="<br>") }}</th><th style="width:16%;">{{ bi("Appréciation", separateur="<br>") }}</th>
+        <th style="width:{{ 30 if bilingue else 23 }}%;">{{ bi("Matière", separateur="<br>") }}</th><th style="width:{{ 9 if bilingue else 11 }}%;">{{ bi("Moy. /" ~ calcul.bareme, "المعدل", "<br>") }}</th><th style="width:{{ 7 if bilingue else 8 }}%;">{{ bi("Coef.", separateur="<br>") }}</th>
+        <th style="width:{{ 9 if bilingue else 10 }}%;">{{ bi("Points", separateur="<br>") }}</th><th style="width:{{ 7 if bilingue else 8 }}%;">{{ bi("Rang", separateur="<br>") }}</th><th style="width:11%;">{{ bi("Moy. classe", separateur="<br>") }}</th>
+        <th style="width:{{ 12 if bilingue else 13 }}%;">{{ bi("Min – Max", separateur="<br>") }}</th><th style="width:16%;">{{ bi("Appréciation", separateur="<br>") }}</th>
       </tr>
       {% for l in b.lignes %}
         <tr>
-          <td>{{ bi(l.matiere, separateur="<br>") }}</td><td class="c">{{ "%.2f"|format(l.moyenne) }}</td><td class="c">{{ "%g"|format(l.coefficient) }}</td>
+          <td>{{ bi(l.matiere, separateur=" &nbsp;") }}</td><td class="c">{{ "%.2f"|format(l.moyenne) }}</td><td class="c">{{ "%g"|format(l.coefficient) }}</td>
           <td class="c">{{ "%.2f"|format(l.points) }}</td><td class="c">{{ l.rang }}</td><td class="c">{{ "%.2f"|format(l.classe) }}</td>
-          <td class="c">{{ "%.1f"|format(l.min) }} – {{ "%.1f"|format(l.max) }}</td><td>{{ bi(l.mention, separateur="<br>") }}</td>
+          <td class="c">{{ "%.1f"|format(l.min) }} – {{ "%.1f"|format(l.max) }}</td><td>{{ bi(l.mention, separateur=" &nbsp;") }}</td>
         </tr>
       {% endfor %}
       <tr>

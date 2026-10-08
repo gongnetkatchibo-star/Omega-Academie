@@ -204,6 +204,14 @@ def create_app(config_name=None):
     app.add_template_filter(arabe_pdf, "arabe_pdf")
     app.add_template_filter(traduction_document, "trad_doc")
 
+    @app.template_filter("ltr")
+    def isoler_ltr(valeur):
+        """Valeur à garder de gauche à droite dans une phrase arabe
+        (année scolaire « 2026-2027 », numéro…). Sans effet en français."""
+        if valeur is None:
+            return ""
+        return f"\u2066{valeur}\u2069" if langue_courante() == "ar" else str(valeur)
+
     from app.services.pagination import liens_pagination
     app.add_template_global(liens_pagination, "pagination")
 
