@@ -86,6 +86,7 @@
     {% if not b.appreciation %}<br>&nbsp;<br>&nbsp;{% endif %}
   </div>
 
+  {% set verification = verifs.get(eleve.id) if verifs else None %}
   {% include "documents_officiels/_signature.html" %}
 {% endfor %}
 </body>

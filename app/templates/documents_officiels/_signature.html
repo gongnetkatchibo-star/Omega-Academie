@@ -1,6 +1,24 @@
 <table style="width:100%; margin-top:40pt;">
   <tr>
-    <td style="width:45%; border:none; background:none;"></td>
+    <td style="width:45%; border:none; background:none; vertical-align:bottom; color:#000;">
+      {% if verification %}
+        {# QR code de vérification (oct. 2026) : renvoie vers la page
+           publique /verifier/<code> de ce document. #}
+        <table style="width:100%;">
+          <tr>
+            <td style="width:72pt; border:none; background:none; padding:0;">
+              <img src="{{ verification.qr }}" style="width:66pt; height:66pt;">
+            </td>
+            <td style="border:none; background:none; padding:0 0 0 6pt; font-size:7.5pt; line-height:1.35; color:#333;">
+              <strong>Vérifier ce document</strong><br>
+              Scannez le QR code ou saisissez le code<br>
+              <strong style="font-size:9pt; color:#000;">{{ verification.code }}</strong><br>
+              sur {{ verification.adresse }}
+            </td>
+          </tr>
+        </table>
+      {% endif %}
+    </td>
     <td style="width:55%; text-align:center; padding-right:10pt; border:none; background:none; color:#000;">
       <p style="margin:0 0 14pt 0; font-weight:bold;">{{ lieu_et_date }}.</p>
       <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}</p>

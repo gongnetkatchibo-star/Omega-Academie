@@ -220,7 +220,12 @@ def _pdf_bulletins(classe, periode, eleves, nom_fichier):
     pages = [(e, calcul["bulletins"][e.id]) for e in eleves if e.id in calcul["bulletins"]]
     if not pages:
         return None
-    html = render_template("notes/bulletin_pdf.html", classe=classe, calcul=calcul, pages=pages, **contexte_entete_officiel())
+    from app.services.verification import emettre_bulletin, bloc_verification
+    verifs = {e.id: bloc_verification(emettre_bulletin(e, classe, calcul, b)) for e, b in pages}
+    db.session.commit()
+    html = render_template(
+        "notes/bulletin_pdf.html", classe=classe, calcul=calcul, pages=pages, verifs=verifs, **contexte_entete_officiel(),
+    )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}.pdf"

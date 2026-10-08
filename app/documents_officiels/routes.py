@@ -41,13 +41,17 @@ def _generer(eleve_id, type_doc):
             eleve=eleve, libelle=libelle, parametre=ParametreEtablissement.get(),
         )
 
+    from app.services.verification import emettre_document_eleve, bloc_verification
+
     signataire = signataire_depuis_formulaire()
     numero = numero_reference(code)
     journaliser(f"generation_{prefixe_fichier}", details=f"{eleve.nom_complet} — {numero}", cible_type="Eleve", cible_id=eleve.id)
+    document = emettre_document_eleve(type_doc, eleve, numero, signataire)
     db.session.commit()
 
     contexte = contexte_entete_officiel()
     contexte["signataire"] = signataire
+    contexte["verification"] = bloc_verification(document)
     html = render_template(modele, eleve=eleve, numero=numero, **contexte)
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"

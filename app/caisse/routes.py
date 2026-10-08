@@ -213,7 +213,13 @@ def recu_pdf(mouvement_id):
     autre ligne officielle."""
     m = db.get_or_404(MouvementCaisse, mouvement_id)
     from app.services.documents_officiels import contexte_entete_officiel
-    html = render_template("caisse/recu_pdf.html", etablissement=nom_ecole_courante(), m=m, **contexte_entete_officiel())
+    from app.services.verification import emettre_recu, bloc_verification
+    verification = bloc_verification(emettre_recu(m))
+    db.session.commit()
+    html = render_template(
+        "caisse/recu_pdf.html", etablissement=nom_ecole_courante(), m=m, verification=verification,
+        **contexte_entete_officiel(),
+    )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
     reponse.headers["Content-Disposition"] = f"attachment; filename=recu_{m.reference or m.id}.pdf"

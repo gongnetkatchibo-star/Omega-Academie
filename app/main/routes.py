@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from datetime import datetime
 
+from app import limiter
 from app.extensions import db
 from app.main import main_bp
 from app.models.user import ROLES_DIRECTION, ROLES_PERSONNEL
@@ -288,3 +289,37 @@ def image_ecole(image):
     reponse = Response(contenu, mimetype=getattr(ecole, f"{image}_mime") or "image/png")
     reponse.headers["Cache-Control"] = "private, max-age=3600"
     return reponse
+
+
+@main_bp.route("/verifier", methods=["GET", "POST"])
+@limiter.limit("30 per minute")
+def verifier_formulaire():
+    """Page publique : saisir à la main le code imprimé sous le QR code."""
+    from app.services.verification import normaliser_code
+
+    if request.method == "POST":
+        code = normaliser_code(request.form.get("code"))
+        if code:
+            return redirect(url_for("main.verifier", code=code))
+        flash("Ce code n'a pas le bon format. Il compte 12 caractères, par exemple K7QF-3M9X-PA2D.", "error")
+    return render_template("main/verifier.html", document=None, recherche=False)
+
+
+@main_bp.route("/verifier/<code>")
+@limiter.limit("30 per minute")
+def verifier(code):
+    """Page publique ouverte par le QR code d'un document officiel. Elle
+    n'affiche que ce qui figure déjà sur le papier."""
+    from sqlalchemy import select
+    from app.models.ecole import Ecole
+    from app.services.verification import trouver
+
+    document = trouver(code)
+    ecole = None
+    if document:
+        ecole = db.session.execute(
+            select(Ecole).where(Ecole.id == document.ecole_id).execution_options(tous_etablissements=True)
+        ).scalar_one_or_none()
+    reponse = render_template("main/verifier.html", document=document, ecole_emettrice=ecole, recherche=True, code=code)
+    # Jamais indexée par les moteurs de recherche : elle contient des noms d'élèves.
+    return reponse, (200 if document else 404), {"X-Robots-Tag": "noindex, nofollow"}
