@@ -20,6 +20,7 @@ compte connecté et à la console plateforme."""
 from flask import g, has_app_context, session
 from sqlalchemy import event
 from sqlalchemy.orm import Session, with_loader_criteria
+from sqlalchemy.orm.util import LoaderCriteriaOption
 
 from app.extensions import db
 
@@ -86,6 +87,16 @@ def installer_isolement(app):
             return
         ecole_id = ecole_courante_id()
         if ecole_id is None:
+            return
+        # Un objet chargé avec ce filtre le transmet aux objets liés qu'on
+        # charge ensuite à partir de lui (élève → classe → élèves…). Le
+        # rajouter à chaque étape l'empilait sans fin, jusqu'à dépasser la
+        # limite de la base (constaté oct. 2026) : on ne l'ajoute que s'il
+        # n'y est pas déjà.
+        if any(
+            isinstance(option, LoaderCriteriaOption) and option.root_entity is AppartientEcole
+            for option in getattr(execute_state.statement, "_with_options", ())
+        ):
             return
         execute_state.statement = execute_state.statement.options(
             with_loader_criteria(
