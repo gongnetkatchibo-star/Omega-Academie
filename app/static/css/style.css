@@ -2071,6 +2071,7 @@ button:hover {
 
 @media (max-width: 800px) {
   .sidebar-toggle-mobile { display: flex; }
+  .contenu-principal { margin-left: 0; }
 }
 
 /* Barre du haut : devise de l'école et recherche */
@@ -2495,6 +2496,11 @@ button:hover {
   padding: 10px 8px;
   border-bottom: 1px solid var(--trait);
   white-space: nowrap;
+}
+
+.tdb-table .tdb-cellule-discrete {
+  font-size: 13px;
+  color: var(--encre-3);
 }
 
 .tdb-table tr:last-child td {

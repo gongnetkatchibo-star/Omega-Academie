@@ -213,8 +213,8 @@
                     <td>{{ p.libelle_echeance }}</td>
                     <td><span class="tdb-mode tdb-mode-{{ p.mode }}">{{ tableau.libelles_mode.get(p.mode, p.mode) }}</span></td>
                     <td class="nombre"><strong>{{ p.montant|fcfa }}</strong></td>
-                    <td class="tdb-discret">{{ p.numero_recu or "—" }}</td>
-                    <td class="tdb-discret">{{ p.date_paiement.strftime("%d/%m à %H:%M") if p.date_paiement }}</td>
+                    <td class="tdb-cellule-discrete">{{ p.numero_recu or "—" }}</td>
+                    <td class="tdb-cellule-discrete">{{ p.date_paiement.strftime("%d/%m à %H:%M") if p.date_paiement }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
