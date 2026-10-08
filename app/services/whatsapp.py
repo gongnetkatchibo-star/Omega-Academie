@@ -59,7 +59,7 @@ def _nom_ecole():
 
 
 def _date(jour):
-    return current_app.jinja_env.filters["date_longue"](jour)
+    return current_app.jinja_env.filters["date_longue"](jour, langue="fr")
 
 
 def message_absence(eleve, jour):

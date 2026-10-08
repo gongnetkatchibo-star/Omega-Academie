@@ -75,6 +75,12 @@ def html_vers_pdf(html):
     from io import BytesIO
     from xhtml2pdf import pisa
 
+    if 'class="ar' in html:
+        # Document bilingue : polices arabes (voir services/langues.py).
+        from app.services.langues import css_polices_arabes
+        polices = css_polices_arabes()
+        html = re.sub(r"(<head[^>]*>)", lambda m: m.group(1) + "<style>" + polices + "</style>", html, count=1)
+
     uri_filigrane = filigrane_data_uri()
     if not uri_filigrane:
         tampon = BytesIO()

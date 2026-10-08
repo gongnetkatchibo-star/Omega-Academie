@@ -55,6 +55,8 @@ class User(AppartientEcole, UserMixin, db.Model):
     mot_de_passe_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(40), nullable=False)
     statut = db.Column(db.String(20), nullable=False, default="en_attente")
+    # Langue de l'interface choisie par la personne : "fr" ou "ar" (oct. 2026).
+    langue = db.Column(db.String(2), nullable=False, default="fr")
     date_creation = db.Column(db.DateTime, default=maintenant)
 
     ecole_id = db.Column(db.Integer, db.ForeignKey("ecoles.id"), index=True)

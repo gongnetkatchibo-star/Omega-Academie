@@ -323,3 +323,24 @@ def verifier(code):
     reponse = render_template("main/verifier.html", document=document, ecole_emettrice=ecole, recherche=True, code=code)
     # Jamais indexée par les moteurs de recherche : elle contient des noms d'élèves.
     return reponse, (200 if document else 404), {"X-Robots-Tag": "noindex, nofollow"}
+
+
+@main_bp.route("/langue/<code>")
+def changer_langue(code):
+    """Bouton FR / ع : retenu sur le compte (et dans la session pour une
+    personne non connectée), puis retour à la page d'où l'on vient."""
+    from urllib.parse import urlparse
+    from flask import session
+    from app.services.langues import LANGUES
+
+    if code not in LANGUES:
+        abort(404)
+    session["langue"] = code
+    if current_user.is_authenticated and current_user.langue != code:
+        current_user.langue = code
+        db.session.commit()
+    retour = request.referrer or ""
+    cible = urlparse(retour)
+    if not retour or (cible.netloc and cible.netloc != request.host):
+        return redirect(url_for("main.index"))
+    return redirect(cible.path + (f"?{cible.query}" if cible.query else ""))

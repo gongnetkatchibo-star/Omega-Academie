@@ -16,6 +16,9 @@ class Ecole(db.Model):
     ville = db.Column(db.String(80))
     pays = db.Column(db.String(80))
     slogan = db.Column(db.String(200))  # devise affichée dans la barre du haut
+    # Nom et ville en arabe, pour l'en-tête des documents bilingues (oct. 2026).
+    nom_arabe = db.Column(db.String(200))
+    ville_arabe = db.Column(db.String(80))
     prefixe_matricule = db.Column(db.String(20), unique=True)
     couleur_principale = db.Column(db.String(7), default="#00387B")
     couleur_secondaire = db.Column(db.String(7), default="#DEA230")

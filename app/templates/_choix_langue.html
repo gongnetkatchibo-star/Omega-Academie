@@ -1,0 +1,6 @@
+{# Bouton FR / ع (oct. 2026) : propose l'autre langue que celle affichée. #}
+{% if langue_courante() == "ar" %}
+  <a class="choix-langue" href="{{ url_for('main.changer_langue', code='fr') }}" lang="fr" title="{{ _('Afficher en français') }}">FR</a>
+{% else %}
+  <a class="choix-langue" href="{{ url_for('main.changer_langue', code='ar') }}" lang="ar" title="Afficher en arabe · العرض بالعربية">ع</a>
+{% endif %}

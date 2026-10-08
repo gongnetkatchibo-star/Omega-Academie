@@ -177,12 +177,24 @@ def create_app(config_name=None):
             "septembre", "octobre", "novembre", "décembre"]
 
     @app.template_filter("date_longue")
-    def date_longue(jour, avec_jour=True):
-        """date(2026, 10, 8) → « jeudi 8 octobre 2026 »."""
+    def date_longue(jour, avec_jour=True, langue=None):
+        """date(2026, 10, 8) → « jeudi 8 octobre 2026 » (ou en arabe si
+        c'est la langue de la personne connectée)."""
         if not jour:
             return ""
+        from app.services.langues import langue_courante
+        if (langue or langue_courante()) == "ar":
+            from app.services import traductions_ar as ar
+            texte = f"{jour.day} {ar.MOIS[jour.month - 1]} {jour.year}"
+            return f"{ar.JOURS[jour.weekday()]} {texte}" if avec_jour else texte
         texte = f"{'1er' if jour.day == 1 else jour.day} {MOIS[jour.month - 1]} {jour.year}"
         return f"{JOURS[jour.weekday()]} {texte}" if avec_jour else texte
+
+    from app.services.langues import traduire, langue_courante, arabe_pdf, traduction_document
+    app.add_template_global(traduire, "_")
+    app.add_template_global(langue_courante, "langue_courante")
+    app.add_template_filter(arabe_pdf, "arabe_pdf")
+    app.add_template_filter(traduction_document, "trad_doc")
 
     from app.services.pagination import liens_pagination
     app.add_template_global(liens_pagination, "pagination")
@@ -207,7 +219,7 @@ def create_app(config_name=None):
         template plutôt que ce raccourci."""
         return Markup(
             f'<div class="etat-vide"><span class="etat-vide-icone">{icone(cle_icone)}</span>'
-            f'<p>{escape(texte)}</p></div>'
+            f'<p>{escape(traduire(texte))}</p></div>'
         )
 
     @app.template_global()
@@ -216,13 +228,14 @@ def create_app(config_name=None):
         Usage : {{ fil_ariane(("Élèves", url_for('eleves.liste')), (eleve.nom_complet, None)) }}
         Le dernier élément (page actuelle) n'a généralement pas de lien
         (sept. 2026)."""
-        morceaux = [f'<a href="{escape(url_for("main.index"))}">Accueil</a>']
+        from app.services.langues import traduire as t
+        morceaux = [f'<a href="{escape(url_for("main.index"))}">{escape(t("Accueil"))}</a>']
         for label, url in items:
             morceaux.append('<span class="fil-ariane-sep">›</span>')
             if url:
-                morceaux.append(f'<a href="{escape(url)}">{escape(label)}</a>')
+                morceaux.append(f'<a href="{escape(url)}">{escape(t(label))}</a>')
             else:
-                morceaux.append(f'<span class="fil-ariane-actuel">{escape(label)}</span>')
+                morceaux.append(f'<span class="fil-ariane-actuel">{escape(t(label))}</span>')
         return Markup(f'<nav class="fil-ariane" aria-label="Fil d\'Ariane">{"".join(morceaux)}</nav>')
 
     @app.template_global()
@@ -231,11 +244,12 @@ def create_app(config_name=None):
         simple <h1> par quelque chose de plus soigné, sur le modèle des
         tableaux de bord de référence montrés par l'utilisateur
         (sept. 2026)."""
-        bloc_description = f'<p>{escape(description)}</p>' if description else ""
+        from app.services.langues import traduire as t
+        bloc_description = f'<p>{escape(t(description))}</p>' if description else ""
         return Markup(
             f'<div class="banniere-page">'
             f'<span class="banniere-page-icone">{icone(cle_icone)}</span>'
-            f'<div><h1>{escape(titre)}</h1>{bloc_description}</div>'
+            f'<div><h1>{escape(t(titre))}</h1>{bloc_description}</div>'
             f'</div>'
         )
 
