@@ -39,7 +39,7 @@ def test_retard_apres_la_date_limite(client, db, scolarite):
     client.post(f"/finances/{scolarite['eleve']}", data={"montant": "4000", "mode": "especes", "echeance": "inscription"})
     assert _resume(db, scolarite["eleve"])["retard"] == 6000
     page = client.get("/finances/?retard=1").get_data(as_text=True)
-    assert "Awa" in page and "6000" in page
+    assert "Awa" in page and "6\u00a0000\u00a0FCFA" in page
     client.post(f"/finances/{scolarite['eleve']}", data={"montant": "6000", "mode": "especes", "echeance": "inscription"})
     assert _resume(db, scolarite["eleve"])["retard"] == 0
     assert "Aucun élève en retard" in client.get("/finances/?retard=1").get_data(as_text=True)

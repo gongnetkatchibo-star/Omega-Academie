@@ -8,11 +8,11 @@
   {% endwith %}
 
   <p>
-    <strong>Total dû :</strong> {{ resume.du|int }} ·
-    <strong>Total payé :</strong> {{ resume.paye|int }} ·
-    <strong>Solde :</strong> {{ resume.solde|int }} ·
+    <strong>Total dû :</strong> {{ resume.du|fcfa }} ·
+    <strong>Total payé :</strong> {{ resume.paye|fcfa }} ·
+    <strong>Solde :</strong> {{ resume.solde|fcfa }} ·
     <strong>Statut :</strong>
-    <span class="{% if resume.statut == 'PAYÉ' %}solde-ok{% else %}solde-du{% endif %}">{{ resume.statut }}</span>
+    <span class="badge {{ {'PAYÉ': 'badge-ok', 'PARTIEL': 'badge-attention'}.get(resume.statut, 'badge-critique') }}">{{ resume.statut }}</span>
   </p>
 
   {% if resume.solde > 0 and acces("comptable", "fondateur", "administrateur_general") %}
@@ -23,7 +23,7 @@
   {% endif %}
 
   {% if resume.retard > 0 %}
-    <p class="solde-du"><strong>En retard : {{ resume.retard|int }}</strong> (date limite dépassée)</p>
+    <p class="solde-du"><strong>En retard : {{ resume.retard|fcfa }}</strong> (date limite dépassée)</p>
   {% endif %}
   {% if resume.remise %}
     <p>Remise de <strong>{{ "%g"|format(resume.remise) }} %</strong> sur la scolarité{% if eleve.remise_motif %} — {{ eleve.remise_motif }}{% endif %}.</p>
@@ -37,9 +37,9 @@
         <tr>
           <td>{{ e.libelle }}</td>
           <td class="{% if e.en_retard %}solde-du{% endif %}">{{ e.date_limite.strftime("%d/%m/%Y") if e.date_limite else "—" }}{% if e.en_retard %} · en retard{% endif %}</td>
-          <td>{{ e.attendu|int }}</td>
-          <td>{{ e.paye|int }}</td>
-          <td class="{% if e.reste > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ e.reste|int }}</td>
+          <td>{{ e.attendu|fcfa }}</td>
+          <td>{{ e.paye|fcfa }}</td>
+          <td class="{% if e.reste > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ e.reste|fcfa }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -65,7 +65,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Échéance
       <select name="echeance" required>
-        {% for e in resume.echeances + resume.annexes %}<option value="{{ e.cle }}">{{ e.libelle }}{% if e.reste > 0 %} — reste {{ e.reste|int }}{% endif %}</option>{% endfor %}
+        {% for e in resume.echeances + resume.annexes %}<option value="{{ e.cle }}">{{ e.libelle }}{% if e.reste > 0 %} — reste {{ e.reste|fcfa }}{% endif %}</option>{% endfor %}
       </select>
     </label>
     <label>Montant
@@ -92,7 +92,7 @@
           <tr>
             <td>{{ p.date_paiement.strftime("%d/%m/%Y") }}</td>
             <td>{{ p.libelle_echeance }}</td>
-            <td>{{ p.montant|int }}</td>
+            <td>{{ p.montant|fcfa }}</td>
             <td>{{ p.mode.replace('_', ' ') }}</td>
             <td>{{ p.numero_recu or "—" }}</td>
             <td>{{ p.reference or "—" }}</td>

@@ -14,10 +14,10 @@
         {% for f in frais %}
           <tr>
             <td><strong>{{ f.libelle }}</strong></td>
-            <td>{{ f.montant|int }}</td>
+            <td>{{ f.montant|fcfa }}</td>
             <td>{{ f.classe.nom if f.classe else "Toutes les classes" }}</td>
             <td>{{ f.date_limite.strftime("%d/%m/%Y") if f.date_limite else "—" }}</td>
-            <td>{{ encaisse[f.id]|int }}</td>
+            <td>{{ encaisse[f.id]|fcfa }}</td>
             <td>
               {% if acces("fondateur", "administrateur_general") and not encaisse[f.id] %}
                 <form method="post" action="{{ url_for('finances.supprimer_frais_annexe', frais_id=f.id) }}" onsubmit="return confirm('Supprimer ce frais ?');">

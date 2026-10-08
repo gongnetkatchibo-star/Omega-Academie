@@ -1,5 +1,5 @@
 :root {
-  /* Charte oct. 2026 : indigo et ocre, tirés du logo de l'école.
+  /* Charte Toumaï (oct. 2026) : indigo et ocre.
      Les anciens noms (navy, gold…) sont gardés : tout le fichier s'en sert. */
   --navy: #23306B;        /* indigo — menu, titres, boutons */
   --gold: #C9820F;        /* ocre — accent, élément actif, focus */
@@ -1714,4 +1714,910 @@ textarea {
 
 .fiche-eleve-champs dd {
   margin: 0;
+}
+
+/* ==========================================================================
+   Charte Toumaï (oct. 2026)
+   Placée en fin de fichier : elle remplace l'aspect des composants
+   existants (menu, boutons, tableaux, bandeaux) sans toucher aux pages.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Figtree";
+  src: url("../fonts/figtree.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../fonts/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 600 700;
+  font-display: swap;
+}
+
+body {
+  font-family: var(--police-texte);
+  font-size: 15.5px;
+  color: var(--encre);
+  background: var(--cream);
+}
+
+h1, h2, h3 {
+  font-family: var(--police-titres);
+  color: var(--encre);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.container a:not([class]) {
+  color: var(--navy);
+  text-decoration-color: rgba(35, 48, 107, 0.35);
+  text-underline-offset: 3px;
+}
+
+.container a:not([class]):hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ocre-vif);
+  outline-offset: 2px;
+}
+
+/* Icônes dessinées */
+.sprite-icones {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+svg.icone {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -3px;
+}
+
+/* Champs et boutons */
+input, select, textarea {
+  font-family: inherit;
+  border-color: #D5D9E6;
+  border-radius: 8px;
+  color: var(--encre);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--ocre-vif);
+  border-color: var(--gold);
+}
+
+button {
+  font-family: inherit;
+  font-size: 15px;
+  background-color: var(--navy);
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+
+button:hover {
+  opacity: 1;
+  background-color: #2E3C82;
+}
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--trait);
+  background: var(--surface);
+  color: var(--encre);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bouton:hover {
+  border-color: var(--encre-3);
+}
+
+.bouton-plein {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+.bouton-plein:hover {
+  background: #2E3C82;
+  border-color: #2E3C82;
+}
+
+/* Tableaux : en-tête discret plutôt qu'un bandeau bleu plein */
+.table th {
+  background: transparent;
+  color: var(--encre-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--trait);
+}
+
+.table th, .table td {
+  border-bottom-color: var(--trait);
+}
+
+.table {
+  background: var(--surface);
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+.table tbody tr:hover {
+  background: #F6F7FB;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.solde-du { color: var(--critique); }
+.solde-ok { color: var(--ok); }
+
+/* Pastilles d'état (Bon, À suivre, Critique…) */
+.badge {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.badge-ok { background: var(--ok-pale); color: var(--ok); }
+.badge-attention { background: var(--attention-pale); color: var(--attention); }
+.badge-critique { background: var(--critique-pale); color: var(--critique); }
+
+/* Bandeau de page : sobre, il ne prend plus un quart de l'écran */
+.banniere-page {
+  background: none;
+  color: var(--encre);
+  padding: 4px 0;
+  margin-bottom: 20px;
+  border-radius: 0;
+  gap: 14px;
+}
+
+.banniere-page-icone {
+  width: 44px;
+  height: 44px;
+  background: var(--ocre-pale);
+  color: var(--gold);
+  border-radius: 10px;
+}
+
+.banniere-page-icone svg.icone {
+  width: 22px;
+  height: 22px;
+}
+
+.banniere-page h1 {
+  color: var(--encre);
+  font-size: 26px;
+  margin: 0;
+}
+
+.banniere-page p {
+  color: var(--encre-2);
+  font-size: 14.5px;
+  margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .banniere-page {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+.fil-ariane a { color: var(--encre-2); }
+.fil-ariane-actuel { color: var(--encre); }
+
+.carte-attente {
+  background: var(--alerte-fond);
+  border: 1px solid #F0D9A8;
+}
+
+.carte-attente-critique {
+  background: var(--critique-pale);
+  border-color: #F2C4BA;
+}
+
+/* Menu latéral */
+.sidebar {
+  background: var(--navy);
+  width: 240px;
+}
+
+.contenu-principal {
+  margin-left: 240px;
+}
+
+.sidebar-marque {
+  padding: 18px 16px 16px;
+  border-bottom: 0;
+}
+
+.sidebar-marque .logo-mark {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  padding: 3px;
+  object-fit: contain;
+}
+
+.sidebar-marque span {
+  font-family: var(--police-titres);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.sidebar-utilisateur {
+  margin: 0 12px;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-utilisateur .navbar-avatar {
+  background: var(--ocre-vif);
+  color: #1B1406;
+  font-size: 13px;
+}
+
+.sidebar-liens {
+  padding: 12px 10px;
+  gap: 1px;
+}
+
+.sidebar-liens a,
+.sidebar-deroulant summary {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 10px;
+  border-left: 0;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: #DDE1F2;
+}
+
+.sidebar-liens a svg.icone,
+.sidebar-deroulant summary svg.icone {
+  color: #A9B1D6;
+}
+
+.sidebar-liens a:hover,
+.sidebar-deroulant summary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar-liens a.lien-actif {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 3px 0 0 var(--ocre-vif);
+}
+
+.sidebar-liens a.lien-actif svg.icone {
+  color: var(--ocre-vif);
+}
+
+.sidebar-deroulant summary::after {
+  right: 12px;
+  color: #A9B1D6;
+}
+
+.sidebar-deroulant[open] {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 8px;
+}
+
+.sidebar-deroulant a {
+  padding: 7px 10px 7px 39px !important;
+  font-size: 14px;
+}
+
+.sidebar-lien-plateforme {
+  background: rgba(232, 163, 58, 0.16);
+  box-shadow: inset 3px 0 0 var(--ocre-vif);
+}
+
+.sidebar-pied {
+  padding: 12px 22px 18px;
+  font-size: 12px;
+  color: #8F97C2;
+}
+
+.sidebar-pied strong {
+  color: #DDE1F2;
+  font-family: var(--police-titres);
+  font-weight: 600;
+}
+
+.sidebar-toggle-mobile {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy);
+  border-radius: 8px;
+}
+
+@media (max-width: 800px) {
+  .sidebar-toggle-mobile { display: flex; }
+}
+
+/* Barre du haut : devise de l'école et recherche */
+.barre-devise {
+  background: var(--surface);
+  border-bottom: 1px solid var(--trait);
+  color: var(--encre-2);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: left;
+  padding: 10px 32px;
+}
+
+.recherche-globale {
+  flex: 0 1 320px;
+}
+
+.recherche-globale input[type=search] {
+  border-radius: 8px;
+  background: var(--cream);
+  border-color: var(--trait);
+}
+
+.container {
+  max-width: 1240px;
+  margin: 28px auto;
+  padding: 0 32px;
+}
+
+@media (max-width: 800px) {
+  .barre-devise { padding-left: 64px; padding-right: 16px; }
+  .container { padding: 0 16px; margin-top: 20px; }
+}
+
+/* Cartes des guides */
+.carte-guide {
+  border: 1px solid var(--trait);
+  border-left: 1px solid var(--trait);
+  background: var(--surface);
+}
+
+.carte-guide:hover, .carte-guide:focus-visible {
+  box-shadow: 0 6px 18px rgba(35, 48, 107, 0.10);
+  border-color: #CBD0E2;
+}
+
+.carte-guide-icone {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ocre-pale);
+  color: var(--gold);
+  border-radius: 9px;
+}
+
+.carte-guide-icone svg.icone {
+  width: 20px;
+  height: 20px;
+}
+
+.carte-guide-texte strong {
+  color: var(--encre);
+  font-size: 16px;
+}
+
+.carte-guide-lien {
+  color: var(--navy);
+}
+
+.grille-guides-compacte {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.grille-guides-compacte .carte-guide {
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.grille-guides-compacte .carte-guide-texte strong {
+  font-size: 14.5px;
+  font-family: var(--police-texte);
+}
+
+.accueil-carte-ecole {
+  background: var(--navy);
+}
+
+.accueil-carte-ecole h1 {
+  color: #fff;
+}
+
+/* ========== Tableau de bord de la direction (oct. 2026) ========== */
+
+.accueil {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.accueil > .carte-attente,
+.accueil > .accueil-carte-ecole,
+.accueil > .accueil-titre-guides {
+  margin: 0;
+}
+
+.tdb-entete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tdb-entete h1 {
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.tdb-entete p {
+  margin: 4px 0 0;
+  color: var(--encre-2);
+}
+
+.tdb-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tdb-indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.tdb-indicateur {
+  background: var(--surface);
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tdb-indicateur-titre {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--encre-2);
+}
+
+.tdb-indicateur-titre svg.icone {
+  width: 15px;
+  height: 15px;
+  color: var(--encre-3);
+}
+
+.tdb-indicateur-valeur {
+  font-family: var(--police-titres);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-indicateur-valeur small {
+  font-family: var(--police-texte);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-2);
+  margin-left: 5px;
+}
+
+.tdb-indicateur-detail {
+  font-size: 13.5px;
+  color: var(--encre-2);
+}
+
+.tdb-indicateur-detail strong {
+  color: var(--encre);
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-hausse { color: var(--ok); font-weight: 600; }
+.tdb-baisse { color: var(--critique); font-weight: 600; }
+
+.tdb-jauge {
+  display: block;
+  height: 6px;
+  background: var(--piste);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.tdb-jauge > span {
+  display: block;
+  height: 100%;
+  background: var(--ocre-vif);
+  border-radius: 99px;
+}
+
+.tdb-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.tdb-grille > .tdb-panneau:only-child {
+  grid-column: 1 / -1;
+}
+
+.tdb-panneau {
+  background: var(--surface);
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tdb-panneau-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tdb-panneau h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.tdb-panneau-tete a {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
+  text-decoration: none;
+}
+
+.tdb-panneau-tete a:hover {
+  text-decoration: underline;
+}
+
+.tdb-sous-titre {
+  margin: -8px 0 0;
+  font-size: 13.5px;
+  color: var(--encre-2);
+}
+
+.tdb-discret {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--encre-3);
+}
+
+.tdb-vide {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+/* Échéancier */
+.tdb-echeances {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tdb-echeance-haut {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.tdb-echeance-haut .tdb-discret {
+  display: inline;
+  margin-left: 6px;
+  font-size: 12.5px;
+}
+
+.tdb-chiffres {
+  color: var(--encre-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-chiffres strong {
+  color: var(--encre);
+}
+
+.tdb-piste {
+  height: 14px;
+  background: var(--piste);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tdb-piste > span {
+  display: block;
+  height: 100%;
+  background: var(--navy);
+  border-radius: 4px;
+}
+
+.tdb-legende {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--encre-2);
+}
+
+.tdb-legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tdb-legende i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.tdb-legende-encaisse { background: var(--navy); }
+.tdb-legende-reste { background: var(--piste); }
+
+/* À traiter */
+.tdb-taches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tdb-taches li + li {
+  border-top: 1px solid var(--trait);
+}
+
+.tdb-taches a {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tdb-taches a:hover strong {
+  text-decoration: underline;
+}
+
+.tdb-taches strong {
+  font-size: 14.5px;
+}
+
+.tdb-taches svg.icone {
+  color: var(--encre-3);
+  width: 16px;
+  height: 16px;
+}
+
+.tdb-pastille {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--police-titres);
+  font-weight: 700;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-pastille-critique { background: var(--critique-pale); color: var(--critique); }
+.tdb-pastille-attention { background: var(--attention-pale); color: var(--attention); }
+.tdb-pastille-info { background: var(--piste); color: var(--navy); }
+
+/* Tableaux du tableau de bord */
+.tdb-defile {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+
+.tdb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tdb-table th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--encre-3);
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--trait);
+  white-space: nowrap;
+}
+
+.tdb-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--trait);
+  white-space: nowrap;
+}
+
+.tdb-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.tdb-table .nombre {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-taux {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.tdb-taux .tdb-jauge {
+  flex: 1;
+}
+
+.tdb-taux .tdb-jauge > span {
+  background: var(--navy);
+}
+
+.tdb-taux strong {
+  width: 40px;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-eleve {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tdb-eleve:hover > span:last-child {
+  text-decoration: underline;
+}
+
+.tdb-eleve small {
+  display: block;
+  font-size: 12px;
+  color: var(--encre-3);
+}
+
+.tdb-initiales {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--piste);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tdb-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--encre-2);
+}
+
+.tdb-mode::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--encre-3);
+}
+
+.tdb-mode-mobile_money::before { background: var(--ocre-vif); }
+.tdb-mode-virement_bancaire::before { background: var(--navy); }
+
+/* Absences du jour */
+.tdb-absences {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.tdb-absences li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--trait);
+}
+
+.tdb-absences li:last-child {
+  border-bottom: 0;
+}
+
+.tdb-absences strong {
+  color: var(--critique);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tdb-absences .tdb-discret {
+  display: inline;
+}
+
+@media (max-width: 1100px) {
+  .tdb-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .tdb-entete h1 { font-size: 25px; }
+  .tdb-actions { width: 100%; }
+  .tdb-actions .bouton { flex: 1 1 auto; justify-content: center; }
+  .tdb-indicateurs { grid-template-columns: minmax(0, 1fr); }
 }

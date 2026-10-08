@@ -48,7 +48,7 @@
             <td>{{ s.email_contact or "—" }}</td>
             <td>{{ s.telephone_contact or "—" }}</td>
             <td>{{ s.libelle_periode }}</td>
-            <td>{{ s.montant|int }}</td>
+            <td>{{ s.montant|fcfa }}</td>
             <td class="{% if s.statut == 'paye' %}solde-ok{% else %}solde-du{% endif %}">{{ s.statut }}</td>
             <td>{{ s.date_paiement.strftime("%d/%m/%Y") if s.date_paiement else "—" }}</td>
             <td>

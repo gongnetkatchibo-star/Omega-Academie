@@ -41,7 +41,7 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ c.nom }}</strong>
-            <span>{{ c.annee_scolaire }} · {{ c.eleves.count() }} élève(s) · total annuel {{ c.frais_annuel|int }}</span>
+            <span>{{ c.annee_scolaire }} · {{ c.eleves.count() }} élève(s) · total annuel {{ c.frais_annuel|fcfa }}</span>
             {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "comptable") %}
               <form method="post" action="{{ url_for('classes.modifier_frais', classe_id=c.id) }}" class="ligne-frais">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

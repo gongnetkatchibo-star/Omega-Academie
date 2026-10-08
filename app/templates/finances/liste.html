@@ -19,11 +19,11 @@
           <tr>
             <td>{{ l.eleve.nom_complet }}</td>
             <td>{{ l.eleve.classe.nom }}</td>
-            <td>{{ l.du|int }}</td>
-            <td>{{ l.paye|int }}</td>
-            <td class="{% if l.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ l.solde|int }}</td>
-            <td class="{% if l.retard > 0 %}solde-du{% endif %}">{{ l.retard|int if l.retard > 0 else "—" }}</td>
-            <td class="{% if l.statut == 'PAYÉ' %}solde-ok{% else %}solde-du{% endif %}">{{ l.statut }}</td>
+            <td>{{ l.du|fcfa }}</td>
+            <td>{{ l.paye|fcfa }}</td>
+            <td class="{% if l.solde > 0 %}solde-du{% else %}solde-ok{% endif %}">{{ l.solde|fcfa }}</td>
+            <td class="{% if l.retard > 0 %}solde-du{% endif %}">{{ l.retard|fcfa if l.retard > 0 else "—" }}</td>
+            <td><span class="badge {{ {'PAYÉ': 'badge-ok', 'PARTIEL': 'badge-attention'}.get(l.statut, 'badge-critique') }}">{{ l.statut }}</span></td>
             <td><a href="{{ url_for('finances.detail', eleve_id=l.eleve.id) }}">Détail</a></td>
           </tr>
         {% endfor %}
