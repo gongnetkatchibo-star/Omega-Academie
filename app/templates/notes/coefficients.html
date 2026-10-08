@@ -4,7 +4,7 @@
   {{ fil_ariane(("Notes", url_for('notes.index')), (classe.nom, url_for('notes.bulletins_classe', classe_id=classe.id)), ("Coefficients", None)) }}
   <h1>{{ _("Coefficients —") }} {{ classe.nom }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
   {% if matieres %}
     <form method="post" class="formulaire-etroit">

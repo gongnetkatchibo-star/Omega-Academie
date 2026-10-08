@@ -9,7 +9,7 @@
     {% if messages %}
       <ul class="flashes">
         {% for category, message in messages %}
-          <li class="flash-{{ category }}">{{ message }}</li>
+          <li class="flash-{{ category }}">{{ _(message) }}</li>
         {% endfor %}
       </ul>
     {% endif %}

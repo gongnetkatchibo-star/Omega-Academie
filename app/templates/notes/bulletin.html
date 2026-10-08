@@ -4,7 +4,7 @@
   {{ fil_ariane(("Élèves", url_for('eleves.liste')) if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") else ("Bulletin", None), (eleve.nom_complet, None)) }}
   {{ banniere("notes", "Bulletin — " ~ eleve.nom_complet, eleve.classe.nom ~ " · " ~ eleve.matricule ~ " · " ~ calcul.annee) }}
   {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
   <nav class="onglets-periode" aria-label="{{ _("Période") }}">
