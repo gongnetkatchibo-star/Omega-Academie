@@ -65,7 +65,7 @@
                 </a></td>
                 <td class="cellule-discrete">{{ e.matricule }}</td>
                 <td>{{ e.classe.nom }}</td>
-                <td>{{ e.sexe|genre_libelle }}</td>
+                <td>{{ _(e.sexe|genre_libelle) }}</td>
                 <td>{% if e.statut_dossier == "complet" %}<span class="badge badge-ok">{{ _("Complet") }}</span>{% else %}<span class="badge badge-attention">{{ _("Incomplet") }}</span>{% endif %}</td>
               </tr>
             {% endfor %}

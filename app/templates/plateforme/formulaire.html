@@ -35,6 +35,6 @@
       </label>
       <label>{{ _("Mot de passe provisoire") }}<input type="text" name="fondateur_mot_de_passe" minlength="8" required autocomplete="off"></label>
     {% endif %}
-    <button type="submit">{{ "Enregistrer" if etab else "Créer l'établissement" }}</button>
+    <button type="submit">{{ _("Enregistrer" if etab else "Créer l'établissement") }}</button>
   </form>
 {% endblock %}

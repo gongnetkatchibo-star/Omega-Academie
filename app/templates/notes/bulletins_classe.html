@@ -9,7 +9,7 @@
 
   <nav class="onglets-periode" aria-label="{{ _("Période") }}">
     {% for p in periodes %}
-      <a href="{{ url_for('notes.bulletins_classe', classe_id=classe.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ libelles[p] }}</a>
+      <a href="{{ url_for('notes.bulletins_classe', classe_id=classe.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ _(libelles[p]) }}</a>
     {% endfor %}
   </nav>
 

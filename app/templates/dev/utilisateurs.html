@@ -81,7 +81,7 @@
               {% if u.id != current_user.id %}
                 <form method="post" action="{{ url_for('dev.basculer_verrouillage_utilisateur', user_id=u.id) }}" style="display:inline;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit">{{ "Déverrouiller" if u.statut == "verrouille" else "Verrouiller" }}</button>
+                  <button type="submit">{{ _("Déverrouiller" if u.statut == "verrouille" else "Verrouiller") }}</button>
                 </form>
               {% endif %}
               {% if u.id != current_user.id and current_user.role == "developpeur" %}

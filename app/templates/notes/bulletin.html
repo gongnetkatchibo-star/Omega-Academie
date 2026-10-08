@@ -9,7 +9,7 @@
 
   <nav class="onglets-periode" aria-label="{{ _("Période") }}">
     {% for p in periodes %}
-      <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ libelles[p] }}</a>
+      <a href="{{ url_for('notes.bulletin', eleve_id=eleve.id, trimestre=p) }}" {% if p == periode %}class="actif" aria-current="page"{% endif %}>{{ _(libelles[p]) }}</a>
     {% endfor %}
   </nav>
 
@@ -49,7 +49,7 @@
         <thead><tr><th>{{ _("Période") }}</th><th>{{ _("Moyenne /") }}{{ calcul.bareme }}</th></tr></thead>
         <tbody>
           {% for t, m in bulletin.trimestres.items() %}
-            <tr><td>{{ libelles[t] }}</td><td>{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
+            <tr><td>{{ _(libelles[t]) }}</td><td>{{ "%.2f"|format(m) if m is not none else "—" }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

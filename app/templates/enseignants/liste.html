@@ -23,7 +23,7 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ e.nom_complet }}</strong>
-            <span>{{ e.user.genre|genre_libelle }} — {{ e.specialite or "Spécialité non précisée" }} — {{ e.affectations|length }} {{ _("classe(s)") }}</span>
+            <span>{{ _(e.user.genre|genre_libelle) }} — {{ e.specialite or _("Spécialité non précisée") }} — {{ e.affectations|length }} {{ _("classe(s)") }}</span>
           </div>
           <div class="actions"><a href="{{ url_for('enseignants.detail', enseignant_id=e.id) }}">{{ _("Voir") }}</a></div>
         </li>

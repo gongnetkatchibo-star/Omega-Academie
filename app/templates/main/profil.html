@@ -43,7 +43,7 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ n.numero }}</strong>
-            <span>{{ "Airtel Tchad" if n.operateur == "airtel" else "Moov Africa Tchad" }}{% if n.libelle %} · {{ n.libelle }}{% endif %}</span>
+            <span>{{ _("Airtel Tchad" if n.operateur == "airtel" else "Moov Africa Tchad") }}{% if n.libelle %} · {{ n.libelle }}{% endif %}</span>
           </div>
           <div class="actions">
             <form method="post" action="{{ url_for('main.supprimer_numero', numero_id=n.id) }}" onsubmit="return confirm('{{ _("Supprimer ce numéro ?") }}');">

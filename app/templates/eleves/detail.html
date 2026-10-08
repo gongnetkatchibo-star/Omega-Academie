@@ -28,7 +28,7 @@
     <dl class="fiche-eleve-champs">
       <dt>{{ _("Matricule") }}</dt><dd>{{ eleve.matricule }}</dd>
       <dt>{{ _("Classe") }}</dt><dd>{{ eleve.classe.nom }} ({{ eleve.classe.annee_scolaire }})</dd>
-      <dt>{{ _("Genre") }}</dt><dd>{{ eleve.sexe|genre_libelle }}</dd>
+      <dt>{{ _("Genre") }}</dt><dd>{{ _(eleve.sexe|genre_libelle) }}</dd>
       <dt>{{ _("Naissance") }}</dt><dd>{{ eleve.date_naissance.strftime("%d/%m/%Y") if eleve.date_naissance else "—" }}{% if eleve.lieu_naissance %} {{ _("à") }} {{ eleve.lieu_naissance }}{% endif %}</dd>
       {% if eleve.nationalite %}<dt>{{ _("Nationalité") }}</dt><dd>{{ eleve.nationalite }}</dd>{% endif %}
       {% if eleve.adresse %}<dt>{{ _("Adresse") }}</dt><dd>{{ eleve.adresse }}</dd>{% endif %}
@@ -40,7 +40,7 @@
       <dt>{{ _("Inscrit le") }}</dt><dd>{{ eleve.date_inscription.strftime("%d/%m/%Y") }}</dd>
     </dl>
   </div>
-  <p><strong>{{ _("Parents liés :") }}</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else "Aucun" }}</p>
+  <p><strong>{{ _("Parents liés :") }}</strong> {{ eleve.parents|map(attribute='nom_complet')|join(', ') if eleve.parents else _("Aucun") }}</p>
 
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="eleves") %}
     <section class="panneau relances-fiche">
@@ -52,7 +52,7 @@
   {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
     <p>
       <strong>{{ _("Statut du dossier (automatique) :") }}</strong>
-      <span class="{% if eleve.statut_dossier == 'complet' %}solde-ok{% else %}solde-du{% endif %}">{{ eleve.statut_dossier }}</span>
+      <span class="{% if eleve.statut_dossier == 'complet' %}solde-ok{% else %}solde-du{% endif %}">{{ _(eleve.statut_dossier) }}</span>
     </p>
     {% if eleve.statut_dossier != "complet" %}
       <p class="lien-secondaire">
@@ -118,7 +118,7 @@
       {% if moyenne is not none %}
         {{ moyenne }}/{{ 10 if eleve.classe.niveau <= 6 else 20 }} —
         <span class="{% if reussite %}solde-ok{% else %}solde-du{% endif %}">
-          {{ "Admissible" if reussite else "Sous le seuil requis" }}
+          {{ _("Admissible" if reussite else "Sous le seuil requis") }}
         </span>
         {{ _("(seuil :") }} {{ seuil }})
       {% else %}

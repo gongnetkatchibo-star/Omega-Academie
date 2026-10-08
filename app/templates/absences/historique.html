@@ -11,7 +11,7 @@
         {% for a in absences %}
           <tr>
             <td>{{ a.date.strftime("%d/%m/%Y") }}</td>
-            <td class="{% if a.justifiee %}solde-ok{% else %}solde-du{% endif %}">{{ "Oui" if a.justifiee else "Non" }}</td>
+            <td class="{% if a.justifiee %}solde-ok{% else %}solde-du{% endif %}">{{ _("Oui" if a.justifiee else "Non") }}</td>
             <td>{{ a.motif or "—" }}</td>
           </tr>
         {% endfor %}

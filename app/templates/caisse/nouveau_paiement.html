@@ -17,7 +17,7 @@
     </label>
     <label>{{ _("Échéance") }}
       <select name="echeance" required>
-        {% for ech in echeances %}<option value="{{ ech }}">{{ libelles_echeance[ech] }}</option>{% endfor %}
+        {% for ech in echeances %}<option value="{{ ech }}">{{ _(libelles_echeance[ech]) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ _("Montant") }}

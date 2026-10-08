@@ -24,7 +24,7 @@
             <td>{{ e.date_envoi.strftime("%d/%m/%Y %H:%M") }}</td>
             <td>{{ e.destinataires }}</td>
             <td>{{ e.sujet }}</td>
-            <td class="{{ 'solde-ok' if e.reussi else 'solde-du' }}">{{ "Envoyé" if e.reussi else "Échec" }}</td>
+            <td class="{{ 'solde-ok' if e.reussi else 'solde-du' }}">{{ _("Envoyé" if e.reussi else "Échec") }}</td>
           </tr>
         {% endfor %}
       </tbody>

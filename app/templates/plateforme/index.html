@@ -19,7 +19,7 @@
             <td>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}</td>
             <td>{{ stats[e.id].comptes }}</td>
             <td>{{ stats[e.id].eleves }}</td>
-            <td class="{{ 'solde-ok' if e.actif else 'solde-du' }}">{{ "Actif" if e.actif else "Suspendu" }}</td>
+            <td class="{{ 'solde-ok' if e.actif else 'solde-du' }}">{{ _("Actif" if e.actif else "Suspendu") }}</td>
             <td>
               <div class="actions-tableau actions-console">
                 <form method="post" action="{{ url_for('plateforme.entrer', ecole_id=e.id) }}">
@@ -30,7 +30,7 @@
                 <a href="{{ url_for('plateforme.restaurer', ecole_id=e.id) }}">{{ _("Restaurer") }}</a>
                 <form method="post" action="{{ url_for('plateforme.basculer', ecole_id=e.id) }}" onsubmit="return confirm({{ ((('Suspendre ' if e.actif else 'Réactiver ') ~ e.nom ~ ' ?'))|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="{{ 'bouton-danger' if e.actif else '' }}">{{ "Suspendre" if e.actif else "Réactiver" }}</button>
+                  <button type="submit" class="{{ 'bouton-danger' if e.actif else '' }}">{{ _("Suspendre" if e.actif else "Réactiver") }}</button>
                 </form>
               </div>
             </td>

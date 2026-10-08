@@ -11,7 +11,7 @@
     <div class="barre-actions">
       <a class="bouton bouton-plein" href="{{ url_for('bibliotheque.nouvelle') }}">{{ icone("plus") }} {{ _("Ajouter une ressource") }}</a>
       <a class="bouton" href="{{ url_for('bibliotheque.importer') }}">{{ icone("importer") }} {{ _("Importer plusieurs fichiers") }}</a>
-      <a class="bouton" href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">{{ icone("telecharger") }} {{ _("Exporter") }} {{ "cette sélection" if type_filtre else "tout" }} {{ _("(.zip)") }}</a>
+      <a class="bouton" href="{{ url_for('bibliotheque.exporter', type=type_filtre) }}">{{ icone("telecharger") }} {{ _("Exporter") }} {{ _("cette sélection" if type_filtre else "tout") }} {{ _("(.zip)") }}</a>
     </div>
   {% endif %}
 
@@ -42,7 +42,7 @@
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "enseignant") %}
               <form method="post" action="{{ url_for('bibliotheque.basculer_verrouillage', ressource_id=r.id) }}" style="display:inline;">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit">{{ "Déverrouiller" if r.consultation_sur_place else "Verrouiller (sur place)" }}</button>
+                <button type="submit">{{ _("Déverrouiller" if r.consultation_sur_place else "Verrouiller (sur place)") }}</button>
               </form>
             {% endif %}
             {% if acces("bibliothecaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general") or (current_user.role == "enseignant" and r.ajoute_par_id == current_user.id) %}

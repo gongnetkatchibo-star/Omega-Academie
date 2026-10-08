@@ -7,7 +7,7 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
-  <p><strong>{{ _("Genre :") }}</strong> {{ enseignant.user.genre|genre_libelle }}</p>
+  <p><strong>{{ _("Genre :") }}</strong> {{ _(enseignant.user.genre|genre_libelle) }}</p>
   <p><strong>{{ _("Spécialité :") }}</strong> {{ enseignant.specialite or "—" }}</p>
   <p><strong>{{ _("Email :") }}</strong> {{ enseignant.user.email }}</p>
 
