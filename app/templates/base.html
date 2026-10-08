@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ nom_plateforme() }}{% endblock %}</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
 </head>
 <body>
+{% include "_icones.html" %}
 {% if current_user.is_authenticated %}
-  <button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('sidebar-ouverte'); document.getElementById('sidebar-overlay').classList.toggle('actif');" aria-label="Ouvrir le menu">☰</button>
+  <button class="sidebar-toggle-mobile" onclick="document.getElementById('sidebar').classList.toggle('sidebar-ouverte'); document.getElementById('sidebar-overlay').classList.toggle('actif');" aria-label="Ouvrir le menu">{{ icone("menu") }}</button>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('sidebar-ouverte'); this.classList.remove('actif');"></div>
 
   <div class="app-layout">
@@ -28,11 +30,11 @@
       <nav class="sidebar-liens">
         <a href="{{ url_for('main.index') }}" {% if request.endpoint == "main.index" %}class="lien-actif"{% endif %}>{{ icone("tableau_de_bord") }} Tableau de bord</a>
         {% if current_user.role == "developpeur" %}
-          <a href="{{ url_for('plateforme.index') }}" class="sidebar-lien-plateforme">🌐 Plateforme</a>
+          <a href="{{ url_for('plateforme.index') }}" class="sidebar-lien-plateforme">{{ icone("plateforme") }} Plateforme</a>
         {% endif %}
         {% for e in current_user.enfants if e.actif %}
           <details class="sidebar-deroulant" {% if request.view_args and request.view_args.get('eleve_id') == e.id %}open{% endif %}>
-            <summary>🎓 {{ e.nom_complet }}</summary>
+            <summary>{{ icone("eleves") }} {{ e.nom_complet }}</summary>
             <a href="{{ url_for('eleves.detail', eleve_id=e.id) }}">Fiche</a>
             <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">Scolarité</a>
             <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">Bulletin</a>
@@ -42,7 +44,7 @@
           {% set dossier = mon_dossier_eleve() %}
           {% if dossier %}
             <details class="sidebar-deroulant" open>
-              <summary>🎓 Mon espace</summary>
+              <summary>{{ icone("chapeau") }} Mon espace</summary>
               <a href="{{ url_for('eleves.detail', eleve_id=dossier.id) }}">Ma fiche</a>
               <a href="{{ url_for('notes.bulletin', eleve_id=dossier.id) }}">Mon bulletin</a>
               {% if dossier.classe %}<a href="{{ url_for('emploi_du_temps.classe', classe_id=dossier.classe.id) }}">Mon emploi du temps</a>{% endif %}
@@ -129,6 +131,7 @@
         <a href="{{ url_for('main.profil') }}">{{ icone("profil") }} Mon profil</a>
         <a href="{{ url_for('auth.deconnexion') }}">{{ icone("deconnexion") }} Déconnexion</a>
       </nav>
+      <div class="sidebar-pied">Propulsé par <strong>{{ nom_plateforme() }}</strong></div>
     </aside>
     <div class="contenu-principal">
       <div class="barre-devise">
