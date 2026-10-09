@@ -1446,3 +1446,15 @@ INTERFACE.update({
     "Parents": "أولياء الأمور",
     "Pour :": "إلى:",
 })
+
+
+# Lien propre à chaque école (oct. 2026).
+INTERFACE.update({
+    "Lien de l'école": "رابط المدرسة",
+    "Adresse de l'école": "عنوان المدرسة على الموقع",
+    "Copier le lien": "نسخ الرابط",
+    "Lien copié": "تم نسخ الرابط",
+    "À donner aux familles et au personnel : la page de connexion y porte le nom et le logo de l'école.":
+        "يُعطى للأسر والموظفين: صفحة الدخول فيه تحمل اسم المدرسة وشعارها.",
+    "Lettres, chiffres et tirets. Laisser vide pour la tirer du nom.": "حروف وأرقام وشرطات. اتركه فارغًا ليُؤخذ من الاسم.",
+})

@@ -6,6 +6,13 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
+  {% if etab.identifiant %}
+    <div class="carte-lien-ecole">
+      <strong>{{ _("Lien de l'école") }}</strong>
+      {% set e = etab %}{% include "plateforme/_lien.html" %}
+      <p>{{ _("À donner aux familles et au personnel : la page de connexion y porte le nom et le logo de l'école.") }}</p>
+    </div>
+  {% endif %}
   <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <h2>{{ _("Identité") }}</h2>

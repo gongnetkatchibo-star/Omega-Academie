@@ -1,0 +1,6 @@
+{# Lien propre à l'école `e`, avec un bouton pour le copier. #}
+<span class="lien-ecole">
+  <a href="{{ lien_de_l_ecole(e) }}" dir="ltr">{{ lien_de_l_ecole(e) }}</a>
+  <button type="button" class="lien-ecole-copier" data-lien="{{ lien_de_l_ecole(e) }}" data-copie="{{ _('Lien copié') }}"
+          onclick="var b=this; navigator.clipboard.writeText(b.dataset.lien).then(function(){ var t=b.textContent; b.textContent=b.dataset.copie; setTimeout(function(){ b.textContent=t; }, 1600); });">{{ _("Copier le lien") }}</button>
+</span>

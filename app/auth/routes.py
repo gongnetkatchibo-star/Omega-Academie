@@ -513,7 +513,15 @@ def renvoyer_code_verification():
 @auth_bp.route("/deconnexion")
 @login_required
 def deconnexion():
+    from app.services.liens_ecole import retenir_ecole_d_accueil
+
+    from app.models.ecole import Ecole
+
+    ecole_id = current_user.ecole_id
+    etab = db.session.get(Ecole, ecole_id) if ecole_id else None
     logout_user()
+    # La page de connexion garde le nom et le logo de son école.
+    retenir_ecole_d_accueil(etab)
     return redirect(url_for("auth.connexion"))
 
 

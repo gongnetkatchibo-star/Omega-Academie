@@ -61,6 +61,13 @@ def _appliquer_formulaire(ecole):
             setattr(ecole, f"{champ}_mime", info)
         elif info:
             erreurs.append(f"{champ.capitalize()} : {info}")
+    from app.services.liens_ecole import identifiant_depuis, identifiant_libre, identifiant_valide
+    identifiant = identifiant_depuis(request.form.get("identifiant", ""))
+    if identifiant:
+        if not identifiant_valide(identifiant):
+            erreurs.append("L'adresse de l'école doit faire au moins 3 lettres ou chiffres (tirets permis).")
+        elif identifiant_libre(identifiant, sauf_id=ecole.id) != identifiant:
+            erreurs.append(f"L'adresse « {identifiant} » est déjà prise par une autre école.")
     from app.services.theme import lire_couleurs_formulaire
     couleurs, erreurs_couleurs = lire_couleurs_formulaire(request.form)
     erreurs += erreurs_couleurs
@@ -69,6 +76,8 @@ def _appliquer_formulaire(ecole):
             setattr(ecole, champ, prefixe if champ == "prefixe_matricule" else (valeur or None))
         ecole.couleur_theme, ecole.couleur_accent = couleurs["couleur_theme"], couleurs["couleur_accent"]
         ecole.double_authentification = request.form.get("double_authentification") == "on"
+        # Champ laissé vide : l'adresse est tirée du nom de l'école.
+        ecole.identifiant = identifiant or ecole.identifiant or identifiant_libre(ecole.nom, sauf_id=ecole.id)
     return erreurs
 
 

@@ -176,9 +176,17 @@
       <div class="container">
 {% else %}
   <div class="navbar">
-    <div class="navbar-marque">
-      <span>{{ nom_plateforme() }}</span>
-    </div>
+    {% set accueil = ecole_accueil() %}
+    {% if accueil %}
+      <a class="navbar-marque" href="{{ url_for('main.page_ecole', identifiant=accueil.identifiant) }}">
+        {% if accueil.logo %}<img class="logo-mark" src="{{ url_for('main.logo_ecole_public', identifiant=accueil.identifiant) }}" alt="">{% endif %}
+        <span>{{ accueil.nom }}</span>
+      </a>
+    {% else %}
+      <div class="navbar-marque">
+        <span>{{ nom_plateforme() }}</span>
+      </div>
+    {% endif %}
     <div class="navbar-utilisateur">
       {% include "_choix_langue.html" %}
       <a href="{{ url_for('auth.connexion') }}" style="color:white; text-decoration:none;">{{ _("Connexion") }}</a>

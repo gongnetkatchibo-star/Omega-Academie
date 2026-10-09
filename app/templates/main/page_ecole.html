@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ etab.nom }}{% endblock %}
+{% block content %}
+  <section class="hero">
+    {% if etab.logo %}
+      <img class="hero-logo" src="{{ url_for('main.logo_ecole_public', identifiant=etab.identifiant) }}" alt="">
+    {% endif %}
+    <h1>{{ etab.nom }}</h1>
+    {% if etab.devise %}<p class="hero-devise">{{ etab.devise }}</p>{% endif %}
+    {% if etab.ville %}<p class="hero-texte">{{ etab.ville }}{% if etab.pays %}, {{ etab.pays }}{% endif %}</p>{% endif %}
+    <div class="hero-actions">
+      <a class="bouton-principal" href="{{ url_for('auth.connexion') }}">{{ _("Se connecter") }}</a>
+      <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">{{ _("Créer un compte") }}</a>
+    </div>
+    <p class="hero-verifier">
+      {{ _("Vous souhaitez inscrire votre enfant ?") }}
+      <a href="{{ url_for('main.preinscription_ecole', identifiant=etab.identifiant) }}">{{ _("Faire une pré-inscription en ligne") }}</a>
+    </p>
+    <p class="hero-verifier">
+      {{ _("Vous avez reçu un bulletin, un certificat ou un reçu ?") }}
+      <a href="{{ url_for('main.verifier_formulaire') }}">{{ _("Vérifier qu'il est authentique") }}</a>
+    </p>
+  </section>
+
+  <footer class="pied-accueil">
+    <p>{{ _("Propulsé par") }} {{ nom_plateforme() }}</p>
+  </footer>
+{% endblock %}

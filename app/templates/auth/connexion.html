@@ -4,7 +4,13 @@
 {% block content %}
   <div class="carte-connexion">
     <div class="connexion-formulaire">
-      <p class="nom-plateforme">{{ nom_plateforme() }}</p>
+      {% set accueil = ecole_accueil() %}
+      {% if accueil %}
+        {% if accueil.logo %}<img class="connexion-logo" src="{{ url_for('main.logo_ecole_public', identifiant=accueil.identifiant) }}" alt="">{% endif %}
+        <p class="nom-plateforme">{{ accueil.nom }}</p>
+      {% else %}
+        <p class="nom-plateforme">{{ nom_plateforme() }}</p>
+      {% endif %}
       <h1>{{ _("Connexion") }}</h1>
 
       {% with messages = get_flashed_messages(with_categories=true) %}

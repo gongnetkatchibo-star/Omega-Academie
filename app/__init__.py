@@ -258,10 +258,12 @@ def create_app(config_name=None):
     def theme_ecole():
         """Feuille de style des couleurs choisies par l'école, ou "" pour
         garder celles de la plateforme."""
+        from app.services.liens_ecole import ecole_d_accueil
         from app.services.tenant import ecole_courante
         from app.services.theme import variables_css
 
-        variables = variables_css(ecole_courante())
+        # Visiteur arrivé par le lien d'une école : ses couleurs aussi.
+        variables = variables_css(ecole_courante() or ecole_d_accueil())
         if not variables:
             return ""
         regles = "".join(f"{nom}:{valeur};" for nom, valeur in variables.items())
@@ -470,6 +472,17 @@ def create_app(config_name=None):
         return ecole_courante()
 
     @app.template_global()
+    def ecole_accueil():
+        """École dont le visiteur non connecté a suivi le lien (/e/…)."""
+        from app.services.liens_ecole import ecole_d_accueil
+        return ecole_d_accueil()
+
+    @app.template_global()
+    def lien_de_l_ecole(etablissement):
+        from app.services.liens_ecole import lien_ecole
+        return lien_ecole(etablissement)
+
+    @app.template_global()
     def nom_plateforme():
         return app.config.get("PLATEFORME_NOM", "Toumaï Edu School")
 
@@ -638,5 +651,7 @@ def create_app(config_name=None):
         migrer_permissions_par_ecole(app, db)
         from app.services.evaluations import rattacher_notes_sans_evaluation
         rattacher_notes_sans_evaluation(app)
+        from app.services.liens_ecole import attribuer_identifiants_manquants
+        attribuer_identifiants_manquants(app)
 
     return app

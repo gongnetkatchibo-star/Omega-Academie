@@ -20,6 +20,9 @@ class Ecole(db.Model):
     nom_arabe = db.Column(db.String(200))
     ville_arabe = db.Column(db.String(80))
     prefixe_matricule = db.Column(db.String(20), unique=True)
+    # Mot court du lien propre à l'école : https://…/e/<identifiant>
+    # (services/liens_ecole.py). Unique ; attribué à la création.
+    identifiant = db.Column(db.String(60), unique=True, index=True)
     couleur_principale = db.Column(db.String(7), default="#00387B")
     couleur_secondaire = db.Column(db.String(7), default="#DEA230")
     # Couleurs de l'interface choisies par l'école (oct. 2026). Vides : les

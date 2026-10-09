@@ -17,6 +17,9 @@
     <label>{{ _("Pays") }}<input type="text" name="pays" maxlength="80" value="{{ valeur('pays') }}"></label>
     <label>{{ _("Devise") }}<input type="text" name="slogan" maxlength="200" value="{{ valeur('slogan') }}"></label>
     <label>{{ _("Préfixe des matricules") }}<input type="text" name="prefixe_matricule" value="{{ valeur('prefixe_matricule') }}" maxlength="20" required></label>
+    <label>{{ _("Adresse de l'école") }}
+      <span class="champ-prefixe"><span dir="ltr">{{ request.url_root }}e/</span><input type="text" name="identifiant" value="{{ valeur('identifiant') }}" maxlength="50" placeholder="lycee-toumai" dir="ltr"></span>
+      <small>{{ _("Lettres, chiffres et tirets. Laisser vide pour la tirer du nom.") }}</small></label>
     <label>{{ _("Logo") }}{% if etab and etab.logo %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='logo') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
       <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
     <label>{{ _("Filigrane des documents") }}{% if etab and etab.filigrane %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='filigrane') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}

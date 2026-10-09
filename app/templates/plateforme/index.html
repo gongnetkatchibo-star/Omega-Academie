@@ -15,7 +15,8 @@
         {% for e in ecoles %}
           <tr>
             <td>{% if e.logo %}<img src="{{ url_for('plateforme.image', ecole_id=e.id, image='logo') }}" alt="" style="height:44px;">{% else %}—{% endif %}</td>
-            <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">{{ _("en cours") }}</span>{% endif %}</td>
+            <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">{{ _("en cours") }}</span>{% endif %}
+              {% if e.identifiant %}{% include "plateforme/_lien.html" %}{% endif %}</td>
             <td>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}</td>
             <td>{{ stats[e.id].comptes }}</td>
             <td>{{ stats[e.id].eleves }}</td>

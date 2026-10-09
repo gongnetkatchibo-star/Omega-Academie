@@ -27,7 +27,7 @@
         <select name="ecole_id" required>
           {% if ecoles|length != 1 %}<option value="">—</option>{% endif %}
           {% for e in ecoles %}
-            <option value="{{ e.id }}" {% if request.form.get('ecole_id')|int == e.id or ecoles|length == 1 %}selected{% endif %}>{{ e.nom }}</option>
+            <option value="{{ e.id }}" {% if request.form.get('ecole_id')|int == e.id or ecoles|length == 1 or (not request.form.get('ecole_id') and ecole_accueil() and ecole_accueil().id == e.id) %}selected{% endif %}>{{ e.nom }}</option>
           {% endfor %}
         </select>
       </label>

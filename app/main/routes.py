@@ -91,6 +91,9 @@ def _modules_pour(role):
 @main_bp.route("/")
 def index():
     if not current_user.is_authenticated:
+        # L'accueil général : on oublie l'école dont le lien a été suivi.
+        from app.services.liens_ecole import retenir_ecole_d_accueil
+        retenir_ecole_d_accueil(None)
         return render_template("main/accueil_public.html")
 
     user = current_user
@@ -278,6 +281,52 @@ def supprimer_numero(numero_id):
     db.session.commit()
     flash("Numéro supprimé.", "info")
     return redirect(url_for("main.profil"))
+
+
+def _ecole_du_lien(identifiant):
+    from flask import abort
+    from app.services.liens_ecole import ecole_par_identifiant
+
+    return ecole_par_identifiant(identifiant.lower()) or abort(404)
+
+
+@main_bp.route("/e/<identifiant>")
+def page_ecole(identifiant):
+    """Page d'entrée propre à une école : son nom, son logo, ses couleurs.
+    Les pages publiques suivantes (connexion, création de compte) gardent
+    cet habillage."""
+    from flask import redirect, url_for
+    from app.services.liens_ecole import retenir_ecole_d_accueil
+
+    etab = _ecole_du_lien(identifiant)
+    if identifiant != etab.identifiant:  # majuscules dans l'adresse tapée
+        return redirect(url_for("main.page_ecole", identifiant=etab.identifiant))
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    retenir_ecole_d_accueil(etab)
+    return render_template("main/page_ecole.html", etab=etab)
+
+
+@main_bp.route("/e/<identifiant>/logo")
+def logo_ecole_public(identifiant):
+    """Le logo se voit avant la connexion : il est public, comme sur un
+    papier à en-tête. (Le filigrane, lui, reste réservé aux comptes.)"""
+    from flask import Response, abort
+
+    etab = _ecole_du_lien(identifiant)
+    if not etab.logo:
+        abort(404)
+    reponse = Response(etab.logo, mimetype=etab.logo_mime or "image/png")
+    reponse.headers["Cache-Control"] = "public, max-age=3600"
+    return reponse
+
+
+@main_bp.route("/e/<identifiant>/pre-inscription")
+def preinscription_ecole(identifiant):
+    from flask import redirect, url_for
+
+    etab = _ecole_du_lien(identifiant)
+    return redirect(url_for("preinscriptions.demande", ecole_id=etab.id))
 
 
 @main_bp.route("/etablissement/<any(logo, filigrane):image>")
