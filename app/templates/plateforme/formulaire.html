@@ -11,11 +11,11 @@
   <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <h2>{{ _("Identité") }}</h2>
-    <label>{{ _("Nom officiel") }}<input type="text" name="nom" value="{{ valeur('nom') }}" required></label>
+    <label>{{ _("Nom officiel") }}<input type="text" name="nom" maxlength="120" value="{{ valeur('nom') }}" required></label>
     <label>{{ _("Sigle") }}<input type="text" name="sigle" value="{{ valeur('sigle') }}" maxlength="20" required></label>
-    <label>{{ _("Ville") }}<input type="text" name="ville" value="{{ valeur('ville') }}"></label>
-    <label>{{ _("Pays") }}<input type="text" name="pays" value="{{ valeur('pays') }}"></label>
-    <label>{{ _("Devise") }}<input type="text" name="slogan" value="{{ valeur('slogan') }}"></label>
+    <label>{{ _("Ville") }}<input type="text" name="ville" maxlength="80" value="{{ valeur('ville') }}"></label>
+    <label>{{ _("Pays") }}<input type="text" name="pays" maxlength="80" value="{{ valeur('pays') }}"></label>
+    <label>{{ _("Devise") }}<input type="text" name="slogan" maxlength="200" value="{{ valeur('slogan') }}"></label>
     <label>{{ _("Préfixe des matricules") }}<input type="text" name="prefixe_matricule" value="{{ valeur('prefixe_matricule') }}" maxlength="20" required></label>
     <label>{{ _("Logo") }}{% if etab and etab.logo %} <img src="{{ url_for('plateforme.image', ecole_id=etab.id, image='logo') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
       <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
@@ -26,8 +26,8 @@
 
     {% if not etab %}
       <h2>{{ _("Premier compte fondateur") }}</h2>
-      <label>{{ _("Nom complet") }}<input type="text" name="fondateur_nom" value="{{ form.get('fondateur_nom', '') }}" required></label>
-      <label>{{ _("Email") }}<input type="email" name="fondateur_email" value="{{ form.get('fondateur_email', '') }}" required></label>
+      <label>{{ _("Nom complet") }}<input type="text" name="fondateur_nom" maxlength="120" value="{{ form.get('fondateur_nom', '') }}" required></label>
+      <label>{{ _("Email") }}<input type="email" name="fondateur_email" maxlength="120" value="{{ form.get('fondateur_email', '') }}" required></label>
       <label>{{ _("Genre") }}
         <select name="fondateur_genre" required>
           <option value="">—</option>

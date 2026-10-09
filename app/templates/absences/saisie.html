@@ -24,7 +24,7 @@
             <td>{{ e.nom_complet }}</td>
             <td><input type="checkbox" name="absent_{{ e.id }}" {% if a %}checked{% endif %}></td>
             <td><input type="checkbox" name="justifiee_{{ e.id }}" {% if a and a.justifiee %}checked{% endif %}></td>
-            <td><input type="text" name="motif_{{ e.id }}" value="{{ a.motif if a else '' }}"></td>
+            <td><input type="text" name="motif_{{ e.id }}" maxlength="200" value="{{ a.motif if a else '' }}"></td>
           </tr>
         {% endfor %}
       </tbody>

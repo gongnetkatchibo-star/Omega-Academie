@@ -333,7 +333,10 @@ def connexion():
         # chemin interne, jamais une adresse externe, pour ne pas servir
         # de rebond vers un autre site (sept. 2026).
         destination = request.args.get("next") or request.form.get("next")
-        if not (destination and destination.startswith("/") and not destination.startswith("//") and "\\" not in destination):
+        if not (
+            destination and destination.startswith("/") and not destination.startswith("//")
+            and "\\" not in destination and not any(ord(c) < 32 for c in destination)
+        ):
             destination = None
 
         if exige_double_authentification(user) and not appareil_de_confiance(user):
@@ -616,7 +619,22 @@ def premiere_configuration():
         flash("La configuration initiale a déjà été faite — connecte-toi normalement.", "error")
         return redirect(url_for("auth.connexion"))
 
+    # Sur un serveur en ligne, le premier venu ne doit pas pouvoir se
+    # créer le compte super-administrateur : il faut la clé d'installation
+    # écrite dans le fichier .env du serveur (ou passer par la commande
+    # « flask creer-compte-initial »).
+    cle_requise = current_app.config.get("EXIGER_CLE_INSTALLATION", False)
+    cle_attendue = current_app.config.get("CLE_INSTALLATION", "")
+    if cle_requise and len(cle_attendue) < 8:
+        return render_template("auth/premiere_configuration.html", cle_requise=True, indisponible=True)
+
     if request.method == "POST":
+        import hmac
+        if cle_requise and not hmac.compare_digest(
+            request.form.get("cle_installation", "").strip().encode(), cle_attendue.encode()
+        ):
+            flash("Clé d'installation incorrecte.", "error")
+            return render_template("auth/premiere_configuration.html", cle_requise=True)
         nom_complet = request.form.get("nom_complet", "").strip()
         email = request.form.get("email", "").strip().lower()
         mot_de_passe = request.form.get("mot_de_passe", "")
@@ -624,13 +642,13 @@ def premiere_configuration():
 
         if not all([nom_complet, email, mot_de_passe]):
             flash("Merci de remplir tous les champs.", "error")
-            return render_template("auth/premiere_configuration.html")
+            return render_template("auth/premiere_configuration.html", cle_requise=cle_requise)
         if mot_de_passe != confirmation:
             flash("Les mots de passe ne correspondent pas.", "error")
-            return render_template("auth/premiere_configuration.html")
+            return render_template("auth/premiere_configuration.html", cle_requise=cle_requise)
         if len(mot_de_passe) < 8:
             flash("Le mot de passe doit faire au moins 8 caractères.", "error")
-            return render_template("auth/premiere_configuration.html")
+            return render_template("auth/premiere_configuration.html", cle_requise=cle_requise)
 
         # Re-vérifié juste avant l'écriture, au cas où deux personnes
         # tenteraient la configuration en même temps.
@@ -646,4 +664,4 @@ def premiere_configuration():
         flash("Compte développeur créé. Tu peux te connecter.", "info")
         return redirect(url_for("auth.connexion"))
 
-    return render_template("auth/premiere_configuration.html")
+    return render_template("auth/premiere_configuration.html", cle_requise=cle_requise)

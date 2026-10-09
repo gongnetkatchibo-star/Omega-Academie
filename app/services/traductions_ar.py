@@ -1432,3 +1432,17 @@ INTERFACE.update({
     "Collège": "الإعدادي",
     "Lycée": "الثانوي",
 })
+
+# Diagnostic avant déploiement (oct. 2026) — à faire relire comme le reste.
+INTERFACE.update({
+    "Le texte saisi dans « {champ} » est trop long : {maximum} caractères au maximum. Reviens à la page précédente pour le raccourcir.":
+        "النص المُدخل في «{champ}» طويل جدًا: {maximum} حرفًا كحد أقصى. ارجع إلى الصفحة السابقة لاختصاره.",
+    "Adresse du site non reconnue.": "عنوان الموقع غير معروف.",
+    "Clé d'installation": "مفتاح التثبيت",
+    "Clé d'installation incorrecte.": "مفتاح التثبيت غير صحيح.",
+    "Sur le serveur, le premier compte se crée avec la commande « flask creer-compte-initial », ou ici après avoir défini une clé d'installation (CLE_INSTALLATION) dans le fichier .env.":
+        "على الخادم، يُنشأ الحساب الأول بالأمر «flask creer-compte-initial»، أو من هنا بعد تحديد مفتاح التثبيت (CLE_INSTALLATION) في ملف ‎.env.",
+    "Toute l'école": "المدرسة كلها",
+    "Parents": "أولياء الأمور",
+    "Pour :": "إلى:",
+})

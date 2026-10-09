@@ -8,13 +8,21 @@
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
 
+  {% if indisponible %}
+    <p>{{ _("Sur le serveur, le premier compte se crée avec la commande « flask creer-compte-initial », ou ici après avoir défini une clé d'installation (CLE_INSTALLATION) dans le fichier .env.") }}</p>
+  {% else %}
   <form method="post" autocomplete="off" class="formulaire-etroit">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if cle_requise %}
+      <label>{{ _("Clé d'installation") }}
+        <input type="password" name="cle_installation" autocomplete="off" maxlength="200" required>
+      </label>
+    {% endif %}
     <label>{{ _("Nom complet") }}
-      <input type="text" name="nom_complet" autocomplete="off" required>
+      <input type="text" name="nom_complet" autocomplete="off" maxlength="120" required>
     </label>
     <label>{{ _("Email") }}
-      <input type="email" name="email" autocomplete="off" required>
+      <input type="email" name="email" autocomplete="off" maxlength="120" required>
     </label>
     <label>{{ _("Mot de passe") }}
       {{ champ_mot_de_passe("mot_de_passe") }}
@@ -24,4 +32,5 @@
     </label>
     <button type="submit">{{ _("Créer le compte développeur") }}</button>
   </form>
+  {% endif %}
 {% endblock %}

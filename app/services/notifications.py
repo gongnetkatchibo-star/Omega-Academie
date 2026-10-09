@@ -52,6 +52,16 @@ def notifier_annonce(annonce):
         comptes = User.query.filter_by(statut="actif").all()
     else:
         comptes = User.query.filter_by(statut="actif", role=annonce.destinataire).all()
+        if annonce.destinataire == "parent":
+            # Tout compte auquel un enfant est rattaché est aussi un
+            # parent d'élève (un enseignant, un comptable…).
+            from app.models.eleve import Eleve
+            deja = {u.id for u in comptes}
+            for eleve in Eleve.query.filter_by(actif=True).all():
+                for parent in eleve.parents:
+                    if parent.id not in deja and parent.statut == "actif":
+                        deja.add(parent.id)
+                        comptes.append(parent)
 
     destinataires = [u.email for u in comptes]
     lien = url_for("communication.detail", annonce_id=annonce.id, _external=True)

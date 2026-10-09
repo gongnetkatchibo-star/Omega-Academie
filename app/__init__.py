@@ -14,8 +14,44 @@ csrf = CSRFProtect()
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
+CLES_SECRETES_CONNUES = {"change-this-in-production", "changeme", "secret", "dev"}
+
+
+def _cle_secrete_faible(cle):
+    return not cle or cle.strip().lower() in CLES_SECRETES_CONNUES or len(cle.strip()) < 16
+
+
+def _cle_secrete_durable(app):
+    """Clé tirée au hasard une fois, puis relue dans instance/cle_secrete
+    (fichier lisible seulement par le compte du serveur)."""
+    import secrets
+
+    chemin = os.path.join(app.instance_path, "cle_secrete")
+    for _ in range(2):
+        try:
+            with open(chemin, encoding="ascii") as fichier:
+                cle = fichier.read().strip()
+            if len(cle) >= 32:
+                return cle
+            os.remove(chemin)  # fichier vide ou abîmé : on le refait
+        except FileNotFoundError:
+            pass
+        try:
+            descripteur = os.open(chemin, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
+            continue  # créé au même instant par un autre processus : on le relit
+        with os.fdopen(descripteur, "w", encoding="ascii") as fichier:
+            fichier.write(secrets.token_hex(32))
+    with open(chemin, encoding="ascii") as fichier:
+        return fichier.read().strip()
+
+
 def create_app(config_name=None):
-    config_name = config_name or os.environ.get("FLASK_ENV", "default")
+    config_name = config_name or os.environ.get("FLASK_ENV") or "default"
+    if config_name not in config:
+        raise RuntimeError(
+            f"FLASK_ENV={config_name!r} inconnu : utiliser development, production ou testing."
+        )
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config[config_name])
@@ -37,13 +73,16 @@ def create_app(config_name=None):
             send_default_pii=False,  # jamais de données personnelles des utilisateurs envoyées à Sentry
         )
 
-    if config_name == "production" and not os.environ.get("SECRET_KEY"):
-        # Sans clé secrète, n'importe qui pourrait fabriquer une session.
-        # On en tire une au hasard plutôt que de démarrer avec une valeur
-        # connue : les sessions sont simplement perdues à chaque redémarrage.
-        import secrets
-        app.config["SECRET_KEY"] = secrets.token_hex(32)
-        app.logger.warning("SECRET_KEY absente : clé temporaire générée. Définis SECRET_KEY sur le serveur.")
+    if config_name == "production" and _cle_secrete_faible(os.environ.get("SECRET_KEY")):
+        # Sans clé secrète (ou avec la valeur d'exemple, connue de tous),
+        # n'importe qui pourrait fabriquer une session et entrer dans
+        # n'importe quel compte. On utilise alors une clé tirée au hasard
+        # et gardée dans instance/ : elle reste la même aux redémarrages.
+        app.config["SECRET_KEY"] = _cle_secrete_durable(app)
+        app.logger.warning(
+            "SECRET_KEY absente ou trop faible : clé générée et gardée dans instance/cle_secrete. "
+            "Définis SECRET_KEY dans le fichier .env du serveur."
+        )
 
     if app.config.get("PROXY_COUCHES"):
         # Derrière nginx : retrouver la vraie adresse du visiteur et le
@@ -77,6 +116,33 @@ def create_app(config_name=None):
         # Page restée ouverte trop longtemps (session expirée) : on explique
         # au lieu d'afficher l'erreur brute.
         return page_400("La page a expiré. Recharge-la, puis recommence.")
+
+    from app.services.controles import installer_controle_longueurs, TexteTropLong
+    installer_controle_longueurs()
+
+    @app.errorhandler(TexteTropLong)
+    def erreur_texte_trop_long(e):
+        from app.services.langues import traduire
+        return page_400(traduire(
+            "Le texte saisi dans « {champ} » est trop long : {maximum} caractères au maximum. "
+            "Reviens à la page précédente pour le raccourcir.",
+            champ=e.champ, maximum=e.maximum,
+        ))
+
+    @app.before_request
+    def refuser_les_hotes_inconnus():
+        """Si HOTES_AUTORISES est renseigné, une requête adressée à un
+        autre nom de domaine est refusée (la surveillance locale du
+        serveur reste possible)."""
+        autorises = app.config.get("HOTES_AUTORISES")
+        if not autorises or request.endpoint == "sante":
+            return None
+        hote = (request.host or "").lower()
+        if not hote.startswith("["):  # hors adresse IPv6 : on retire le port
+            hote = hote.rsplit(":", 1)[0]
+        if hote in autorises or hote in ("localhost", "127.0.0.1"):
+            return None
+        return page_400("Adresse du site non reconnue.")
 
     from sqlalchemy.exc import DataError
 
@@ -514,18 +580,27 @@ def create_app(config_name=None):
     @click.option("--nom", prompt="Nom complet")
     @click.option("--email", prompt="Email")
     @click.option("--mot-de-passe", prompt="Mot de passe", hide_input=True, confirmation_prompt=True)
-    @click.option("--role", default="fondateur", help="Rôle du premier compte (fondateur, secretaire, ...).")
-    def creer_compte_initial(nom, email, mot_de_passe, role):
-        """Crée un premier compte déjà actif — nécessaire car aucun secrétaire
-        n'existe encore pour approuver quiconque au tout premier lancement."""
-        if User.query.filter_by(email=email).first():
-            click.echo("Un compte existe déjà avec cet email.")
-            return
-        user = User(nom_complet=nom, email=email, role=role, statut="actif")
+    def creer_compte_initial(nom, email, mot_de_passe):
+        """Crée le compte super-administrateur de la plateforme, sur le
+        serveur. C'est lui qui crée ensuite les écoles et leurs fondateurs
+        depuis la console « Plateforme »."""
+        from sqlalchemy import select
+
+        email = email.strip().lower()
+        if "@" not in email or len(email) > 120:
+            raise click.ClickException("Adresse email invalide.")
+        if len(mot_de_passe) < 8:
+            raise click.ClickException("Le mot de passe doit faire au moins 8 caractères.")
+        existe = db.session.execute(
+            select(User.id).where(User.email == email).execution_options(tous_etablissements=True)
+        ).first()
+        if existe:
+            raise click.ClickException("Un compte existe déjà avec cet email.")
+        user = User(nom_complet=nom.strip(), email=email, role="developpeur", statut="actif", email_verifie=True)
         user.set_mot_de_passe(mot_de_passe)
         db.session.add(user)
         db.session.commit()
-        click.echo(f"Compte {role} créé et actif : {email}")
+        click.echo(f"Compte super-administrateur créé : {email}")
 
     from app.sauvegarde.commandes import enregistrer_commandes
     enregistrer_commandes(app)

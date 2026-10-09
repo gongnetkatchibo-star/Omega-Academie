@@ -52,27 +52,22 @@ class Paiement(AppartientEcole, db.Model):
         saisie à la main (exigence de la direction, sept. 2026)."""
         # Compteur propre à l'école et à l'année : un numéro attribué
         # n'est jamais redonné, même après la suppression d'un paiement.
-        from app.models.numero_document import NumeroDocument
+        from app.services.compteurs import prochain_numero
 
         annee = maintenant().year
         prefixe = f"REC-{annee}-"
-        compteur = (
-            NumeroDocument.query.filter_by(type_document="REC", annee=annee).with_for_update().first()
-        )
-        if compteur is None:
+
+        def dernier_recu_existant():
+            # Base déjà en service avant le compteur : on continue après
+            # le plus grand numéro de reçu de l'année.
             suffixes = [
                 numero[len(prefixe):]
                 for (numero,) in Paiement.query.with_entities(Paiement.numero_recu)
                 .filter(Paiement.numero_recu.like(prefixe + "%")).all()
             ]
-            compteur = NumeroDocument(
-                type_document="REC", annee=annee,
-                dernier_numero=max((int(s) for s in suffixes if s.isdigit()), default=0),
-            )
-            db.session.add(compteur)
-            db.session.flush()
-        compteur.dernier_numero += 1
-        return f"{prefixe}{compteur.dernier_numero:05d}"
+            return max((int(s) for s in suffixes if s.isdigit()), default=0)
+
+        return f"{prefixe}{prochain_numero('REC', annee, depart=dernier_recu_existant):05d}"
 
     def __repr__(self):
         return f"<Paiement eleve={self.eleve_id} {self.montant} ({self.mode})>"

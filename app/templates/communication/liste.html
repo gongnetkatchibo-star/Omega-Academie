@@ -48,11 +48,11 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ a.titre }}</strong>
-            <span>{{ a.contenu }}</span>
+            <span style="white-space: pre-line;">{{ a.contenu }}</span>
             {% if a.nom_fichier %}
               <span><a href="{{ url_for('communication.telecharger', annonce_id=a.id) }}">{{ icone("trombone") }} {{ _("Télécharger la pièce jointe") }}</a></span>
             {% endif %}
-            <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }}</span>
+            <span>{{ a.date_publication.strftime("%d/%m/%Y") }} — {{ a.auteur.nom_complet if a.auteur else "—" }} · {{ _("Pour :") }} {{ _(a.libelle_destinataire) }}</span>
           </div>
           {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire") or (current_user.role == "enseignant" and a.auteur_id == current_user.id) %}
             <form method="post" action="{{ url_for('communication.supprimer', annonce_id=a.id) }}" onsubmit="return confirm({{ _("Supprimer cette annonce ?")|tojson|forceescape }});">

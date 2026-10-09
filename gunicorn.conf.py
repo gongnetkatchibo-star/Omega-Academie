@@ -9,6 +9,14 @@ Chaque valeur se change par une variable d'environnement, sans toucher
 import multiprocessing
 import os
 
+# gunicorn = serveur en ligne, toujours. Si le fichier .env du serveur
+# contient encore FLASK_ENV=development (copie de .env.example), on
+# passe quand même en production : en mode développement, les liens
+# « mot de passe oublié » s'affichent à l'écran et le cookie de session
+# voyage sans protection. (Pour développer : python3 run.py.)
+if os.environ.get("FLASK_ENV") != "production":
+    os.environ["FLASK_ENV"] = "production"
+
 # Adresse d'écoute : locale par défaut, nginx fait le lien avec Internet.
 bind = os.environ.get("GUNICORN_BIND", "127.0.0.1:8000")
 

@@ -8,7 +8,7 @@
   <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Titre") }}
-      <input type="text" name="titre" required>
+      <input type="text" name="titre" maxlength="150" required>
     </label>
     <label>{{ _("Type") }}
       <select name="type" required>
@@ -16,7 +16,7 @@
       </select>
     </label>
     <label>{{ _("Matière") }}
-      <input type="text" name="matiere">
+      <input type="text" name="matiere" maxlength="80">
     </label>
     <label>{{ _("Description") }}
       <input type="text" name="description">

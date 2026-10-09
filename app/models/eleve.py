@@ -106,6 +106,13 @@ class Eleve(AppartientEcole, db.Model):
         # changement de classe ou une suppression). Le matricule est
         # unique sur toute la plateforme : on regarde toutes les écoles.
         from sqlalchemy import select
+        from app.models.classe import Classe
+
+        # La classe est verrouillée jusqu'à la fin de l'inscription : deux
+        # secrétaires qui inscrivent au même instant dans la même classe
+        # obtiennent deux matricules différents (sans effet sur SQLite, où
+        # les écritures se suivent déjà une à une).
+        db.session.execute(select(Classe.id).where(Classe.id == classe.id).with_for_update())
 
         existants = db.session.execute(
             select(cls.matricule).where(cls.matricule.startswith(debut, autoescape=True))

@@ -9,14 +9,18 @@ def _url_base_de_donnees():
     une URL commençant par postgres:// — SQLAlchemy 1.4+ exige le préfixe
     postgresql://. On corrige automatiquement pour éviter une erreur de
     déploiement classique."""
-    url = os.environ.get("DATABASE_URL")
-    # Pilote psycopg2 imposé : SQLAlchemy 2.1 choisit sinon psycopg (v3),
-    # absent de requirements.txt, et l'application ne démarre plus.
-    if url and url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif url and url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    url = avec_pilote(os.environ.get("DATABASE_URL"))
     return url or "sqlite:///" + os.path.join(basedir, "instance", "app.db")
+
+
+def avec_pilote(url):
+    """Pilote psycopg2 imposé : SQLAlchemy 2.1 choisit sinon psycopg (v3),
+    absent de requirements.txt, et l'application ne démarre plus."""
+    if url and url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url and url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url
 
 
 class Config:
@@ -92,6 +96,22 @@ class Config:
     # administrateur) — à activer une fois l'envoi d'emails vérifié.
     DOUBLE_AUTH_DEVELOPPEUR = os.environ.get("DOUBLE_AUTH_DEVELOPPEUR", "").lower() in ("1", "oui", "true")
 
+    # Noms de domaine servis par l'application, séparés par des virgules
+    # (ex. "ecole.example,www.ecole.example"). Renseigné, toute requête
+    # adressée à un autre nom est refusée : personne ne peut faire
+    # fabriquer un lien « mot de passe oublié » pointant vers un autre site.
+    HOTES_AUTORISES = [h.strip().lower() for h in os.environ.get("HOTES_AUTORISES", "").split(",") if h.strip()]
+
+    # Création du tout premier compte depuis le navigateur : en
+    # production, il faut la clé définie ici (ou la commande
+    # « flask creer-compte-initial » sur le serveur).
+    CLE_INSTALLATION = os.environ.get("CLE_INSTALLATION", "")
+    EXIGER_CLE_INSTALLATION = False
+
+    # Un formulaire reste valable tant que la session l'est (par défaut,
+    # il expirait au bout d'une heure, même en pleine saisie).
+    WTF_CSRF_TIME_LIMIT = None
+
     # Déconnexion automatique après ce temps sans activité.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get("SESSION_HEURES", "4")))
     # Blocage d'un compte après des mots de passe faux répétés.
@@ -108,7 +128,12 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
+    # Le cookie de session ne voyage qu'en https. HTTPS_ACTIF=0 : à mettre
+    # seulement le temps d'essayer le serveur par son adresse IP, avant
+    # d'avoir le nom de domaine et son certificat (sinon la connexion
+    # échoue : le navigateur ne renvoie pas le cookie en http).
+    SESSION_COOKIE_SECURE = os.environ.get("HTTPS_ACTIF", "1").strip().lower() not in ("0", "non", "false")
+    EXIGER_CLE_INSTALLATION = True
 
 
 class TestingConfig(Config):
@@ -117,7 +142,9 @@ class TestingConfig(Config):
     extraire un jeton à chaque requête de test (sept. 2026)."""
     TESTING = True
     WTF_CSRF_ENABLED = False
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # TEST_DATABASE_URL : lancer la suite sur un vrai PostgreSQL, celui de
+    # la production (base d'essai VIDÉE à chaque test — jamais la vraie).
+    SQLALCHEMY_DATABASE_URI = avec_pilote(os.environ.get("TEST_DATABASE_URL")) or "sqlite:///:memory:"
     SQLALCHEMY_ENGINE_OPTIONS = {}
     PERMISSIONS_CACHE_SECONDES = 0  # toujours relues : un test voit tout de suite ses changements
     AFFICHER_SECRETS_SANS_EMAIL = True

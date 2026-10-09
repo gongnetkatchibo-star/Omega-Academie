@@ -53,23 +53,10 @@ def numero_reference(type_document, annee=None):
     année — ex. "003/CSOA/CERT/2026". S'incrémente tout seul, jamais
     saisi à la main, jamais de doublon possible même si deux personnes
     génèrent un document au même moment (verrouillage de ligne)."""
+    from app.services.compteurs import prochain_numero
+
     annee = annee or aujourd_hui().year
-
-    compteur = (
-        NumeroDocument.query
-        .filter_by(type_document=type_document, annee=annee)
-        .with_for_update()
-        .first()
-    )
-    if compteur is None:
-        from app.services.tenant import ecole_courante_id
-        compteur = NumeroDocument(type_document=type_document, annee=annee, dernier_numero=0,
-                                  ecole_id=ecole_courante_id())
-        db.session.add(compteur)
-        db.session.flush()
-
-    compteur.dernier_numero += 1
-    numero = compteur.dernier_numero
+    numero = prochain_numero(type_document, annee)
     db.session.commit()
 
     sigle = identite_ecole()["sigle"] or "DOC"

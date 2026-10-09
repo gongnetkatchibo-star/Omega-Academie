@@ -1,6 +1,9 @@
-# Sauvegarde de tous les établissements (lancée par toumai-sauvegarde.timer).
+# Sauvegarde nocturne (lancée par toumai-sauvegarde.timer) :
+# 1. copie complète de la base — celle qui sert après une panne du serveur ;
+# 2. une archive par école, restaurable depuis la console « Plateforme ».
 [Unit]
 Description=Sauvegarde Toumaï Edu School
+After=postgresql.service
 
 [Service]
 Type=oneshot
@@ -8,6 +11,5 @@ User=toumai
 Group=toumai
 WorkingDirectory=/opt/toumai_edu_school
 EnvironmentFile=/opt/toumai_edu_school/.env
-Environment=FLASK_ENV=production
-Environment=FLASK_APP=run.py
-ExecStart=/opt/toumai_edu_school/venv/bin/flask sauvegarder-ecoles --dossier /var/sauvegardes/toumai --garder 30
+ExecStart=/opt/toumai_edu_school/venv/bin/flask --app run.py sauvegarder-base --dossier /var/sauvegardes/toumai --garder 14
+ExecStart=/opt/toumai_edu_school/venv/bin/flask --app run.py sauvegarder-ecoles --dossier /var/sauvegardes/toumai --garder 7

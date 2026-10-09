@@ -39,16 +39,30 @@ pytest
 ```
 
 La suite utilise une base en mémoire et ne touche jamais la vraie base.
+Pour la rejouer sur PostgreSQL, comme en production (base **vide et
+réservée aux tests** : elle est effacée à chaque test) :
+
+```bash
+TEST_DATABASE_URL=postgresql://utilisateur:motdepasse@127.0.0.1/toumai_test pytest
+```
 
 ## Mise en production
 
-Voir [`deploiement/LISEZMOI.md`](deploiement/LISEZMOI.md) : service
-gunicorn (`gunicorn.conf.py`), nginx, sauvegarde nocturne.
+Sur le serveur, un seul script installe tout (PostgreSQL, gunicorn,
+nginx, https, sauvegarde nocturne) :
+
+```bash
+sudo bash deploiement/installer.sh                       # essai par l'adresse IP
+sudo bash deploiement/installer.sh ecole.example toi@exemple.com   # avec nom de domaine
+```
+
+Détails, mises à jour et restauration : [`deploiement/LISEZMOI.md`](deploiement/LISEZMOI.md).
 
 Commandes utiles :
 
 ```bash
-flask creer-compte-initial      # créer un compte actif en ligne de commande
+flask creer-compte-initial      # créer un compte super-administrateur
+flask sauvegarder-base          # copie complète de la base
 flask sauvegarder-ecoles        # une archive de sauvegarde par école
 ```
 
@@ -75,7 +89,7 @@ app/
 ├── templates/       pages
 └── static/          styles, images
 tests/               tests automatiques
-deploiement/         modèles pour le serveur
+deploiement/         installation sur le serveur (installer.sh)
 outils/              envoi automatique vers GitHub
 ```
 

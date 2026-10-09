@@ -141,30 +141,48 @@ def supprimer_utilisateur(user_id):
         )
         return redirect(url_for("dev.utilisateurs"))
 
+    from app.models.livre import Pret
+    from app.services.suppression import detacher, libelle_tables
+
+    def refuser(raison):
+        db.session.rollback()
+        flash(
+            f"Impossible de supprimer {utilisateur.nom_complet} : {raison}. "
+            f"Pour lui retirer l'accès sans rien perdre, verrouille son compte.",
+            "error",
+        )
+        return redirect(url_for("dev.utilisateurs"))
+
+    if Pret.query.filter_by(user_id=utilisateur.id, date_retour=None).count() > 0:
+        return refuser("il lui reste des livres empruntés à la bibliothèque")
+
     # L'association élève-parents (table de liaison) est nettoyée
     # automatiquement par SQLAlchemy à la suppression.
 
-    eleve_lie = Eleve.query.filter_by(user_id=utilisateur.id).first()
-    if eleve_lie:
-        eleve_lie.user_id = None
-
     profil_enseignant = Enseignant.query.filter_by(user_id=utilisateur.id).first()
     if profil_enseignant:
+        # Notes, absences, cahier de textes, emploi du temps : tout reste,
+        # simplement sans enseignant. Ce qui ne peut pas exister sans lui
+        # (ex. son suivi des cours) bloque la suppression.
+        bloquantes = detacher("enseignants", profil_enseignant.id, deja_traitees=("affectations",))
+        if bloquantes:
+            return refuser(f"{libelle_tables(bloquantes)} lui sont rattachés")
         db.session.delete(profil_enseignant)  # supprime aussi ses affectations (cascade)
+        db.session.flush()
 
     # Ses numéros et sa conversation avec l'école n'ont plus de sens sans
-    # lui ; le journal et les fichiers restent, simplement sans auteur.
+    # lui ; le journal, les fichiers, les paiements enregistrés, les
+    # incidents signalés… restent, simplement sans auteur. Le contrôle
+    # part de la structure réelle de la base : une table ajoutée plus tard
+    # est prise en compte sans toucher à ce code.
     NumeroTelephone.query.filter_by(user_id=utilisateur.id).delete(synchronize_session=False)
     Message.query.filter(
         or_(Message.parent_id == utilisateur.id, Message.auteur_id == utilisateur.id)
     ).delete(synchronize_session=False)
-    JournalAction.query.filter_by(utilisateur_id=utilisateur.id).update({"utilisateur_id": None})
-    Ressource.query.filter_by(ajoute_par_id=utilisateur.id).update({"ajoute_par_id": None})
-    Paiement.query.filter_by(enregistre_par_id=utilisateur.id).update({"enregistre_par_id": None})
-    MouvementCaisse.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})
-    Salaire.query.filter_by(responsable_id=utilisateur.id).update({"responsable_id": None})
-    Annonce.query.filter_by(auteur_id=utilisateur.id).update({"auteur_id": None})
-    TestNiveau.query.filter_by(evaluateur_id=utilisateur.id).update({"evaluateur_id": None})
+    bloquantes = detacher("users", utilisateur.id, deja_traitees=("eleve_parents", "enseignants"))
+    if bloquantes:
+        return refuser(f"{libelle_tables(bloquantes)} lui sont rattachés")
+    db.session.expire_all()  # les lignes modifiées directement en base sont relues
 
     nom = utilisateur.nom_complet
     role_supprime = utilisateur.role

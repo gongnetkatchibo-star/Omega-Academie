@@ -17,7 +17,7 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Nom de la classe") }}
-      <input type="text" name="nom" required>
+      <input type="text" name="nom" maxlength="20" required>
     </label>
     <label>{{ _("Niveau") }}
       <select name="niveau" required>
@@ -34,7 +34,7 @@
       </label>
     {% endif %}
     <label>{{ _("Année scolaire") }}
-      <input type="text" name="annee_scolaire" required>
+      <input type="text" name="annee_scolaire" maxlength="9" required>
     </label>
     <label>{{ _("Frais d'inscription") }}
       {{ champ_montant("frais_inscription", 0, 30000) }}

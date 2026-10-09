@@ -2,10 +2,10 @@
 {% block title %}{{ annonce.titre }}{% endblock %}
 {% block content %}
   <h1>{{ annonce.titre }}</h1>
-  <p class="lien-secondaire">{{ annonce.date_publication.strftime("%d/%m/%Y") }} — {{ annonce.auteur.nom_complet if annonce.auteur else "—" }}</p>
+  <p class="lien-secondaire">{{ annonce.date_publication.strftime("%d/%m/%Y") }} — {{ annonce.auteur.nom_complet if annonce.auteur else "—" }} · {{ _("Pour :") }} {{ _(annonce.libelle_destinataire) }}</p>
 
   <div class="carte-attente">
-    <p>{{ annonce.contenu }}</p>
+    <p style="white-space: pre-line;">{{ annonce.contenu }}</p>
   </div>
 
   {% if annonce.nom_fichier %}

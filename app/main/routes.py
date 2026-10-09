@@ -167,6 +167,9 @@ def recherche():
         motif = f"%{terme}%"
         if voit_eleves:
             du_cycle = [c.id for c in filtrer_par_cycle(Classe.query.all(), cycle_du_role(role))]
+            if role == "enseignant":
+                from app.services.suivi_eleve import classes_de_l_enseignant
+                du_cycle = list(classes_de_l_enseignant())
             eleves = (
                 Eleve.query.filter(Eleve.actif.is_(True), Eleve.classe_id.in_(du_cycle))
                 .filter(db.or_(Eleve.nom_complet.ilike(motif), Eleve.matricule.ilike(motif)))

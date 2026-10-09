@@ -3,6 +3,7 @@
 Base en mémoire, recréée à zéro pour chaque test — aucun test ne peut
 donc être influencé par un autre, ni toucher la vraie base."""
 
+import os
 import sqlite3
 
 import pytest
@@ -45,15 +46,47 @@ def _ecole_par_defaut_hors_requete(session_db, flush_context, instances):
             objet.ecole_id = ecole_par_defaut
 
 
+# Par défaut, chaque test a sa propre base SQLite en mémoire. Pour lancer
+# la suite sur PostgreSQL (la base de la production) :
+#     TEST_DATABASE_URL=postgresql://utilisateur@127.0.0.1/base_d_essai pytest
+# La base indiquée est VIDÉE avant chaque test : jamais la vraie base.
+from config import avec_pilote
+
+URL_POSTGRESQL = avec_pilote(os.environ.get("TEST_DATABASE_URL"))
+if URL_POSTGRESQL and URL_POSTGRESQL == avec_pilote(os.environ.get("DATABASE_URL")):
+    raise SystemExit("TEST_DATABASE_URL désigne la base de l'application : les tests l'effaceraient. Indique une base réservée aux tests.")
+
+
+def _vider_base_postgresql():
+    import sqlalchemy
+
+    moteur = sqlalchemy.create_engine(URL_POSTGRESQL, isolation_level="AUTOCOMMIT")
+    with moteur.connect() as connexion:
+        connexion.execute(sqlalchemy.text("DROP SCHEMA public CASCADE"))
+        connexion.execute(sqlalchemy.text("CREATE SCHEMA public"))
+    moteur.dispose()
+
+
 @pytest.fixture
 def app():
+    if URL_POSTGRESQL:
+        _vider_base_postgresql()
     application = create_app("testing")
     with application.app_context():
         from app.models.ecole import Ecole
         _db.session.add(Ecole(id=ECOLE_PAR_DEFAUT, nom="École Test", sigle="ET", ville="Pala",
                               pays="Tchad", slogan="Devise test", prefixe_matricule="ET26"))
         _db.session.commit()
+        if URL_POSTGRESQL:
+            # Les tests créent des écoles avec un numéro imposé (1, 2, 3…) :
+            # le compteur de PostgreSQL repart plus loin pour ne pas les heurter.
+            from sqlalchemy import text
+            _db.session.execute(text("SELECT setval('ecoles_id_seq', 1000)"))
+            _db.session.commit()
         yield application
+        if URL_POSTGRESQL:
+            _db.session.remove()
+            _db.engine.dispose()
 
 
 @pytest.fixture

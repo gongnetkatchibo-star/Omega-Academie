@@ -22,7 +22,7 @@
       </select>
     </label>
     <label>{{ _("Référence") }}
-      <input type="text" name="reference" value="{{ paiement.reference or '' }}">
+      <input type="text" name="reference" maxlength="80" value="{{ paiement.reference or '' }}">
     </label>
     <button type="submit">{{ _("Enregistrer la correction") }}</button>
   </form>

@@ -19,7 +19,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <h2>{{ _("Identité") }}</h2>
       <label>{{ _("Nom complet") }}
-        <input type="text" name="nom_complet" required>
+        <input type="text" name="nom_complet" maxlength="120" required>
       </label>
       <label>{{ _("Date de naissance") }}
         <input type="date" name="date_naissance">

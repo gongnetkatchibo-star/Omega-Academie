@@ -9,11 +9,11 @@
   <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <h2>{{ _("Identité") }}</h2>
-    <label>{{ _("Nom officiel") }}<input type="text" name="nom" value="{{ etab.nom or '' }}" required></label>
+    <label>{{ _("Nom officiel") }}<input type="text" name="nom" maxlength="120" value="{{ etab.nom or '' }}" required></label>
     <label>{{ _("Sigle") }}<input type="text" name="sigle" value="{{ etab.sigle or '' }}" maxlength="20" required></label>
-    <label>{{ _("Ville") }}<input type="text" name="ville" value="{{ etab.ville or '' }}"></label>
-    <label>{{ _("Pays") }}<input type="text" name="pays" value="{{ etab.pays or '' }}"></label>
-    <label>{{ _("Devise") }}<input type="text" name="slogan" value="{{ etab.slogan or '' }}"></label>
+    <label>{{ _("Ville") }}<input type="text" name="ville" maxlength="80" value="{{ etab.ville or '' }}"></label>
+    <label>{{ _("Pays") }}<input type="text" name="pays" maxlength="80" value="{{ etab.pays or '' }}"></label>
+    <label>{{ _("Devise") }}<input type="text" name="slogan" maxlength="200" value="{{ etab.slogan or '' }}"></label>
     <label>{{ _("Préfixe des matricules") }}<input type="text" name="prefixe_matricule" value="{{ etab.prefixe_matricule or '' }}" maxlength="20" required></label>
     <label>{{ _("Logo") }}{% if etab.logo %} <img src="{{ url_for('main.image_ecole', image='logo') }}" alt="" style="height:32px; vertical-align:middle;">{% endif %}
       <input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
@@ -23,8 +23,8 @@
     {% include "dev/_couleurs_securite.html" %}
 
     <h2>{{ _("Signataire des documents") }}</h2>
-    <label>{{ _("Nom") }}<input type="text" name="nom_directeur" value="{{ parametre.nom_directeur or '' }}"></label>
-    <label>{{ _("Qualité") }}<input type="text" name="titre_directeur" value="{{ parametre.titre_directeur or 'Directeur' }}"></label>
+    <label>{{ _("Nom") }}<input type="text" name="nom_directeur" maxlength="120" value="{{ parametre.nom_directeur or '' }}"></label>
+    <label>{{ _("Qualité") }}<input type="text" name="titre_directeur" maxlength="120" value="{{ parametre.titre_directeur or 'Directeur' }}"></label>
     <label>{{ _("Genre") }}
       <select name="genre_directeur">
         <option value="M" {% if parametre.genre_directeur != "F" %}selected{% endif %}>{{ _("Masculin") }}</option>
@@ -35,8 +35,8 @@
     <h2>{{ _("Documents bilingues français · arabe") }}</h2>
     <label class="ligne-case"><input type="checkbox" name="documents_bilingues" {% if parametre.documents_bilingues %}checked{% endif %}>
       {{ _("Bulletins, certificats, attestations et reçus en français et en arabe") }}</label>
-    <label>{{ _("Nom de l'établissement en arabe") }}<input type="text" name="nom_arabe" dir="rtl" lang="ar" value="{{ etab.nom_arabe or '' }}" placeholder="مثال: أكاديمية أوميغا"></label>
-    <label>{{ _("Ville en arabe") }}<input type="text" name="ville_arabe" dir="rtl" lang="ar" value="{{ etab.ville_arabe or '' }}" placeholder="مثال: انجامينا"></label>
+    <label>{{ _("Nom de l'établissement en arabe") }}<input type="text" name="nom_arabe" maxlength="200" dir="rtl" lang="ar" value="{{ etab.nom_arabe or '' }}" placeholder="مثال: أكاديمية أوميغا"></label>
+    <label>{{ _("Ville en arabe") }}<input type="text" name="ville_arabe" maxlength="80" dir="rtl" lang="ar" value="{{ etab.ville_arabe or '' }}" placeholder="مثال: انجامينا"></label>
 
     <h2>{{ _("Dates limites de paiement") }}</h2>
     <label>{{ _("Inscription") }}

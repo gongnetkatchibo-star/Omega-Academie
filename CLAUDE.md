@@ -32,6 +32,13 @@ laisser un fichier à moitié modifié pendant une longue pause.
 - Numéros de téléphone : `services/numeros.py` (pays de l'école).
 - Textes affichés : passer par la traduction (`services/langues.py`), l'interface
   existe aussi en arabe.
+- Numéros de reçus, de documents et matricules : `services/compteurs.py`
+  (`prochain_numero`), qui tient quand deux personnes enregistrent en même temps.
+  Ne jamais calculer un numéro avec un `max()` ou un `count()`.
+- Supprimer une ligne référencée ailleurs : `services/suppression.py` (`detacher`).
+- Tout champ de saisie libre porte un `maxlength` égal à la taille de la colonne ;
+  `services/controles.py` refuse proprement un texte trop long (PostgreSQL, lui,
+  ferait échouer l'enregistrement).
 - Jamais de secret dans le dépôt : `.env` et `instance/` restent hors de Git.
 - Nouvelles colonnes : ajoutées automatiquement au démarrage
   (`services/auto_migration.py`) ; un renommage ou un changement de type demande
@@ -41,8 +48,11 @@ laisser un fichier à moitié modifié pendant une longue pause.
 
 ```bash
 pytest                       # tests (base en mémoire)
+TEST_DATABASE_URL=postgresql://… pytest   # les mêmes sur PostgreSQL, comme en production
 python3 run.py               # serveur de développement
+flask sauvegarder-base       # copie complète de la base
 flask sauvegarder-ecoles     # une archive de sauvegarde par école
 ```
 
-Mise en production : `deploiement/LISEZMOI.md`.
+Mise en production : `sudo bash deploiement/installer.sh` sur le serveur (voir
+`deploiement/LISEZMOI.md`). Avant une mise en ligne, rejouer les tests sur PostgreSQL.

@@ -9,7 +9,7 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Nom du candidat") }}
-      <input type="text" name="nom_candidat" required>
+      <input type="text" name="nom_candidat" maxlength="120" required>
     </label>
     <label>{{ _("Genre") }}
       <select name="sexe_candidat" required>
@@ -22,7 +22,7 @@
       <input type="date" name="date_naissance_candidat">
     </label>
     <label>{{ _("Téléphone du parent") }}
-      <input type="tel" name="telephone_parent" autocomplete="off">
+      <input type="tel" name="telephone_parent" maxlength="30" autocomplete="off">
     </label>
     <label>{{ _("Classe demandée") }}
       <select name="classe_demandee_id" required>

@@ -76,8 +76,19 @@ def determiner_ecole(utilisateur):
     return premiere[0] if premiere else None
 
 
+_isolement_installe = False
+
+
 def installer_isolement(app):
     from app.models.tenant import AppartientEcole
+
+    # Les écouteurs sont posés sur la session de base de données, pas sur
+    # l'application : une seule fois suffit, même si plusieurs
+    # applications sont créées dans le même processus (tests, commandes).
+    global _isolement_installe
+    if _isolement_installe:
+        return
+    _isolement_installe = True
 
     @event.listens_for(Session, "do_orm_execute")
     def _filtrer(execute_state):

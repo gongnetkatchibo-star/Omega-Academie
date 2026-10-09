@@ -43,7 +43,7 @@
 
       <div id="champs-eleve" style="display:none;">
         <label>{{ _("Matricule") }}
-          <input type="text" name="matricule" id="champ-matricule" autocomplete="off" value="{{ request.form.get('matricule', '') }}">
+          <input type="text" name="matricule" maxlength="30" id="champ-matricule" autocomplete="off" value="{{ request.form.get('matricule', '') }}">
         </label>
         <label>{{ _("Date de naissance") }}
           <input type="date" name="date_naissance_eleve" id="champ-date-eleve">
@@ -52,19 +52,19 @@
 
       <div id="champs-standard">
         <label>{{ _("Nom complet") }}
-          <input type="text" name="nom_complet" id="champ-nom-complet" autocomplete="off">
+          <input type="text" name="nom_complet" maxlength="120" id="champ-nom-complet" autocomplete="off">
         </label>
       </div>
 
       <div id="champs-parent" style="display:none;">
         <label>{{ _("Prénom") }}
-          <input type="text" name="prenom" id="champ-prenom" autocomplete="off">
+          <input type="text" name="prenom" maxlength="60" id="champ-prenom" autocomplete="off">
         </label>
         <label>{{ _("Nom") }}
-          <input type="text" name="nom" id="champ-nom" autocomplete="off">
+          <input type="text" name="nom" maxlength="60" id="champ-nom" autocomplete="off">
         </label>
         <label>{{ _("Profession") }}
-          <input type="text" name="profession" id="champ-profession" autocomplete="off">
+          <input type="text" name="profession" maxlength="100" id="champ-profession" autocomplete="off">
         </label>
       </div>
 
@@ -76,10 +76,10 @@
         </select>
       </label>
       <label><span>{{ _("Email") }}<span id="email-facultatif" style="display:none;"> {{ _("(facultatif)") }}</span></span>
-        <input type="email" name="email" id="champ-email" autocomplete="off" required>
+        <input type="email" name="email" maxlength="120" id="champ-email" autocomplete="off" required>
       </label>
       <label><span>{{ _("Téléphone") }}<span id="tel-obligatoire" style="display:none;"> {{ _("(obligatoire, unique)") }}</span></span>
-        <input type="tel" name="telephone" id="champ-telephone" autocomplete="off">
+        <input type="tel" name="telephone" maxlength="30" id="champ-telephone" autocomplete="off">
       </label>
       <label>{{ _("Mot de passe") }}
         {{ champ_mot_de_passe("mot_de_passe") }}

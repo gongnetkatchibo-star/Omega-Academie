@@ -8,7 +8,7 @@
   <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Nouvelle année scolaire") }}
-      <input type="text" name="annee_scolaire" value="{{ annee_suggeree }}" required>
+      <input type="text" name="annee_scolaire" maxlength="9" value="{{ annee_suggeree }}" required>
     </label>
     <label>{{ _("Reprendre l'échéancier de frais depuis") }}
       <select name="annee_source">

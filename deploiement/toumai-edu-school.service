@@ -1,19 +1,24 @@
-# Service de l'application (à copier dans /etc/systemd/system/).
-# Adapter User, WorkingDirectory et les chemins si le dossier diffère.
+# Service de l'application (installé par deploiement/installer.sh dans
+# /etc/systemd/system/). Tous les réglages sont dans le fichier .env :
+# ne rien ajouter ici avec Environment=, le fichier .env passe toujours
+# en dernier.
 [Unit]
 Description=Toumaï Edu School (gunicorn)
 After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 User=toumai
 Group=toumai
 WorkingDirectory=/opt/toumai_edu_school
 EnvironmentFile=/opt/toumai_edu_school/.env
-Environment=FLASK_ENV=production
-Environment=PROXY_COUCHES=1
 ExecStart=/opt/toumai_edu_school/venv/bin/gunicorn run:app
 Restart=always
 RestartSec=5
+# Le service ne peut ni prendre d'autres droits ni écrire dans le système.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target

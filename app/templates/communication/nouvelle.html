@@ -8,14 +8,14 @@
   <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Titre") }}
-      <input type="text" name="titre" required>
+      <input type="text" name="titre" maxlength="150" required>
     </label>
     <label>{{ _("Contenu") }}
       <textarea name="contenu" rows="4" required></textarea>
     </label>
     <label>{{ _("Destinataires") }}
       <select name="destinataire" required>
-        {% for d in destinataires %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+        {% for d in destinataires %}<option value="{{ d }}">{{ _(libelles_destinataire[d]) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ _("Pièce jointe") }}

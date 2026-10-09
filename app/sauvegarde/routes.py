@@ -12,32 +12,17 @@ from app.sauvegarde import sauvegarde_bp
 from app.utils import roles_required
 from app.services.temps import maintenant
 
-# Toutes les tables exportées — si un nouveau module ajoute un modèle,
-# il suffit de l'ajouter ici pour qu'il soit couvert par la sauvegarde.
-def _modeles_a_exporter():
-    from app.models.user import User
-    from app.models.classe import Classe
-    from app.models.eleve import Eleve
-    from app.models.enseignant import Enseignant, Affectation
-    from app.models.note import Note
-    from app.models.absence import Absence
-    from app.models.paiement import Paiement
-    from app.models.mouvement_caisse import MouvementCaisse
-    from app.models.salaire import Salaire
-    from app.models.test_niveau import TestNiveau
-    from app.models.annonce import Annonce
-    from app.models.ressource import Ressource
-    from app.models.historique import HistoriqueScolaire
-    from app.models.emploi_du_temps import Creneau
-    from app.models.journal import JournalAction
-    from app.models.journal_email import JournalEmail
-    from app.models.parametre import ParametreEtablissement
+# Jamais dans les fichiers lisibles au tableur (le fichier de
+# restauration, lui, garde tout).
+COLONNES_SECRETES = {"mot_de_passe_hash", "code_2fa", "code_2fa_expiration"}
 
-    return [
-        User, Classe, Eleve, Enseignant, Affectation, Note, Absence,
-        Paiement, MouvementCaisse, Salaire, TestNiveau, Annonce, Ressource,
-        HistoriqueScolaire, Creneau, JournalAction, JournalEmail, ParametreEtablissement,
-    ]
+
+def _modeles_a_exporter():
+    """Toutes les tables de l'école, lues dans la structure de la base :
+    un module ajouté plus tard est exporté sans rien changer ici."""
+    from app.services.tenant import modeles_rattaches
+
+    return sorted(modeles_rattaches(), key=lambda modele: modele.__tablename__)
 
 
 @sauvegarde_bp.route("/exporter")
@@ -67,7 +52,7 @@ def construire_archive():
         for modele in _modeles_a_exporter():
             colonnes = [
                 c.name for c in modele.__table__.columns
-                if c.name != "mot_de_passe_hash" and not isinstance(c.type, LargeBinary)
+                if c.name not in COLONNES_SECRETES and not isinstance(c.type, LargeBinary)
             ]
             lignes = modele.query.all()
 

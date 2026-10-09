@@ -29,7 +29,12 @@ def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
     from flask import current_app
 
     # Sans doublon : un même compte ne reçoit jamais deux fois le message.
-    destinataires = list(dict.fromkeys(d for d in destinataires if d))
+    # Les adresses techniques des comptes élèves (…@eleves.local) n'existent
+    # pas : leur écrire ferait rebondir l'email et nuirait à la réputation
+    # de l'expéditeur auprès du service d'envoi.
+    destinataires = list(dict.fromkeys(
+        d.strip() for d in destinataires if d and d.strip() and not d.strip().lower().endswith(".local")
+    ))
     cle_api = current_app.config.get("BREVO_API_KEY")
     if not destinataires or not cle_api:
         return False

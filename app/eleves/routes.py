@@ -41,6 +41,12 @@ def liste():
         requete = requete.filter(Eleve.classe_id.in_(du_cycle))
         classes = filtrer_par_cycle(classes, cycle)
 
+    if current_user.role == "enseignant":
+        from app.services.suivi_eleve import classes_de_l_enseignant
+        mes_classes = classes_de_l_enseignant()
+        requete = requete.filter(Eleve.classe_id.in_(mes_classes))
+        classes = [c for c in classes if c.id in mes_classes]
+
     page = paginer(requete.order_by(Eleve.nom_complet))
     return render_template("eleves/liste.html", page=page, classes=classes, classe_id=classe_id, terme=terme)
 
@@ -167,6 +173,11 @@ def _peut_voir(eleve):
         return True
     if current_user.role not in ROLES_LECTURE:
         return False
+    if current_user.role == "enseignant":
+        # Comme pour les bulletins, les absences et le cahier de textes :
+        # un enseignant ne consulte que les dossiers de ses propres classes.
+        from app.services.suivi_eleve import classes_de_l_enseignant
+        return eleve.classe_id in classes_de_l_enseignant()
     # Un directeur de cycle ne voit que les élèves de son cycle.
     cycle = cycle_du_role(current_user.role)
     return not cycle or classe_dans_le_cycle(eleve.classe, cycle)

@@ -83,7 +83,8 @@ def lire_fichier(fichier, classes):
 
     par_nom = {c.nom.strip().lower(): c for c in classes}
     lignes, erreurs = [], []
-    aujourd_hui = dt.date.today()
+    from app.services.temps import aujourd_hui as date_de_l_ecole
+    aujourd_hui = date_de_l_ecole()
 
     for numero, rangee in enumerate(rangees, start=2):
         cellules = list(rangee[:5]) + [None] * (5 - len(rangee[:5]))

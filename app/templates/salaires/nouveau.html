@@ -21,7 +21,7 @@
       </select>
     </label>
     <label>{{ _("Fonction") }}
-      <input type="text" name="fonction" id="champ-fonction">
+      <input type="text" name="fonction" maxlength="80" id="champ-fonction">
     </label>
     <label>{{ _("Mois") }}
       <select name="mois" required>
@@ -52,10 +52,10 @@
     </details>
 
     <label>{{ _("Email de contact (pour l'avis de paiement)") }}
-      <input type="email" name="email_contact" id="champ-email-contact">
+      <input type="email" name="email_contact" maxlength="150" id="champ-email-contact">
     </label>
     <label>{{ _("Téléphone de contact") }}
-      <input type="text" name="telephone_contact" id="champ-telephone-contact">
+      <input type="text" name="telephone_contact" maxlength="30" id="champ-telephone-contact">
     </label>
     <button type="submit">{{ _("Enregistrer (impayé)") }}</button>
   </form>
