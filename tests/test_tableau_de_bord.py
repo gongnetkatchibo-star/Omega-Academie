@@ -92,3 +92,17 @@ def test_format_des_montants_et_des_dates(app):
     assert fcfa(None) == "0 FCFA"
     assert date_longue(date(2026, 10, 8)) == "jeudi 8 octobre 2026"
     assert date_longue(date(2026, 11, 1), False) == "1er novembre 2026"
+
+
+def test_les_couleurs_disent_l_etat_des_chiffres(client, creer_utilisateur, creer_classe, creer_eleve):
+    """Recouvrement à 9 % : tuile, jauge et badge passent au rouge. Une
+    tranche dont la date limite n'est pas passée n'est pas jugée."""
+    _ecole_avec_un_paiement(client, creer_utilisateur, creer_classe, creer_eleve)
+    page = _page(client)
+
+    assert 'class="tdb-indicateur tdb-ton-principal"' in page  # l'argent encaissé, seule tuile pleine
+    assert 'class="tdb-indicateur tdb-ton-critique"' in page   # recouvrement de l'année
+    assert 'class="tdb-indicateur tdb-ton-ok"' in page         # aucun absent
+    assert '<tr class="tdb-ton-critique">' in page             # la classe CM1
+    echeancier = page.split("Échéancier de la scolarité")[1].split("À traiter")[0]
+    assert echeancier.count('class="badge') == 1  # seule l'inscription est due

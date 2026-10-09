@@ -53,8 +53,8 @@
 
     <section class="tdb-indicateurs" aria-label="{{ _('Indicateurs clés') }}">
       {% if f %}
-        <div class="tdb-indicateur">
-          <span class="tdb-indicateur-titre">{{ icone("portefeuille") }} {{ _("Encaissé en {mois}", mois=(aujourd_hui|date_longue(False)).split()[1]) }}</span>
+        <div class="tdb-indicateur tdb-ton-principal">
+          <span class="tdb-indicateur-titre"><span class="tdb-puce">{{ icone("portefeuille") }}</span> {{ _("Encaissé en {mois}", mois=(aujourd_hui|date_longue(False)).split()[1]) }}</span>
           <span class="tdb-indicateur-valeur">{{ f.encaisse_mois|fcfa(False) }}<small>FCFA</small></span>
           <span class="tdb-indicateur-detail">
             {% if f.evolution_mois is not none %}
@@ -64,23 +64,24 @@
             {% endif %}
           </span>
         </div>
-        <div class="tdb-indicateur">
-          <span class="tdb-indicateur-titre">{{ icone("tendance") }} {{ _("Recouvrement de l'année") }}</span>
-          <span class="tdb-indicateur-valeur">{{ f.taux_recouvrement }} %<small>{{ _("du total attendu") }}</small></span>
+        <div class="tdb-indicateur tdb-ton-{{ f.etat_recouvrement[0]|replace('badge-', '') }}">
+          <span class="tdb-indicateur-titre"><span class="tdb-puce">{{ icone("tendance") }}</span> {{ _("Recouvrement de l'année") }}</span>
+          <span class="tdb-indicateur-valeur">{{ f.taux_recouvrement }} %<small>{{ _("du total attendu") }}</small>
+            <span class="badge {{ f.etat_recouvrement[0] }}">{{ _(f.etat_recouvrement[1]) }}</span></span>
           <span class="tdb-jauge" aria-hidden="true"><span style="width: {{ [f.taux_recouvrement, 100]|min }}%"></span></span>
           <span class="tdb-indicateur-detail">{{ _("Reste") }} <strong>{{ f.reste_a_recouvrer|fcfa }}</strong></span>
         </div>
       {% endif %}
       {% if eff %}
-        <div class="tdb-indicateur">
-          <span class="tdb-indicateur-titre">{{ icone("eleves") }} {{ _("Élèves inscrits") }}</span>
+        <div class="tdb-indicateur tdb-ton-neutre">
+          <span class="tdb-indicateur-titre"><span class="tdb-puce">{{ icone("eleves") }}</span> {{ _("Élèves inscrits") }}</span>
           <span class="tdb-indicateur-valeur">{{ eff.total }}</span>
           <span class="tdb-indicateur-detail">{% if langue_courante() == "ar" %}{{ _("{filles} filles · {garcons} garçons · {classes} classes", filles=eff.filles, garcons=eff.garcons, classes=eff.classes) }}{% else %}{{ eff.filles }} filles · {{ eff.garcons }} garçons · {{ eff.classes }} classe{{ "s" if eff.classes > 1 }}{% endif %}</span>
         </div>
       {% endif %}
       {% if a %}
-        <div class="tdb-indicateur">
-          <span class="tdb-indicateur-titre">{{ icone("calendrier") }} {{ _("Absents aujourd'hui") }}</span>
+        <div class="tdb-indicateur tdb-ton-{{ 'critique' if a.non_justifies else ('attention' if a.absents else 'ok') }}">
+          <span class="tdb-indicateur-titre"><span class="tdb-puce">{{ icone("calendrier") }}</span> {{ _("Absents aujourd'hui") }}</span>
           <span class="tdb-indicateur-valeur">{{ a.absents }}</span>
           <span class="tdb-indicateur-detail">
             {% if a.absents %}{% if langue_courante() == "ar" %}{{ _("dont {n} non justifiés", n=a.non_justifies) }}{% else %}dont {{ a.non_justifies }} non justifié{{ "s" if a.non_justifies > 1 }}{% endif %}{% else %}{{ _("Aucune absence signalée") }}{% endif %}
@@ -103,7 +104,7 @@
                 <div class="tdb-echeance-haut">
                   <span><strong>{{ _(e.libelle) }}</strong>
                     {% if e.date_limite %}<span class="tdb-discret">{{ _("limite le {date}", date=e.date_limite|date_longue(False)) }}</span>{% endif %}</span>
-                  <span class="tdb-chiffres"><strong>{{ e.paye|fcfa }}</strong> {{ _("sur") }} {{ e.attendu|fcfa }} · {{ e.taux }} %</span>
+                  <span class="tdb-chiffres"><strong>{{ e.paye|fcfa }}</strong> {{ _("sur") }} {{ e.attendu|fcfa }} · {{ e.taux }} %{% if e.badge %} <span class="badge {{ e.badge }}">{{ _(e.etat) }}</span>{% endif %}</span>
                 </div>
                 <div class="tdb-piste" style="width: {{ e.largeur }}%" role="img" aria-label="{{ e.libelle }} : {{ e.taux }} % encaissé">
                   <span style="width: {{ [e.taux, 100]|min }}%"></span>
@@ -153,7 +154,7 @@
                   <thead><tr><th>{{ _("Classe") }}</th><th class="nombre">{{ _("Élèves") }}</th><th>{{ _("Taux") }}</th><th class="nombre">{{ _("Reste dû") }}</th><th>{{ _("État") }}</th></tr></thead>
                   <tbody>
                     {% for l in f.classes %}
-                      <tr>
+                      <tr class="tdb-ton-{{ l.ton }}">
                         <td><strong>{{ l.classe.nom }}</strong></td>
                         <td class="nombre">{{ l.effectif }}</td>
                         <td><span class="tdb-taux"><span class="tdb-jauge"><span style="width: {{ [l.taux, 100]|min }}%"></span></span><strong>{{ l.taux }} %</strong></span></td>

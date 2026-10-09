@@ -37,6 +37,12 @@ def etat_recouvrement(taux):
     return "badge-critique", "Critique"
 
 
+def ton_du_badge(badge):
+    """« ok », « attention » ou « critique » : la couleur qui porte le
+    même sens partout sur le tableau de bord (jauge, chiffre, badge)."""
+    return badge.replace("badge-", "") if badge else "neutre"
+
+
 def _debut_mois(jour, decalage_annees=0):
     return date(jour.year - decalage_annees, jour.month, 1)
 
@@ -63,8 +69,14 @@ def _bloc_finances(eleves, annee, classes):
             "taux": round(paye / attendu * 100) if attendu else 0,
         })
     plus_grand = max((e["attendu"] for e in echeancier), default=0)
+    jour = maintenant().date()
     for e in echeancier:
         e["largeur"] = round(e["attendu"] / plus_grand * 100, 1) if plus_grand else 0
+        # Une échéance n'est jugée (bon / à suivre / critique) qu'une fois
+        # due : l'inscription tout de suite, une tranche après sa date
+        # limite. Avant, un taux bas est normal.
+        echue = e["attendu"] and (e["cle"] == "inscription" or (e["date_limite"] and e["date_limite"] <= jour))
+        e["badge"], e["etat"] = etat_recouvrement(e["taux"]) if echue else (None, None)
 
     # Recouvrement par classe : part du total dû déjà payée.
     par_classe = defaultdict(lambda: {"effectif": 0, "du": 0, "solde": 0})
@@ -82,11 +94,10 @@ def _bloc_finances(eleves, annee, classes):
         badge, etat = etat_recouvrement(taux)
         lignes_classes.append({
             "classe": classe, "effectif": ligne["effectif"], "taux": taux,
-            "reste": ligne["solde"], "badge": badge, "etat": etat,
+            "reste": ligne["solde"], "badge": badge, "etat": etat, "ton": ton_du_badge(badge),
         })
     lignes_classes.sort(key=lambda l: l["taux"])
 
-    jour = maintenant().date()
     encaisse_mois = _somme_paiements(_debut_mois(jour), jour)
     try:
         debut_an_passe = _debut_mois(jour, 1)
@@ -108,6 +119,7 @@ def _bloc_finances(eleves, annee, classes):
         "encaisse_mois": encaisse_mois,
         "evolution_mois": evolution,
         "taux_recouvrement": round(totaux["taux_recouvrement"]),
+        "etat_recouvrement": etat_recouvrement(round(totaux["taux_recouvrement"])),
         "reste_a_recouvrer": totaux["solde_a_recouvrer"],
         "echeancier": echeancier,
         "classes": lignes_classes[:NB_CLASSES_RECOUVREMENT],

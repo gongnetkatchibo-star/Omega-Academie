@@ -23,6 +23,12 @@
   --attention-pale: #FDF3E2;
   --critique: #A32D2D;
   --critique-pale: #FBECEB;
+  /* Versions soutenues, pour les jauges et les liserés : assez vives pour
+     se lire d'un coup d'œil sur fond blanc. */
+  --ok-vif: #2E9B57;
+  --attention-vif: #D9961A;
+  --critique-vif: #C8473F;
+  --accent-fonce: #00776F;
   /* Les polices latines n'ont pas de lettres arabes : le navigateur prend
      alors Noto Sans Arabic, chargée seulement si la page en contient. */
   --police-titres: "Bricolage Grotesque", "Noto Sans Arabic", "Segoe UI", system-ui, sans-serif;
@@ -2211,39 +2217,97 @@ button:hover {
   gap: 14px;
 }
 
+/* Chaque chiffre porte un « ton » : la couleur dit tout de suite si ça
+   va (vert), s'il faut suivre (ambre) ou agir (rouge). Le bleu plein est
+   réservé à l'argent encaissé, le chiffre que la direction cherche en
+   premier ; le sarcelle aux chiffres sans jugement (effectifs). */
+.tdb-ton-neutre { --ton: var(--accent-fonce); --ton-pale: var(--accent-pale); --ton-vif: var(--accent-vif); }
+.tdb-ton-ok { --ton: var(--ok); --ton-pale: var(--ok-pale); --ton-vif: var(--ok-vif); }
+.tdb-ton-attention { --ton: var(--attention); --ton-pale: var(--attention-pale); --ton-vif: var(--attention-vif); }
+.tdb-ton-critique { --ton: var(--critique); --ton-pale: var(--critique-pale); --ton-vif: var(--critique-vif); }
+
 .tdb-indicateur {
   background: var(--surface);
   border: 1px solid var(--trait);
-  border-radius: 10px;
-  padding: 16px 18px;
+  border-radius: 14px;
+  padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.tdb-indicateur.tdb-ton-ok,
+.tdb-indicateur.tdb-ton-attention,
+.tdb-indicateur.tdb-ton-critique {
+  border-inline-start: 5px solid var(--ton-vif);
 }
 
 .tdb-indicateur-titre {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 14px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--encre-2);
 }
 
-.tdb-indicateur-titre svg.icone {
-  width: 15px;
-  height: 15px;
-  color: var(--encre-3);
+.tdb-indicateur-valeur .badge {
+  font-family: var(--police-texte);
+  vertical-align: middle;
+  margin-inline-start: 6px;
+}
+
+.tdb-puce {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--ton-pale, var(--piste));
+  color: var(--ton, var(--navy));
+}
+
+.tdb-puce svg.icone {
+  width: 18px;
+  height: 18px;
 }
 
 .tdb-indicateur-valeur {
   font-family: var(--police-titres);
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
   font-variant-numeric: tabular-nums;
+  color: var(--ton, var(--encre));
+}
+
+.tdb-indicateur.tdb-ton-neutre .tdb-indicateur-valeur {
+  color: var(--encre);
+}
+
+/* L'argent encaissé : seule tuile pleine, on la voit en premier. */
+.tdb-indicateur.tdb-ton-principal {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  --ton: #fff;
+  --ton-pale: rgba(255, 255, 255, 0.16);
+}
+
+.tdb-ton-principal .tdb-indicateur-titre,
+.tdb-ton-principal .tdb-indicateur-detail,
+.tdb-ton-principal .tdb-indicateur-valeur small {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.tdb-ton-principal .tdb-hausse,
+.tdb-ton-principal .tdb-baisse {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+  padding: 1px 8px;
 }
 
 .tdb-indicateur-valeur small {
@@ -2269,7 +2333,7 @@ button:hover {
 
 .tdb-jauge {
   display: block;
-  height: 6px;
+  height: 8px;
   background: var(--piste);
   border-radius: 99px;
   overflow: hidden;
@@ -2278,7 +2342,7 @@ button:hover {
 .tdb-jauge > span {
   display: block;
   height: 100%;
-  background: var(--accent-vif);
+  background: var(--ton-vif, var(--accent-vif));
   border-radius: 99px;
 }
 
@@ -2376,6 +2440,10 @@ button:hover {
 
 .tdb-chiffres strong {
   color: var(--encre);
+}
+
+.tdb-chiffres .badge {
+  margin-inline-start: 4px;
 }
 
 .tdb-piste {
@@ -2523,14 +2591,15 @@ button:hover {
 }
 
 .tdb-taux .tdb-jauge > span {
-  background: var(--navy);
+  background: var(--ton-vif, var(--navy));
 }
 
 .tdb-taux strong {
   width: 40px;
   text-align: right;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--ton, inherit);
 }
 
 .lien-eleve {
