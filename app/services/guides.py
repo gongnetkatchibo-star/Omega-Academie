@@ -370,8 +370,9 @@ GUIDES = [
             ("Réglage commun", "Ce que l'école ne change pas suit le réglage commun à toutes les écoles."),
             ("Revenir en arrière", "« Revenir au réglage commun » efface les choix propres à l'école."),
         ],
-        ["Les zones techniques (rôles, journaux, sauvegarde) restent réglées par le développeur."],
-        endpoint="dev.permissions", roles=("fondateur",),
+        ["Chacun ne règle que les rôles placés sous le sien : le fondateur, pour les modules qu'il a lui-même ; "
+         "le secrétariat, pour les enseignants, élèves, parents et personnel, hors finances."],
+        endpoint="dev.permissions", roles=("fondateur", "secretaire"),
     ),
     _guide(
         "plateforme", "Plateforme", "plateforme",

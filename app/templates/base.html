@@ -153,7 +153,7 @@
         {% set peut_roles = acces("developpeur", module="gestion_roles") %}
         {% set peut_etablissement = acces("developpeur", "fondateur", module="gestion_roles") %}
         {% set peut_sauvegarde = acces("developpeur", module="sauvegarde") %}
-        {% set peut_permissions = acces("fondateur") %}
+        {% set peut_permissions = acces("fondateur", "secretaire") %}
         {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde or peut_permissions %}
           <details class="sidebar-deroulant" {% if module_actif in ["secretariat", "dev", "sauvegarde"] %}open{% endif %}>
             <summary>{{ icone("administration") }} {{ _("Administration") }}</summary>

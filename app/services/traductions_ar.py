@@ -1477,3 +1477,12 @@ INTERFACE.update({
     "Campagne de pré-inscription ouverte : le lien peut être partagé aux familles.": "تم فتح حملة التسجيل المسبق: يمكن إرسال الرابط إلى الأسر.",
     "Campagne de pré-inscription fermée : le formulaire n'est plus accessible.": "تم إغلاق حملة التسجيل المسبق: لم تعد الاستمارة متاحة.",
 })
+
+INTERFACE.update({
+    "Tu règles les rôles placés sous le tien, pour les modules auxquels tu as toi-même accès. Ton propre rôle et les zones techniques se règlent avec l'administrateur de la plateforme.":
+        "تضبط الأدوار التي تقع تحت دورك، في الوحدات التي لك حق الوصول إليها. أما دورك أنت والمناطق التقنية فيضبطها مدير المنصة.",
+    "Tu règles les rôles des enseignants, des élèves, des parents et du personnel, pour les modules qui ne touchent pas aux finances. Le reste se règle avec la direction.":
+        "تضبط أدوار المعلمين والتلاميذ والأولياء والموظفين، في الوحدات التي لا تتعلق بالمالية. والباقي تضبطه الإدارة.",
+    "Chacun ne règle que les rôles placés sous le sien : le fondateur, pour les modules qu'il a lui-même ; le secrétariat, pour les enseignants, élèves, parents et personnel, hors finances.":
+        "كل واحد يضبط الأدوار التي تقع تحت دوره فقط: المؤسس في الوحدات التي يملكها، والسكرتارية للمعلمين والتلاميذ والأولياء والموظفين، خارج المالية.",
+})

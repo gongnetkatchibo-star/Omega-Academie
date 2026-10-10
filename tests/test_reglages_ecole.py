@@ -83,11 +83,72 @@ def test_revenir_au_reglage_commun(client, db, creer_utilisateur):
     assert Permission.query.count() == 0
 
 
-def test_seuls_fondateur_et_developpeur_reglent_les_permissions(client, creer_utilisateur):
+def test_seuls_les_roles_prevus_reglent_les_permissions(client, creer_utilisateur):
     creer_utilisateur("Directeur", "d@t.td", "directeur_college")
     connecter(client, "d@t.td")
     assert client.get("/developpeur/permissions").status_code == 403
     assert client.post("/developpeur/permissions/enregistrer", data={}).status_code == 403
+
+
+def _cases_par_defaut(roles, modules):
+    from app.services.modules_par_defaut import ROLES_PAR_DEFAUT
+    return {f"{r}__{m}": "on" for r in roles for m in modules if r in ROLES_PAR_DEFAUT.get(m, [])}
+
+
+def test_le_fondateur_ne_regle_ni_son_role_ni_ce_qu_il_n_a_pas(client, app, db, creer_utilisateur):
+    from app.models.permission import Permission
+    from app.services.delegation import portee_matrice
+    from app.services.permissions import vider_cache
+    from flask import g
+
+    # L'administrateur de la plateforme a retiré les salaires au fondateur.
+    db.session.add(Permission(ecole_id=None, role="fondateur", module="salaires", autorise=False))
+    db.session.commit()
+    vider_cache()
+    creer_utilisateur("Fondateur", "f@t.td", "fondateur")
+    connecter(client, "f@t.td")
+    page = _texte(client.get("/developpeur/permissions"))
+    assert 'name="fondateur__' not in page and 'name="super_administrateur__' not in page
+    assert 'name="secretaire__salaires"' not in page and 'name="secretaire__sauvegarde"' not in page
+    assert 'name="secretaire__finances"' in page
+
+    with app.test_request_context():
+        g.ecole_id = 1
+        roles, modules = portee_matrice("fondateur")
+    cases = _cases_par_defaut(roles, modules)
+    cases.update({"fondateur__salaires": "on", "secretaire__salaires": "on", "fondateur__gestion_roles": "on"})
+    client.post("/developpeur/permissions/enregistrer", data=cases)
+    assert [(p.ecole_id, p.role, p.module, p.autorise) for p in Permission.query.all()] == [(None, "fondateur", "salaires", False)]
+
+
+def test_le_secretariat_regle_les_roles_de_base_hors_finances(client, app, db, creer_utilisateur):
+    from app.models.permission import Permission
+    from app.services.delegation import portee_matrice
+
+    # Un réglage du fondateur, hors de la portée du secrétariat : il doit rester.
+    db.session.add(Permission(ecole_id=1, role="comptable", module="eleves", autorise=True))
+    db.session.commit()
+    creer_utilisateur("Sec", "s@t.td", "secretaire")
+    creer_utilisateur("Prof", "p@t.td", "enseignant")
+    connecter(client, "s@t.td")
+    page = _texte(client.get("/developpeur/permissions"))
+    assert 'name="enseignant__alertes"' in page and 'name="eleve__bibliotheque"' in page
+    for absent in ("enseignant__finances", "enseignant__caisse", "enseignant__salaires", "enseignant__statistiques",
+                   "enseignant__gestion_roles", "secretaire__", "comptable__", "fondateur__", "directeur_college__"):
+        assert f'name="{absent}' not in page
+    assert "Permissions" in _texte(client.get("/"))
+
+    roles, modules = portee_matrice("secretaire")
+    cases = _cases_par_defaut(roles, modules)
+    cases.update({"enseignant__alertes": "on", "enseignant__caisse": "on", "secretaire__finances": "on", "comptable__eleves": ""})
+    client.post("/developpeur/permissions/enregistrer", data=cases)
+    assert sorted((p.role, p.module, p.autorise) for p in Permission.query.all()) == [
+        ("comptable", "eleves", True), ("enseignant", "alertes", True)]
+
+    # « Revenir au réglage commun » n'efface que sa propre partie.
+    client.post("/developpeur/permissions/reinitialiser")
+    assert [(p.role, p.module) for p in Permission.query.all()] == [("comptable", "eleves")]
+    client.get("/auth/deconnexion")
 
 
 # ------------------------------------------------------- double authentification

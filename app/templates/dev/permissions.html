@@ -40,7 +40,7 @@
               {% for cle, libelle in modules %}
                 <td style="text-align:center;">
                   <input type="checkbox" name="{{ role }}__{{ cle }}" aria-label="{{ _(role|role_libelle) }} — {{ _(libelle) }}"
-                    {% if etat[(role, cle)] %}checked{% endif %} {% if cle in verrouilles %}disabled{% endif %}>
+                    {% if etat[(role, cle)] %}checked{% endif %}>
                 </td>
               {% endfor %}
             </tr>
@@ -48,7 +48,8 @@
         </tbody>
       </table>
     </div>
-    {% if verrouilles %}<p class="lien-secondaire">{{ _("Les zones techniques (rôles, journaux, sauvegarde) se règlent avec le développeur de la plateforme.") }}</p>{% endif %}
+    {% if current_user.role == "fondateur" %}<p class="lien-secondaire">{{ _("Tu règles les rôles placés sous le tien, pour les modules auxquels tu as toi-même accès. Ton propre rôle et les zones techniques se règlent avec l'administrateur de la plateforme.") }}</p>
+    {% elif current_user.role == "secretaire" %}<p class="lien-secondaire">{{ _("Tu règles les rôles des enseignants, des élèves, des parents et du personnel, pour les modules qui ne touchent pas aux finances. Le reste se règle avec la direction.") }}</p>{% endif %}
     <button type="submit" class="bouton bouton-plein" style="margin-top:16px;">{{ _("Enregistrer les permissions") }}</button>
   </form>
 

@@ -5,7 +5,7 @@ from app.extensions import db
 from app.models.user import User, ROLES, STATUTS
 from app.models.permission import Permission, MODULES
 from app.services.permissions import toutes_les_permissions, vider_cache
-from app.services.modules_par_defaut import ROLES_PAR_DEFAUT
+from app.services.delegation import ROLES_DELEGANTS, portee_matrice
 from app.services.journal import journaliser
 from app.dev import dev_bp
 from app.utils import roles_required
@@ -198,9 +198,6 @@ def supprimer_utilisateur(user_id):
     return redirect(url_for("dev.utilisateurs"))
 
 
-ROLES_MATRICE = [r for r in ROLES if r != "developpeur"]  # accès complet, inutile à afficher/modifier
-
-
 @dev_bp.route("/journal")
 @login_required
 @roles_required("developpeur", module="journal_actions")
@@ -240,44 +237,48 @@ def _portee_permissions():
 
 @dev_bp.route("/permissions")
 @login_required
-@roles_required("developpeur", "fondateur")
+@roles_required("developpeur", *ROLES_DELEGANTS)
 def permissions():
-    from app.models.permission import MODULES_TECHNIQUES
     from app.services.tenant import ecole_courante
 
-    modules_cles = [cle for cle, _ in MODULES]
+    roles, modules_cles = portee_matrice(current_user.role)
     ecole_id = _portee_permissions()
-    etat = toutes_les_permissions(ROLES_MATRICE, modules_cles, ecole_id)
-    personnalise = ecole_id is not None and Permission.query.filter_by(ecole_id=ecole_id).first() is not None
+    etat = toutes_les_permissions(roles, modules_cles, ecole_id)
     return render_template(
-        "dev/permissions.html", roles=ROLES_MATRICE, modules=MODULES, etat=etat,
-        roles_par_defaut=ROLES_PAR_DEFAUT, portee="commune" if ecole_id is None else "ecole",
-        ecole_reglee=ecole_courante() if ecole_id else None, personnalise=personnalise,
-        verrouilles=[] if current_user.role == "developpeur" else MODULES_TECHNIQUES,
+        "dev/permissions.html", roles=roles, modules=[(c, l) for c, l in MODULES if c in modules_cles], etat=etat,
+        portee="commune" if ecole_id is None else "ecole",
+        ecole_reglee=ecole_courante() if ecole_id else None,
+        personnalise=ecole_id is not None and _lignes_de_la_portee(ecole_id, roles, modules_cles).first() is not None,
+    )
+
+
+def _lignes_de_la_portee(ecole_id, roles, modules_cles):
+    """Les réglages de l'école que la personne connectée a le droit de toucher."""
+    return Permission.query.filter(
+        Permission.ecole_id == ecole_id, Permission.role.in_(roles), Permission.module.in_(modules_cles)
     )
 
 
 @dev_bp.route("/permissions/enregistrer", methods=["POST"])
 @login_required
-@roles_required("developpeur", "fondateur")
+@roles_required("developpeur", *ROLES_DELEGANTS)
 def enregistrer_permissions():
     """Une case cochée = accès autorisé pour ce rôle sur ce module.
 
     Réglage commun : une ligne par couple (rôle, module) affiché.
     Réglage d'une école : on ne garde que ce qui diffère du réglage
     commun, pour que l'école suive les changements communs ultérieurs
-    sur tout ce qu'elle n'a pas modifié elle-même."""
-    from app.models.permission import MODULES_TECHNIQUES
+    sur tout ce qu'elle n'a pas modifié elle-même.
 
-    modules_cles = [cle for cle, _ in MODULES]
-    if current_user.role != "developpeur":
-        # Le fondateur ne touche pas aux zones techniques.
-        modules_cles = [m for m in modules_cles if m not in MODULES_TECHNIQUES]
+    Seuls les couples de la portée de la personne connectée sont lus :
+    une case envoyée pour un autre rôle ou un autre module est ignorée,
+    et les réglages hors portée restent tels quels."""
+    roles, modules_cles = portee_matrice(current_user.role)
     ecole_id = _portee_permissions()
-    commun = toutes_les_permissions(ROLES_MATRICE, modules_cles, None)
+    commun = toutes_les_permissions(roles, modules_cles, None)
     lignes = {(p.role, p.module): p for p in Permission.query.filter_by(ecole_id=ecole_id).all()}
 
-    for role in ROLES_MATRICE:
+    for role in roles:
         for module in modules_cles:
             autorise = request.form.get(f"{role}__{module}") == "on"
             ligne = lignes.get((role, module))
@@ -300,14 +301,16 @@ def enregistrer_permissions():
 
 @dev_bp.route("/permissions/reinitialiser", methods=["POST"])
 @login_required
-@roles_required("developpeur", "fondateur")
+@roles_required("developpeur", *ROLES_DELEGANTS)
 def reinitialiser_permissions():
-    """L'école reprend le réglage commun à toutes les écoles."""
+    """L'école reprend le réglage commun — pour la partie de la matrice
+    que la personne connectée a le droit de régler."""
     from app.services.tenant import ecole_courante_id
 
     ecole_id = ecole_courante_id()
     if ecole_id is not None:
-        Permission.query.filter_by(ecole_id=ecole_id).delete()
+        roles, modules_cles = portee_matrice(current_user.role)
+        _lignes_de_la_portee(ecole_id, roles, modules_cles).delete(synchronize_session=False)
         journaliser("modification_permissions", details="Permissions de l'école ramenées au réglage commun")
         db.session.commit()
         vider_cache()
