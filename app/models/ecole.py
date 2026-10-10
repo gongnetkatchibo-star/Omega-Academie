@@ -23,6 +23,10 @@ class Ecole(db.Model):
     # Mot court du lien propre à l'école : https://…/e/<identifiant>
     # (services/liens_ecole.py). Unique ; attribué à la création.
     identifiant = db.Column(db.String(60), unique=True, index=True)
+    # Campagne de pré-inscription : fermée, le formulaire public n'est
+    # pas accessible, même avec son lien. L'administration de l'école
+    # l'ouvre le temps de la campagne et partage alors le lien.
+    preinscriptions_ouvertes = db.Column(db.Boolean, nullable=False, default=False)
     couleur_principale = db.Column(db.String(7), default="#00387B")
     couleur_secondaire = db.Column(db.String(7), default="#DEA230")
     # Couleurs de l'interface choisies par l'école (oct. 2026). Vides : les

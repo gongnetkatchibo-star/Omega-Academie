@@ -25,7 +25,15 @@ ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 def _ecoles_ouvertes():
-    return Ecole.query.filter_by(actif=True).order_by(Ecole.nom).all()
+    """Écoles dont la campagne de pré-inscription est ouverte."""
+    return Ecole.query.filter_by(actif=True, preinscriptions_ouvertes=True).order_by(Ecole.nom).all()
+
+
+def lien_de_campagne(ecole):
+    """Adresse du formulaire, que l'administration partage aux familles."""
+    if ecole.identifiant:
+        return url_for("main.preinscription_ecole", identifiant=ecole.identifiant, _external=True)
+    return url_for("preinscriptions.demande", ecole_id=ecole.id, _external=True)
 
 
 def _nouvelle_reference():
@@ -51,6 +59,9 @@ def demande(ecole_id):
     ecole = db.session.get(Ecole, ecole_id)
     if ecole is None or not ecole.actif:
         abort(404)
+    if not ecole.preinscriptions_ouvertes:
+        # Hors campagne : ni formulaire ni enregistrement, même avec le lien.
+        return render_template("preinscriptions/fermee.html", etab=ecole)
     # Toute la suite de la requête se passe dans cette école : lectures
     # filtrées et nouvelle demande rattachée à elle.
     g.ecole_id = ecole.id
@@ -147,7 +158,30 @@ def liste():
         requete = requete.filter(db.or_(PreInscription.classe_demandee_id.is_(None),
                                         PreInscription.classe_demandee_id.in_(ids)))
     page = paginer(requete.order_by(PreInscription.date_creation.desc()))
-    return render_template("preinscriptions/liste.html", page=page, statut=statut, statuts=STATUTS_PREINSCRIPTION)
+    from app.services.tenant import ecole_courante
+    etab = ecole_courante()
+    return render_template("preinscriptions/liste.html", page=page, statut=statut, statuts=STATUTS_PREINSCRIPTION,
+                           etab=etab, lien_campagne=lien_de_campagne(etab) if etab else None)
+
+
+@preinscriptions_bp.route("/campagne", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module=MODULE)
+def campagne():
+    """Ouvre ou ferme la campagne de pré-inscription de l'école."""
+    from app.services.tenant import ecole_courante
+    from app.services.journal import journaliser
+
+    etab = ecole_courante() or abort(404)
+    etab.preinscriptions_ouvertes = request.form.get("ouvrir") == "1"
+    journaliser("campagne_preinscription_ouverte" if etab.preinscriptions_ouvertes else "campagne_preinscription_fermee",
+                details=etab.nom, cible_type="Ecole", cible_id=etab.id)
+    db.session.commit()
+    if etab.preinscriptions_ouvertes:
+        flash("Campagne de pré-inscription ouverte : le lien peut être partagé aux familles.", "info")
+    else:
+        flash("Campagne de pré-inscription fermée : le formulaire n'est plus accessible.", "info")
+    return redirect(url_for("preinscriptions.liste"))
 
 
 @preinscriptions_bp.route("/<int:demande_id>", methods=["GET"])

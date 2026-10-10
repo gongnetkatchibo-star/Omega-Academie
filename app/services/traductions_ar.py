@@ -1458,3 +1458,22 @@ INTERFACE.update({
         "يُعطى للأسر والموظفين: صفحة الدخول فيه تحمل اسم المدرسة وشعارها.",
     "Lettres, chiffres et tirets. Laisser vide pour la tirer du nom.": "حروف وأرقام وشرطات. اتركه فارغًا ليُؤخذ من الاسم.",
 })
+
+
+# Campagne de pré-inscription ouverte par l'administration (oct. 2026).
+INTERFACE.update({
+    "Campagne de pré-inscription": "حملة التسجيل المسبق",
+    "Ouverte": "مفتوحة",
+    "Fermée": "مغلقة",
+    "Ouvrir la campagne": "فتح الحملة",
+    "Fermer la campagne": "إغلاق الحملة",
+    "Lien à partager avec les familles pendant la campagne :": "الرابط الذي يُرسل إلى الأسر خلال الحملة:",
+    "Partager sur WhatsApp": "مشاركة عبر واتساب",
+    "Tant que la campagne est fermée, le formulaire n'est pas accessible aux familles, même avec le lien.":
+        "ما دامت الحملة مغلقة، لا يمكن للأسر الوصول إلى الاستمارة حتى بالرابط.",
+    "Les pré-inscriptions sont fermées": "التسجيلات المسبقة مغلقة",
+    "L'école n'accepte pas de pré-inscription en ligne pour le moment. Contacte le secrétariat pour connaître la date de la prochaine campagne.":
+        "المدرسة لا تقبل التسجيل المسبق عبر الإنترنت حاليًا. اتصلوا بالأمانة لمعرفة موعد الحملة القادمة.",
+    "Campagne de pré-inscription ouverte : le lien peut être partagé aux familles.": "تم فتح حملة التسجيل المسبق: يمكن إرسال الرابط إلى الأسر.",
+    "Campagne de pré-inscription fermée : le formulaire n'est plus accessible.": "تم إغلاق حملة التسجيل المسبق: لم تعد الاستمارة متاحة.",
+})

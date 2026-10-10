@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Les pré-inscriptions sont fermées") }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Les pré-inscriptions sont fermées") }}</h1>
+  <p><strong>{{ etab.nom }}</strong>{% if etab.ville %} · {{ etab.ville }}{% endif %}</p>
+  <p>{{ _("L'école n'accepte pas de pré-inscription en ligne pour le moment. Contacte le secrétariat pour connaître la date de la prochaine campagne.") }}</p>
+  <p class="lien-secondaire"><a href="{{ url_for('main.page_ecole', identifiant=etab.identifiant) if etab.identifiant else url_for('main.index') }}">{{ _("Retour à l'accueil") }}</a></p>
+{% endblock %}

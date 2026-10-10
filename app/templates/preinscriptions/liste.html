@@ -6,7 +6,30 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-  <p class="lien-secondaire">{{ _("Adresse à partager avec les familles :") }} <a href="{{ url_for('preinscriptions.demande', ecole_id=ecole().id, _external=True) if ecole() else '#' }}">{{ url_for('preinscriptions.demande', ecole_id=ecole().id, _external=True) if ecole() else '' }}</a></p>
+  {% if etab %}
+    <section class="carte-campagne {{ 'carte-campagne-ouverte' if etab.preinscriptions_ouvertes else '' }}">
+      <div class="carte-campagne-tete">
+        <strong>{{ _("Campagne de pré-inscription") }}</strong>
+        <span class="badge {{ 'badge-ok' if etab.preinscriptions_ouvertes else 'badge-attention' }}">{{ _("Ouverte") if etab.preinscriptions_ouvertes else _("Fermée") }}</span>
+        <form method="post" action="{{ url_for('preinscriptions.campagne') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="ouvrir" value="{{ '0' if etab.preinscriptions_ouvertes else '1' }}">
+          <button type="submit" class="{{ 'bouton-danger' if etab.preinscriptions_ouvertes else '' }}">{{ _("Fermer la campagne") if etab.preinscriptions_ouvertes else _("Ouvrir la campagne") }}</button>
+        </form>
+      </div>
+      {% if etab.preinscriptions_ouvertes %}
+        <p>{{ _("Lien à partager avec les familles pendant la campagne :") }}</p>
+        <span class="lien-ecole">
+          <a href="{{ lien_campagne }}" dir="ltr">{{ lien_campagne }}</a>
+          <button type="button" class="lien-ecole-copier" data-lien="{{ lien_campagne }}" data-copie="{{ _('Lien copié') }}"
+                  onclick="var b=this; navigator.clipboard.writeText(b.dataset.lien).then(function(){ var t=b.textContent; b.textContent=b.dataset.copie; setTimeout(function(){ b.textContent=t; }, 1600); });">{{ _("Copier le lien") }}</button>
+          <a class="lien-ecole-copier" target="_blank" rel="noopener" href="https://wa.me/?text={{ (_('Pré-inscription en ligne') ~ ' — ' ~ etab.nom ~ ' : ' ~ lien_campagne)|urlencode }}">{{ _("Partager sur WhatsApp") }}</a>
+        </span>
+      {% else %}
+        <p>{{ _("Tant que la campagne est fermée, le formulaire n'est pas accessible aux familles, même avec le lien.") }}</p>
+      {% endif %}
+    </section>
+  {% endif %}
   <div class="onglets-statut barre-actions">
     {% for cle, libelle in statuts %}
       <a class="bouton {% if statut == cle %}bouton-plein{% endif %}" href="{{ url_for('preinscriptions.liste', statut=cle) }}">{{ _(libelle) }}</a>

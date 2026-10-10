@@ -9,10 +9,6 @@
       <a class="bouton-secondaire" href="{{ url_for('auth.inscription') }}">{{ _("Créer un compte") }}</a>
     </div>
     <p class="hero-verifier">
-      {{ _("Vous souhaitez inscrire votre enfant ?") }}
-      <a href="{{ url_for('preinscriptions.choisir_ecole') }}">{{ _("Faire une pré-inscription en ligne") }}</a>
-    </p>
-    <p class="hero-verifier">
       {{ _("Vous avez reçu un bulletin, un certificat ou un reçu ?") }}
       <a href="{{ url_for('main.verifier_formulaire') }}">{{ _("Vérifier qu'il est authentique") }}</a>
     </p>

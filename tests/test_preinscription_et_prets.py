@@ -17,6 +17,13 @@ def _aujourd_hui():
 
 
 # ---------------------------------------------------------- pré-inscription
+def _ouvrir_les_campagnes(db):
+    from app.models.ecole import Ecole
+    for ecole in db.session.query(Ecole).all():
+        ecole.preinscriptions_ouvertes = True
+    db.session.commit()
+
+
 FORMULAIRE = {
     "nom_candidat": "Zara Mahamat", "sexe": "F", "date_naissance": "2018-03-04", "nom_parent": "Mahamat Ali",
     "telephone_parent": "66 12 34 56", "email_parent": "parent.zara@exemple.td", "message": "Merci",
@@ -33,7 +40,9 @@ def test_une_famille_pre_inscrit_sans_compte_et_le_secretariat_convoque(client, 
     cp1 = creer_classe(nom="CP1", niveau=1)
     creer_utilisateur("Secrétaire", "sec@t.td", "secretaire")
 
-    assert "pré-inscription" in _texte(client.get("/")).lower()
+    # Le lien n'est plus affiché au public : c'est l'administration qui le partage.
+    assert "pré-inscription" not in _texte(client.get("/")).lower()
+    _ouvrir_les_campagnes(db)
     r = client.get("/pre-inscriptions/demande")  # une seule école : directement son formulaire
     assert r.headers["Location"].endswith("/pre-inscriptions/demande/1")
     r = client.post("/pre-inscriptions/demande/1", data={**FORMULAIRE, "classe_demandee_id": cp1.id})
@@ -57,8 +66,52 @@ def test_une_famille_pre_inscrit_sans_compte_et_le_secretariat_convoque(client, 
     assert TestNiveau.query.count() == 1
 
 
+def test_hors_campagne_le_formulaire_est_ferme_et_l_administration_l_ouvre(client, db, creer_utilisateur):
+    """Le lien n'est montré nulle part au public. Fermée, la campagne
+    refuse toute demande, même avec le lien ; la direction l'ouvre, voit
+    le lien à partager, puis la referme."""
+    from app.models.ecole import Ecole
+    from app.models.preinscription import PreInscription
+
+    ecole = db.session.get(Ecole, 1)
+    ecole.identifiant = "ecole-test"
+    db.session.commit()
+
+    assert "pré-inscription" not in _texte(client.get("/e/ecole-test")).lower()
+    assert "Les pré-inscriptions sont fermées" in _texte(client.get("/pre-inscriptions/demande/1"))
+    r = client.post("/pre-inscriptions/demande/1", data=FORMULAIRE)
+    assert "Les pré-inscriptions sont fermées" in _texte(r) and PreInscription.query.count() == 0
+    assert "/pre-inscriptions/demande/1" not in _texte(client.get("/pre-inscriptions/demande"))  # pas proposée dans la liste
+
+    creer_utilisateur("Parent", "p@t.td", "parent")
+    connecter(client, "p@t.td")
+    assert client.post("/pre-inscriptions/campagne", data={"ouvrir": "1"}).status_code == 403
+    client.get("/auth/deconnexion")
+
+    creer_utilisateur("Secrétaire", "sec@t.td", "secretaire")
+    connecter(client, "sec@t.td")
+    page = _texte(client.get("/pre-inscriptions/"))
+    assert "Ouvrir la campagne" in page and "/e/ecole-test/pre-inscription" not in page
+    page = _texte(client.post("/pre-inscriptions/campagne", data={"ouvrir": "1"}, follow_redirects=True))
+    assert "Fermer la campagne" in page and "/e/ecole-test/pre-inscription" in page and "wa.me" in page
+    client.get("/auth/deconnexion")
+
+    # Campagne ouverte : le lien partagé mène au formulaire.
+    r = client.get("/e/ecole-test/pre-inscription")
+    assert r.headers["Location"].endswith("/pre-inscriptions/demande/1")
+    assert "Nom complet" in _texte(client.get("/pre-inscriptions/demande/1"))
+    client.post("/pre-inscriptions/demande/1", data=FORMULAIRE)
+    assert PreInscription.query.count() == 1
+
+    connecter(client, "sec@t.td")
+    client.post("/pre-inscriptions/campagne", data={"ouvrir": "0"})
+    client.get("/auth/deconnexion")
+    assert "Les pré-inscriptions sont fermées" in _texte(client.get("/pre-inscriptions/demande/1"))
+
+
 def test_demande_invalide_ou_robot(client, db):
     from app.models.preinscription import PreInscription
+    _ouvrir_les_campagnes(db)
     r = client.post("/pre-inscriptions/demande/1", data={**FORMULAIRE, "telephone_parent": "abc"})
     assert "Numéro de téléphone invalide" in _texte(r)
     client.post("/pre-inscriptions/demande/1", data={**FORMULAIRE, "site_web": "http://spam"})
@@ -71,6 +124,7 @@ def test_pre_inscription_rattachee_a_la_bonne_ecole(client, db, creer_utilisateu
     from app.models.preinscription import PreInscription
     db.session.add(Ecole(id=2, nom="École Deux", sigle="E2", prefixe_matricule="E226"))
     db.session.commit()
+    _ouvrir_les_campagnes(db)
     client.post("/pre-inscriptions/demande/2", data=FORMULAIRE)
     demande = PreInscription.query.execution_options(tous_etablissements=True).one()
     assert demande.ecole_id == 2
@@ -87,6 +141,7 @@ def test_pre_inscription_rattachee_a_la_bonne_ecole(client, db, creer_utilisateu
 def test_refus_et_droits(client, db, creer_utilisateur, monkeypatch):
     from app.models.preinscription import PreInscription
     monkeypatch.setattr("app.services.notifications.envoyer_email", lambda *a, **k: True)
+    _ouvrir_les_campagnes(db)
     client.post("/pre-inscriptions/demande/1", data=FORMULAIRE)
     demande = PreInscription.query.one()
     creer_utilisateur("Parent", "p@t.td", "parent")
