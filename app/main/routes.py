@@ -413,31 +413,74 @@ FICHIERS_A_PRECHARGER = (
 )
 
 
-@main_bp.route("/manifest.webmanifest")
-def manifeste():
+def _manifeste(etab=None):
+    """Fiche de l'application installable. Avec une école : son nom, sa
+    couleur et son logo comme icône ; sinon ceux de la plateforme."""
     from flask import current_app, jsonify
+    from app.services.icones_ecole import empreinte_logo, nom_court
     from app.services.langues import langue_courante
 
+    statique = lambda fichier: url_for("static", filename=f"images/application/{fichier}")  # noqa: E731
+    icones = [
+        {"src": statique("icone-192.png"), "sizes": "192x192", "type": "image/png"},
+        {"src": statique("icone-512.png"), "sizes": "512x512", "type": "image/png"},
+        {"src": statique("icone-masquable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    ]
     nom = current_app.config.get("PLATEFORME_NOM", "Toumaï Edu School")
-    icone = lambda fichier: url_for("static", filename=f"images/application/{fichier}")  # noqa: E731
+    court, depart, couleur = "Toumaï", url_for("main.index") + "?source=application", "#0F5FA6"
+    if etab is not None:
+        nom, court = etab.nom, nom_court(etab)
+        depart = url_for("main.page_ecole", identifiant=etab.identifiant) + "?source=application"
+        couleur = etab.couleur_theme or couleur
+        if etab.logo:
+            v = empreinte_logo(etab)
+            de_l_ecole = lambda **k: url_for("main.icone_ecole_public", identifiant=etab.identifiant, v=v, **k)  # noqa: E731
+            icones = [
+                {"src": de_l_ecole(taille=192), "sizes": "192x192", "type": "image/png"},
+                {"src": de_l_ecole(taille=512), "sizes": "512x512", "type": "image/png"},
+                {"src": de_l_ecole(taille=512, masquable=1), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+            ]
     reponse = jsonify({
         "name": nom,
-        "short_name": "Toumaï",
+        "short_name": court,
         "description": "Gestion scolaire : élèves, notes, paiements, absences.",
         "lang": langue_courante(),
         "dir": "rtl" if langue_courante() == "ar" else "ltr",
-        "start_url": url_for("main.index") + "?source=application",
+        "id": depart.split("?")[0],
+        "start_url": depart,
         "scope": "/",
         "display": "standalone",
         "background_color": "#F4F1EA",
-        "theme_color": "#0F5FA6",
-        "icons": [
-            {"src": icone("icone-192.png"), "sizes": "192x192", "type": "image/png"},
-            {"src": icone("icone-512.png"), "sizes": "512x512", "type": "image/png"},
-            {"src": icone("icone-masquable-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
-        ],
+        "theme_color": couleur,
+        "icons": icones,
     })
     reponse.mimetype = "application/manifest+json"
+    return reponse
+
+
+@main_bp.route("/manifest.webmanifest")
+def manifeste():
+    return _manifeste()
+
+
+@main_bp.route("/e/<identifiant>/manifest.webmanifest")
+def manifeste_ecole(identifiant):
+    """L'école est dans l'adresse, pas dans la session : le navigateur
+    lit ce fichier sans envoyer le cookie de connexion."""
+    return _manifeste(_ecole_du_lien(identifiant))
+
+
+@main_bp.route("/e/<identifiant>/icone-<int:taille>.png")
+def icone_ecole_public(identifiant, taille):
+    """Icône carrée tirée du logo de l'école (écran d'accueil du téléphone)."""
+    from flask import Response, abort
+    from app.services.icones_ecole import icone_ecole
+
+    contenu = icone_ecole(_ecole_du_lien(identifiant), taille, masquable=request.args.get("masquable") == "1")
+    if contenu is None:
+        abort(404)
+    reponse = Response(contenu, mimetype="image/png")
+    reponse.headers["Cache-Control"] = "public, max-age=86400"
     return reponse
 
 

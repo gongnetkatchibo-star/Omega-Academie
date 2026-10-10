@@ -4,12 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ nom_plateforme() }}{% endblock %}</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-  <link rel="manifest" href="{{ url_for('main.manifeste') }}">
-  <meta name="theme-color" content="{{ (ecole().couleur_theme if ecole() else None) or '#0F5FA6' }}">
+  {# Application installée sur le téléphone : au nom et au logo de l'école
+     du compte (ou du lien suivi), sinon à ceux de la plateforme. #}
+  {% set appli = ecole_de_l_application() %}
+  {% if appli and appli.logo %}
+    <link rel="icon" type="image/png" href="{{ icone_de_l_ecole(appli, 64) }}">
+    <link rel="apple-touch-icon" href="{{ icone_de_l_ecole(appli, 180) }}">
+  {% else %}
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/application/icone-apple-180.png') }}">
+  {% endif %}
+  <link rel="manifest" href="{{ url_for('main.manifeste_ecole', identifiant=appli.identifiant) if appli else url_for('main.manifeste') }}">
+  <meta name="theme-color" content="{{ (appli.couleur_theme if appli else None) or '#0F5FA6' }}">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Toumaï">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/application/icone-apple-180.png') }}">
+  <meta name="apple-mobile-web-app-title" content="{{ nom_court_ecole(appli) if appli else 'Toumaï' }}">
   <link rel="preload" href="{{ url_for('static', filename='fonts/figtree.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version_fichier_statique('css/style.css') }}">
   {{ theme_ecole() }}
@@ -165,6 +173,7 @@
     </aside>
     <div class="contenu-principal">
       <div class="barre-devise">
+        {% if ecole_active and ecole_active.logo %}<img class="barre-devise-logo" src="{{ url_for('main.image_ecole', image='logo') }}" alt="">{% endif %}
         <span class="barre-devise-texte">{{ (ecole_active.devise or ecole_active.nom) if ecole_active else nom_plateforme() }}</span>
         {% if peut_classes or peut_enseignants or peut_roles %}
           <form method="get" action="{{ url_for('main.recherche') }}" class="recherche-globale" role="search">

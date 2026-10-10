@@ -3694,3 +3694,21 @@ form label img {
 a.lien-ecole-copier {
   text-decoration: none;
 }
+
+/* Logo de l'école dans la barre du haut, sur téléphone : le menu latéral,
+   qui le porte sur grand écran, y est replié. */
+.barre-devise-logo {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .barre-devise-logo {
+    display: block;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    object-fit: contain;
+    background: #fff;
+  }
+}

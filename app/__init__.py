@@ -478,6 +478,27 @@ def create_app(config_name=None):
         return ecole_d_accueil()
 
     @app.template_global()
+    def ecole_de_l_application():
+        """École dont l'application installée prend le nom et le logo :
+        celle du compte connecté, sinon celle du lien suivi."""
+        from app.services.liens_ecole import ecole_d_accueil
+        from app.services.tenant import ecole_courante
+
+        etab = ecole_courante() or ecole_d_accueil()
+        return etab if etab is not None and etab.identifiant else None
+
+    @app.template_global()
+    def icone_de_l_ecole(etablissement, taille):
+        from app.services.icones_ecole import empreinte_logo
+        return url_for("main.icone_ecole_public", identifiant=etablissement.identifiant, taille=taille,
+                       v=empreinte_logo(etablissement))
+
+    @app.template_global()
+    def nom_court_ecole(etablissement):
+        from app.services.icones_ecole import nom_court
+        return nom_court(etablissement)
+
+    @app.template_global()
     def lien_de_l_ecole(etablissement):
         from app.services.liens_ecole import lien_ecole
         return lien_ecole(etablissement)
