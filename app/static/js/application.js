@@ -72,3 +72,30 @@
     if (bouton) bouton.hidden = true;
   });
 })();
+
+/* Tableaux sur téléphone (oct. 2026) : chaque cellule reçoit le titre de
+   sa colonne (data-label). La feuille de style s'en sert, en dessous de
+   700 px de large, pour présenter chaque ligne comme une fiche. Les
+   grilles (emploi du temps, bulletin) gardent leur forme et défilent. */
+(function () {
+  "use strict";
+
+  var GRILLES = ["table-edt", "table-bulletin"];
+
+  document.querySelectorAll("table.table").forEach(function (tableau) {
+    var grille = GRILLES.some(function (classe) { return tableau.classList.contains(classe); });
+    var titres = tableau.querySelectorAll("thead tr:first-child th");
+    var fusion = tableau.querySelector("tbody [colspan], tbody [rowspan], thead [colspan], thead [rowspan]");
+    if (grille || !titres.length || fusion) {
+      tableau.classList.add("table-defile");
+      return;
+    }
+    var libelles = Array.prototype.map.call(titres, function (th) { return th.textContent.replace(/\s+/g, " ").trim(); });
+    tableau.querySelectorAll("tbody tr").forEach(function (ligne) {
+      Array.prototype.forEach.call(ligne.children, function (cellule, rang) {
+        if (libelles[rang]) cellule.setAttribute("data-label", libelles[rang]);
+      });
+    });
+    tableau.classList.add("table-fiches");
+  });
+})();

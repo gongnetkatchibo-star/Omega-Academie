@@ -2,7 +2,7 @@
 {% from "_macros.html" import champ_mot_de_passe %}
 {% block title %}{{ _("Créer un compte") }}{% endblock %}
 {% block content %}
-  <p class="nom-plateforme">{{ nom_plateforme() }}</p>
+  <p class="nom-plateforme">{{ ecole_accueil().nom if ecole_accueil() else nom_plateforme() }}</p>
   <h1>{{ _("Créer un compte") }}</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}

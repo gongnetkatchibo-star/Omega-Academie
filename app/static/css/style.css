@@ -3380,3 +3380,279 @@ a.navbar-marque {
   color: #fff;
   text-decoration: underline;
 }
+
+/* ========== Écran de téléphone (oct. 2026) ==========
+   Tout ce qui suit corrige ce qui était pensé pour un grand écran :
+   en-têtes à rallonge, tableaux écrasés, images étirées. */
+
+/* Le bouton « Copier le lien » gardait le bleu plein des boutons
+   ordinaires : texte bleu sur fond bleu, illisible. */
+.lien-ecole .lien-ecole-copier,
+.lien-ecole .lien-ecole-copier:hover {
+  background: var(--surface);
+  color: var(--navy);
+  padding: 3px 10px;
+  align-self: auto;
+}
+
+/* Aperçu du logo ou du filigrane dans un formulaire : sa vraie
+   proportion, pas toute la largeur du champ. */
+form label img {
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start;
+}
+
+.pied-accueil {
+  box-sizing: border-box;
+  max-width: calc(100% + 40px);
+}
+
+/* En-tête des pages publiques : un nom d'école long tient sur deux
+   lignes au plus, à côté du bouton de langue. */
+.navbar-marque {
+  min-width: 0;
+}
+
+.navbar-utilisateur {
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .navbar-marque span {
+    font-size: 16px;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .navbar-utilisateur {
+    font-size: 14px;
+  }
+
+  /* Barre du haut, une fois connecté : la devise sur deux lignes au
+     plus, la recherche garde une largeur utilisable. */
+  .barre-devise {
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .barre-devise-texte {
+    font-size: 13px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .recherche-globale {
+    flex: 0 1 132px;
+    max-width: 42%;
+  }
+
+  h1 {
+    overflow-wrap: break-word;
+  }
+
+  .hero {
+    padding: 36px 16px;
+    margin-top: 16px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 300px;
+    margin-inline: auto;
+  }
+
+  .hero-actions a {
+    text-align: center;
+  }
+
+  .carte-lien-ecole {
+    padding: 12px 14px;
+  }
+
+  .lien-ecole {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* ----- Tableaux en fiches -----
+     Sur un téléphone, un tableau de six colonnes devient illisible :
+     chaque ligne devient une fiche, avec le nom de la colonne devant
+     chaque valeur (data-label, posé par application.js). */
+  .table.table-fiches {
+    display: block;
+    overflow: visible;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    margin-top: 12px;
+  }
+
+  .table.table-fiches thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table.table-fiches tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table.table-fiches tbody tr {
+    display: block;
+    width: auto;
+    background: var(--surface);
+    border: 1px solid var(--trait);
+    border-radius: 10px;
+    padding: 4px 14px;
+    margin-bottom: 10px;
+  }
+
+  .table.table-fiches tbody td {
+    display: block;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--trait);
+    text-align: end;
+    overflow-wrap: break-word;
+    word-break: normal;
+    width: auto !important;
+  }
+
+  /* Le titre de la colonne à gauche, la valeur à droite ; une valeur
+     longue passe à la ligne sous le titre. */
+  .table.table-fiches tbody td::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  .table.table-fiches tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .table.table-fiches tbody td[data-label]::before {
+    content: attr(data-label);
+    float: left;
+    max-width: 45%;
+    margin-right: 14px;
+    text-align: start;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.75;
+    color: var(--encre-2);
+  }
+
+  [dir="rtl"] .table.table-fiches tbody td[data-label]::before {
+    float: right;
+    margin-right: 0;
+    margin-left: 14px;
+  }
+
+  /* Cellule sans titre de colonne (photo, boutons d'action) : toute la
+     largeur, alignée au début. */
+  .table.table-fiches tbody td:not([data-label]) {
+    text-align: start;
+  }
+
+  .table.table-fiches tbody td form,
+  .table.table-fiches tbody td .actions-tableau {
+    justify-content: flex-end;
+  }
+
+  .table.table-fiches tbody td:not([data-label]) form,
+  .table.table-fiches tbody td:not([data-label]) .actions-tableau {
+    justify-content: flex-start;
+  }
+
+  .table.table-fiches tbody td .lien-eleve {
+    justify-content: flex-end;
+  }
+
+  .table.table-fiches tbody td .badge-retard {
+    writing-mode: horizontal-tb;
+    white-space: nowrap;
+  }
+
+  .table.table-fiches tbody td:empty {
+    display: none;
+  }
+
+  .table.table-fiches .actions-console {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .table.table-fiches td .lien-ecole {
+    align-items: flex-end;
+    clear: both;
+  }
+
+  /* ----- Grilles (emploi du temps, bulletin, permissions) -----
+     Elles gardent leur forme : on les fait glisser du doigt. */
+  .table.table-defile,
+  .table-dev {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .table.table-defile thead,
+  .table.table-defile tbody {
+    display: table-row-group;
+    width: auto;
+  }
+
+  .table.table-defile thead {
+    display: table-header-group;
+  }
+
+  .table.table-defile tr {
+    display: table-row;
+    width: auto;
+    table-layout: auto;
+  }
+
+  .table.table-defile th,
+  .table.table-defile td {
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+    width: auto !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .pied-accueil {
+    margin-left: -16px;
+    margin-right: -16px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Un libellé long passe à la ligne au lieu de sortir de l'écran. */
+  button,
+  .bouton {
+    white-space: normal;
+    text-align: center;
+  }
+}
