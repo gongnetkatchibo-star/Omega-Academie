@@ -14,6 +14,8 @@ class ParametreEtablissement(AppartientEcole, db.Model):
     # Bulletins, certificats, attestations et reçus en français et en
     # arabe côte à côte (oct. 2026).
     documents_bilingues = db.Column(db.Boolean, nullable=False, default=False)
+    # Signature et cachet imprimés sur les documents (sinon : à la main).
+    signature_imprimee = db.Column(db.Boolean, nullable=False, default=False)
     # Dates limites de paiement de l'année en cours ; au-delà, ce qui
     # reste dû sur l'échéance est compté en retard.
     date_limite_inscription = db.Column(db.Date)

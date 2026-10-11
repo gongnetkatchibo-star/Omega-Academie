@@ -70,8 +70,7 @@ def emettre(type_document, cle_objet, titre, nom_eleve=None, classe=None, refere
     return nouveau
 
 
-def qr_code_data_uri(texte):
-    """Image PNG du QR code, prête pour un <img src=…> (PDF compris)."""
+def qr_code_png(texte):
     import qrcode
 
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=1)
@@ -79,7 +78,23 @@ def qr_code_data_uri(texte):
     qr.make(fit=True)
     tampon = BytesIO()
     qr.make_image(fill_color="black", back_color="white").save(tampon, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(tampon.getvalue()).decode("ascii")
+    return tampon.getvalue()
+
+
+def qr_code_data_uri(texte):
+    """Image PNG du QR code, prête pour un <img src=…> (PDF compris)."""
+    return "data:image/png;base64," + base64.b64encode(qr_code_png(texte)).decode("ascii")
+
+
+def emettre_carte(eleve, annee):
+    """Une carte par élève et par année : réimprimée, elle garde son code."""
+    details = [("Matricule", eleve.matricule), ("Année scolaire", annee)]
+    if eleve.date_naissance:
+        details.append(("Date de naissance", eleve.date_naissance.strftime("%d/%m/%Y")))
+    return emettre(
+        "carte", f"carte:{eleve.id}:{annee}", f"Carte d'élève · {annee}",
+        nom_eleve=eleve.nom_complet, classe=eleve.classe.nom, reference=eleve.matricule, details=details,
+    )
 
 
 def bloc_verification(document):

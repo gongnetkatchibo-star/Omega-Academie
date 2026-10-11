@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Cartes d'élève") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Documents officiels", url_for('documents_officiels.index')), ("Cartes d'élève", None)) }}
+  <h1>{{ _("Cartes d'élève") }}{% if eleve %} — {{ eleve.nom_complet }}{% endif %}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p>{{ _("Les cartes se remplissent toutes seules avec le dossier de chaque élève : nom, date et lieu de naissance, nationalité, classe, matricule et photo. Le PDF est une planche A4 de dix cartes à découper.") }}</p>
+
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if eleve %}
+      <input type="hidden" name="eleve_id" value="{{ eleve.id }}">
+      <p><strong>{{ eleve.nom_complet }}</strong> — {{ eleve.classe.nom }} — {{ eleve.matricule }}
+        {% if not eleve.photo_mime %}<br><span class="lien-secondaire">{{ _("Pas de photo dans le dossier : la carte sortira avec un cadre où la coller.") }}</span>{% endif %}</p>
+    {% else %}
+      <label>{{ _("Classe") }}
+        <select name="classe_id" required>
+          <option value="">{{ _("Choisir une classe") }}</option>
+          {% for c in classes %}
+            {% set n = effectifs.get(c.id, 0) %}
+            <option value="{{ c.id }}" {% if c.id == classe_choisie %}selected{% endif %} {% if not n %}disabled{% endif %}>{{ c.nom }} — {{ n }} {{ _("élève(s)") }}, {{ avec_photo.get(c.id, 0) }} {{ _("avec photo") }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    {% endif %}
+    <label class="ligne-case"><input type="checkbox" name="verso" checked> {{ _("Ajouter le verso (personne à prévenir et QR code de vérification)") }}</label>
+    {% include "documents_officiels/_choix_signature.html" %}
+    <button type="submit" class="bouton bouton-plein">{{ _("Générer le PDF") }}</button>
+  </form>
+
+  <h2>{{ _("Avant d'imprimer") }}</h2>
+  <ul>
+    <li>{{ _("Photos manquantes :") }} <a href="{{ url_for('eleves.photos', classe_id=classe_choisie) if classe_choisie else url_for('eleves.photos') }}">{{ _("ajouter les photos d'une classe") }}</a>. {{ _("Un élève sans photo sort avec un cadre où la coller.") }}</li>
+    <li>{{ _("Imprime à 100 % (sans « ajuster à la page »), sur papier épais, puis découpe en suivant les repères et plastifie.") }}</li>
+    <li>{{ _("Avec le verso : imprime en recto verso, retournement sur le bord long. Les versos tombent au dos des bonnes cartes.") }}</li>
+    <li>{{ _("Chaque carte porte un QR code : en le scannant, on vérifie que l'élève est bien inscrit cette année.") }}</li>
+  </ul>
+{% endblock %}

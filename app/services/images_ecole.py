@@ -46,7 +46,13 @@ def photo_identite(fichier):
         return None, None
     if fichier.mimetype not in FORMATS_IMAGE:
         return None, "Photo refusée : formats acceptés PNG, JPEG ou WEBP."
-    contenu = fichier.read()
+    return reduire_photo(fichier.read())
+
+
+def reduire_photo(contenu):
+    """(JPEG réduit, type) ou (None, erreur) à partir du contenu d'un fichier."""
+    import io
+
     if len(contenu) > TAILLE_MAX_PHOTO:
         return None, "Photo refusée : 8 Mo maximum."
     try:

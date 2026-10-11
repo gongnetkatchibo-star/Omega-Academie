@@ -9,7 +9,8 @@
     <p class="lien-secondaire">
       <a href="{{ url_for('eleves.modifier', eleve_id=eleve.id) }}">{{ _("Modifier le dossier") }}</a> ·
       <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=eleve.id) }}">{{ _("Certificat de scolarité (PDF)") }}</a> ·
-      <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">{{ _("Attestation de fréquentation (PDF)") }}</a>
+      <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=eleve.id) }}">{{ _("Attestation de fréquentation (PDF)") }}</a> ·
+      <a href="{{ url_for('documents_officiels.cartes', eleve_id=eleve.id) }}">{{ _("Carte d'élève (PDF)") }}</a>
     </p>
   {% endif %}
 

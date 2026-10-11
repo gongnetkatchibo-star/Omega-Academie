@@ -74,6 +74,18 @@ def signataire_par_defaut():
     }
 
 
+def signature_du_document(imprimer=None):
+    """Image « cachet + signature » à poser sur le document, ou None s'il
+    doit être signé à la main. `imprimer` : le choix fait pour ce
+    document ; sans choix, le réglage de l'école."""
+    from app.services import signature_ecole
+    from app.services.tenant import ecole_courante
+
+    if imprimer is None:
+        imprimer = signature_ecole.imprimee_par_defaut()
+    return signature_ecole.bloc_data_uri(ecole_courante()) if imprimer else None
+
+
 def contexte_entete_officiel():
     """Variables communes à tout PDF portant l'en-tête officiel : logo,
     nom de l'établissement, lieu et date, signataire par défaut."""
@@ -90,6 +102,7 @@ def contexte_entete_officiel():
         "lieu_et_date": lieu_et_date_officiels(),
         "signataire": signataire_par_defaut(),
         "bilingue": bool(ParametreEtablissement.get().documents_bilingues),
+        "signature_uri": signature_du_document(),
     }
     contexte.update(identite_arabe())
     return contexte

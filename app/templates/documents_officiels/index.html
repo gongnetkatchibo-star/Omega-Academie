@@ -3,6 +3,10 @@
 {% block content %}
   {{ fil_ariane(("Documents officiels", None)) }}
   {{ banniere("documents", "Documents officiels") }}
+  <div class="barre-actions">
+    <a class="bouton bouton-plein" href="{{ url_for('documents_officiels.cartes') }}">{{ _("Cartes d'élève d'une classe") }}</a>
+    <a class="bouton" href="{{ url_for('eleves.photos') }}">{{ _("Photos des élèves") }}</a>
+  </div>
   <form method="get" class="barre-recherche" role="search">
     <input type="search" name="q" value="{{ terme }}" placeholder="Nom ou matricule" aria-label="Nom ou matricule de l'élève">
     <button type="submit">Chercher</button>
@@ -20,6 +24,7 @@
               <a href="{{ url_for('documents_officiels.certificat_scolarite', eleve_id=e.id) }}">Certificat de scolarité</a>
               · <a href="{{ url_for('documents_officiels.attestation_frequentation', eleve_id=e.id) }}">Attestation de fréquentation</a>
               · <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">Bulletin</a>
+              · <a href="{{ url_for('documents_officiels.cartes', eleve_id=e.id) }}">Carte d'élève</a>
             </td>
           </tr>
         {% endfor %}

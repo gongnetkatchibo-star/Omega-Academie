@@ -196,6 +196,124 @@ def photo(eleve_id):
     return reponse
 
 
+def _cle_de_fichier(texte):
+    """« oa26-cm2-004.JPG », « Oa26 CM2 004 » → « OA26CM2004 » : de quoi
+    reconnaître un matricule ou un nom quelle que soit la façon de l'écrire."""
+    import unicodedata
+
+    sans_accents = unicodedata.normalize("NFKD", texte or "").encode("ascii", "ignore").decode("ascii")
+    return "".join(ch for ch in sans_accents.upper() if ch.isalnum())
+
+
+def _eleves_des_photos(classe_id=None):
+    """Élèves dont la personne connectée peut gérer la photo."""
+    classes = filtrer_par_cycle(Classe.query.all(), cycle_du_role(current_user.role))
+    ids = [c.id for c in classes]
+    if classe_id:
+        ids = [i for i in ids if i == classe_id]
+    return Eleve.query.filter(Eleve.actif.is_(True), Eleve.classe_id.in_(ids)) if ids else Eleve.query.filter(db.false())
+
+
+def _veut_du_json():
+    return request.headers.get("X-Requested-With") == "fetch"
+
+
+@eleves_bp.route("/photos")
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def photos():
+    """Photos d'une classe : une case par élève, à prendre ou à choisir
+    depuis le téléphone, ou plusieurs fichiers d'un coup."""
+    classes = filtrer_par_cycle(
+        Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau, Classe.nom).all(),
+        cycle_du_role(current_user.role),
+    )
+    classe_id = request.args.get("classe_id", type=int)
+    classe = next((c for c in classes if c.id == classe_id), None)
+    eleves = _eleves_des_photos(classe.id).order_by(Eleve.nom_complet).all() if classe else []
+    return render_template(
+        "eleves/photos.html", classes=classes, classe=classe, eleves=eleves,
+        sans_photo=sum(1 for e in eleves if not e.photo_mime),
+    )
+
+
+@eleves_bp.route("/<int:eleve_id>/photo", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def enregistrer_photo(eleve_id):
+    from app.services.images_ecole import photo_identite
+    from app.services.journal import journaliser
+
+    eleve = _eleves_des_photos().filter(Eleve.id == eleve_id).first_or_404()
+    contenu, resultat = photo_identite(request.files.get("photo"))
+    erreur = None if contenu else (resultat or "Aucune photo reçue.")
+    if contenu:
+        eleve.photo, eleve.photo_mime = contenu, resultat
+        journaliser("photo_eleve", details=eleve.nom_complet, cible_type="Eleve", cible_id=eleve.id)
+        db.session.commit()
+    if _veut_du_json():
+        return ({"ok": True, "eleve_id": eleve.id}, 200) if contenu else ({"ok": False, "message": erreur}, 400)
+    flash(erreur or f"Photo de {eleve.nom_complet} enregistrée.", "error" if erreur else "info")
+    return redirect(url_for("eleves.photos", classe_id=eleve.classe_id))
+
+
+@eleves_bp.route("/photos/importer", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="eleves")
+def importer_photos():
+    """Plusieurs photos d'un coup : chaque fichier porte le matricule de
+    l'élève (ou son nom complet, s'il est unique dans l'école)."""
+    import os
+    from app.services.images_ecole import photo_identite
+    from app.services.journal import journaliser
+
+    classe_id = request.form.get("classe_id", type=int)
+    eleves = _eleves_des_photos().all()
+    par_matricule = {_cle_de_fichier(e.matricule): e for e in eleves}
+    par_nom = {}
+    for e in eleves:
+        par_nom.setdefault(_cle_de_fichier(e.nom_complet), []).append(e)
+
+    rangees, refusees = [], []
+    for fichier in request.files.getlist("photos"):
+        if not fichier or not fichier.filename:
+            continue
+        nom = os.path.basename(fichier.filename.replace("\\", "/"))
+        cle = _cle_de_fichier(os.path.splitext(nom)[0])
+        eleve = par_matricule.get(cle)
+        if eleve is None:
+            homonymes = par_nom.get(cle, [])
+            if len(homonymes) > 1:
+                refusees.append((nom, "plusieurs élèves portent ce nom : nomme le fichier avec le matricule"))
+                continue
+            eleve = homonymes[0] if homonymes else None
+        if eleve is None:
+            refusees.append((nom, "aucun élève avec ce matricule ou ce nom"))
+            continue
+        contenu, resultat = photo_identite(fichier)
+        if not contenu:
+            refusees.append((nom, (resultat or "fichier vide").replace("Photo refusée : ", "")))
+            continue
+        eleve.photo, eleve.photo_mime = contenu, resultat
+        rangees.append((nom, eleve))
+    if rangees:
+        journaliser("import_photos_eleves", details=f"{len(rangees)} photo(s)")
+        db.session.commit()
+
+    if _veut_du_json():
+        return {
+            "rangees": [{"fichier": nom, "eleve_id": e.id, "eleve": e.nom_complet} for nom, e in rangees],
+            "refusees": [{"fichier": nom, "raison": raison} for nom, raison in refusees],
+        }
+    if rangees:
+        flash(f"{len(rangees)} photo(s) rangée(s) dans les dossiers.", "info")
+    for nom, raison in refusees[:15]:
+        flash(f"{nom} : {raison}.", "error")
+    if not rangees and not refusees:
+        flash("Aucun fichier reçu.", "error")
+    return redirect(url_for("eleves.photos", classe_id=classe_id))
+
+
 @eleves_bp.route("/<int:eleve_id>/modifier", methods=["GET", "POST"])
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")

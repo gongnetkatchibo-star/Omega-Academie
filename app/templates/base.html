@@ -213,5 +213,6 @@
 {% endif %}
   <script src="{{ url_for('static', filename='js/recherche-nom.js') }}?v={{ version_fichier_statique('js/recherche-nom.js') }}"></script>
   <script src="{{ url_for('static', filename='js/application.js') }}?v={{ version_fichier_statique('js/application.js') }}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

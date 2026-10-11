@@ -39,6 +39,17 @@
       </select>
     </label>
 
+    <h2>{{ _("Signature et cachet") }}</h2>
+    <p class="lien-secondaire">{{ _("Facultatif. Photographie la signature et le cachet sur une feuille blanche : le fond blanc est retiré automatiquement.") }}</p>
+    {% for champ, libelle in (("signature", "Signature du signataire"), ("cachet", "Cachet de l'école")) %}
+      <label>{{ _(libelle) }}{% if images_signature[champ] %} <img src="{{ url_for('dev.image_signature', image=champ) }}" alt="" style="height:44px; vertical-align:middle; background:#fff; border:1px solid var(--bordure, #d5dfe8); border-radius:4px;">{% endif %}
+        <input type="file" name="{{ champ }}" accept="image/png,image/jpeg,image/webp"></label>
+      {% if images_signature[champ] %}<label class="ligne-case"><input type="checkbox" name="retirer_{{ champ }}"> {{ _("Retirer") }}</label>{% endif %}
+    {% endfor %}
+    <label class="ligne-case"><input type="checkbox" name="signature_imprimee" {% if parametre.signature_imprimee %}checked{% endif %}>
+      {{ _("Imprimer la signature et le cachet sur les documents (bulletins, certificats, attestations, reçus, fiches de paie, cartes d'élève)") }}</label>
+    <p class="lien-secondaire">{{ _("Décochée : les documents sont signés et tamponnés à la main. Pour un certificat, une attestation ou des cartes d'élève, le choix est reproposé au moment de la génération. Attention : une fois cochée, toute personne autorisée à éditer un document l'obtient déjà signé.") }}</p>
+
     <h2>{{ _("Documents bilingues français · arabe") }}</h2>
     <label class="ligne-case"><input type="checkbox" name="documents_bilingues" {% if parametre.documents_bilingues %}checked{% endif %}>
       {{ _("Bulletins, certificats, attestations et reçus en français et en arabe") }}</label>

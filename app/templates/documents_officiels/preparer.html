@@ -17,6 +17,7 @@
         <option value="F" {% if parametre.genre_directeur == "F" %}selected{% endif %}>Féminin</option>
       </select>
     </label>
+    {% include "documents_officiels/_choix_signature.html" %}
     <button type="submit">Générer le PDF</button>
   </form>
 {% endblock %}

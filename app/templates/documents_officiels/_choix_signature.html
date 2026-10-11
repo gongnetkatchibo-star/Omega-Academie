@@ -1,0 +1,8 @@
+{# Signature et cachet : imprimés ou à la main, au choix pour ce document. #}
+{% if signature_disponible %}
+  <label class="ligne-case"><input type="checkbox" name="signature_imprimee" {% if parametre.signature_imprimee %}checked{% endif %}>
+    {{ _("Imprimer la signature et le cachet") }}</label>
+  <p class="lien-secondaire">{{ _("Décochée : la place est laissée vide pour signer et tamponner à la main.") }}</p>
+{% else %}
+  <p class="lien-secondaire">{{ _("Le document sera signé et tamponné à la main. Pour les faire imprimer, la direction enregistre la signature et le cachet dans « Établissement ».") }}</p>
+{% endif %}

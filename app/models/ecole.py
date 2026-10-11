@@ -42,6 +42,11 @@ class Ecole(db.Model):
     logo_mime = db.Column(db.String(50))
     filigrane = db.Column(db.LargeBinary)
     filigrane_mime = db.Column(db.String(50))
+    # Signature du signataire et cachet de l'école (PNG à fond transparent),
+    # imprimés sur les documents si l'école le choisit — voir
+    # services/signature_ecole.py. Chargés seulement quand on les imprime.
+    signature = db.deferred(db.Column(db.LargeBinary))
+    cachet = db.deferred(db.Column(db.LargeBinary))
     actif = db.Column(db.Boolean, default=True, nullable=False)
     date_creation = db.Column(db.DateTime, default=maintenant)
 

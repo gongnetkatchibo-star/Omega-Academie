@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Photos des élèves") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Élèves", url_for('eleves.liste')), ("Photos des élèves", None)) }}
+  <h1>{{ _("Photos des élèves") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p>{{ _("La photo du dossier sert à la carte d'élève. Depuis un téléphone, « Photo » ouvre l'appareil photo : passe dans la classe et photographie chaque élève.") }}</p>
+
+  <form method="get" class="barre-recherche" role="search">
+    <select name="classe_id" aria-label="{{ _("Classe") }}" required>
+      <option value="">{{ _("Choisir une classe") }}</option>
+      {% for c in classes %}<option value="{{ c.id }}" {% if classe and c.id == classe.id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}
+    </select>
+    <button type="submit">{{ _("Afficher") }}</button>
+  </form>
+
+  <div id="photos" data-jeton="{{ csrf_token() }}" data-importer="{{ url_for('eleves.importer_photos') }}">
+    {% if classe %}
+      <p><strong>{{ classe.nom }}</strong> — <span id="photos-manquantes">{{ sans_photo }}</span> {{ _("élève(s) sans photo sur") }} {{ eleves|length }}.
+        <a href="{{ url_for('documents_officiels.cartes', classe_id=classe.id) }}">{{ _("Générer les cartes de la classe") }}</a></p>
+      {% if eleves %}
+        <div class="grille-photos">
+          {% for e in eleves %}
+            <form class="case-photo" method="post" enctype="multipart/form-data" action="{{ url_for('eleves.enregistrer_photo', eleve_id=e.id) }}" data-eleve="{{ e.id }}" data-photo="{{ url_for('eleves.photo', eleve_id=e.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="case-photo-image">
+                {% if e.photo_mime %}<img src="{{ url_for('eleves.photo', eleve_id=e.id) }}" alt="" loading="lazy">{% else %}<span>{{ _("Pas de photo") }}</span>{% endif %}
+              </div>
+              <strong>{{ e.nom_complet }}</strong>
+              <small>{{ e.matricule }}</small>
+              <label class="bouton case-photo-bouton">{{ _("Remplacer" if e.photo_mime else "Photo") }}
+                <input type="file" name="photo" accept="image/*" hidden>
+              </label>
+              <noscript><button type="submit">{{ _("Envoyer") }}</button></noscript>
+              <small class="case-photo-etat" aria-live="polite"></small>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        {{ etat_vide("Aucun élève dans cette classe.") }}
+      {% endif %}
+    {% endif %}
+
+    <h2>{{ _("Ajouter plusieurs photos d'un coup") }}</h2>
+    <p>{{ _("Nomme chaque fichier avec le matricule de l'élève (par exemple OA26-CM2-004.jpg) ou avec son nom complet, puis sélectionne-les tous. Chaque photo est rangée dans le bon dossier ; les photos sont réduites avant l'envoi.") }}</p>
+    <form id="import-photos" method="post" enctype="multipart/form-data" action="{{ url_for('eleves.importer_photos') }}" class="formulaire-etroit">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if classe %}<input type="hidden" name="classe_id" value="{{ classe.id }}">{% endif %}
+      <label>{{ _("Photos (PNG, JPEG ou WEBP)") }}
+        <input type="file" name="photos" accept="image/png,image/jpeg,image/webp" multiple required>
+      </label>
+      <button type="submit">{{ _("Ranger les photos") }}</button>
+      <p id="import-photos-etat" aria-live="polite"></p>
+      <ul id="import-photos-refus"></ul>
+    </form>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/photos.js') }}?v={{ version_fichier_statique('js/photos.js') }}"></script>
+{% endblock %}

@@ -78,6 +78,7 @@ GUIDES = [
             ("Rattacher les parents", "Sur la fiche, ajoute un ou deux comptes parents : ils verront l'enfant dans leur espace."),
             ("Documents officiels", "Certificat de scolarité et attestation de fréquentation en PDF, depuis la fiche."),
             ("Modifier le dossier", "État civil, famille, personne à prévenir, école d'origine et photo."),
+            ("Photos et cartes", "« Photos » pour photographier toute une classe au téléphone ; « Cartes d'élève » pour la planche à découper."),
             ("Passage de classe", "En fin d'année, toute une classe passe d'un coup : la décision de chaque élève est proposée d'après sa moyenne."),
             ("Départ d'un élève", "Sur la fiche, « Départ de l'élève » : motif, date, école d'accueil. Le certificat de radiation s'édite ensuite en PDF."),
             ("Anciens élèves", "Les élèves partis restent consultables et peuvent être réintégrés dans une classe de l'année."),

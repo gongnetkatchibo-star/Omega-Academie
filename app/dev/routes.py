@@ -364,13 +364,21 @@ def parametres():
                 images[champ] = (contenu, info)
             elif info:
                 erreurs.append(f"{champ.capitalize()} : {info}")
+        from app.services.signature_ecole import nettoyer_image
+        signatures = {}
+        for champ in ("signature", "cachet"):
+            contenu, erreur = nettoyer_image(request.files.get(champ))
+            if contenu:
+                signatures[champ] = contenu
+            elif erreur:
+                erreurs.append(f"{champ.capitalize()} : {erreur}")
         from app.services.theme import lire_couleurs_formulaire
         couleurs, erreurs_couleurs = lire_couleurs_formulaire(request.form)
         erreurs += erreurs_couleurs
         if erreurs:
             for e in erreurs:
                 flash(e, "error")
-            return render_template("dev/parametres.html", parametre=parametre, etab=ecole)
+            return render_template("dev/parametres.html", parametre=parametre, etab=ecole, images_signature=_images_signature(ecole))
 
         ecole.nom, ecole.sigle, ecole.prefixe_matricule = nom, sigle, prefixe
         ecole.ville = request.form.get("ville", "").strip() or None
@@ -384,6 +392,12 @@ def parametres():
         for champ, (contenu, mime) in images.items():
             setattr(ecole, champ, contenu)
             setattr(ecole, f"{champ}_mime", mime)
+        for champ in ("signature", "cachet"):
+            if champ in signatures:
+                setattr(ecole, champ, signatures[champ])
+            elif request.form.get(f"retirer_{champ}") == "on":
+                setattr(ecole, champ, None)
+        parametre.signature_imprimee = request.form.get("signature_imprimee") == "on"
         parametre.nom_directeur = request.form.get("nom_directeur", "").strip() or None
         parametre.titre_directeur = request.form.get("titre_directeur", "").strip() or "Directeur"
         genre = request.form.get("genre_directeur", "M")
@@ -400,4 +414,26 @@ def parametres():
         flash("Paramètres enregistrés.", "info")
         return redirect(url_for("dev.parametres"))
 
-    return render_template("dev/parametres.html", parametre=parametre, etab=ecole)
+    return render_template("dev/parametres.html", parametre=parametre, etab=ecole, images_signature=_images_signature(ecole))
+
+
+def _images_signature(ecole):
+    return {"signature": bool(ecole and ecole.signature), "cachet": bool(ecole and ecole.cachet)}
+
+
+@dev_bp.route("/parametres/<any(signature, cachet):image>")
+@login_required
+@roles_required("developpeur", "fondateur", module="gestion_roles")
+def image_signature(image):
+    """Aperçu de la signature ou du cachet — réservé à ceux qui règlent
+    l'établissement : ces images ne sont servies nulle part ailleurs."""
+    from flask import Response, abort
+    from app.services.tenant import ecole_courante
+
+    ecole = ecole_courante()
+    contenu = getattr(ecole, image, None) if ecole else None
+    if not contenu:
+        abort(404)
+    reponse = Response(contenu, mimetype="image/png")
+    reponse.headers["Cache-Control"] = "private, no-store"
+    return reponse

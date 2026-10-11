@@ -30,7 +30,13 @@
         <p style="margin:0 0 14pt 0; font-weight:bold;">{{ lieu_et_date }}.</p>
         <p style="margin:0; font-weight:bold;">{{ "La" if signataire.genre == "F" else "Le" }} {{ signataire.qualite }}</p>
       {% endif %}
-      <p style="margin:0; padding-top:{{ '34pt' if bilingue else '75pt' }}; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
+      {% if signature_uri %}
+        {# Cachet et signature imprimés (choix de l'école). #}
+        <p style="margin:0; padding-top:2pt;"><img src="{{ signature_uri }}" style="width:{{ '85pt' if bilingue else '160pt' }}; height:{{ '40pt' if bilingue else '75pt' }};"></p>
+        <p style="margin:0; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
+      {% else %}
+        <p style="margin:0; padding-top:{{ '34pt' if bilingue else '75pt' }}; font-weight:bold;">{{ signataire.nom or "&nbsp;"|safe }}</p>
+      {% endif %}
     </td>
   </tr>
 </table>

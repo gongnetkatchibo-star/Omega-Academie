@@ -11,6 +11,7 @@ TYPES_DOCUMENT = {
     "radiation": "Certificat de radiation",
     "recu": "Reçu de paiement",
     "fiche_paie": "Fiche de paie",
+    "carte": "Carte d'élève",
 }
 
 

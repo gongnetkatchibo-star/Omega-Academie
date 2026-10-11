@@ -1486,3 +1486,29 @@ INTERFACE.update({
     "Chacun ne règle que les rôles placés sous le sien : le fondateur, pour les modules qu'il a lui-même ; le secrétariat, pour les enseignants, élèves, parents et personnel, hors finances.":
         "كل واحد يضبط الأدوار التي تقع تحت دوره فقط: المؤسس في الوحدات التي يملكها، والسكرتارية للمعلمين والتلاميذ والأولياء والموظفين، خارج المالية.",
 })
+
+INTERFACE.update({
+    "Cartes d'élève": "بطاقات التلاميذ",
+    "Carte d'élève (PDF)": "بطاقة التلميذ (PDF)",
+    "Photos": "الصور",
+    "Photos des élèves": "صور التلاميذ",
+    "Photo": "صورة",
+    "Remplacer": "استبدال",
+    "Pas de photo": "لا توجد صورة",
+    "Afficher": "عرض",
+    "Choisir une classe": "اختر قسماً",
+    "Ranger les photos": "ترتيب الصور",
+    "Ajouter plusieurs photos d'un coup": "إضافة عدة صور دفعة واحدة",
+    "Générer les cartes de la classe": "إنشاء بطاقات القسم",
+    "Générer le PDF": "إنشاء ملف PDF",
+    "Avant d'imprimer": "قبل الطباعة",
+    "Signature et cachet": "التوقيع والختم",
+    "Signature du signataire": "توقيع الموقِّع",
+    "Cachet de l'école": "ختم المدرسة",
+    "Retirer": "إزالة",
+    "Imprimer la signature et le cachet": "طباعة التوقيع والختم",
+    "Décochée : la place est laissée vide pour signer et tamponner à la main.": "بدون تحديد: يُترك المكان فارغاً للتوقيع والختم يدوياً.",
+    "Ajouter le verso (personne à prévenir et QR code de vérification)": "إضافة الوجه الخلفي (الشخص الواجب إبلاغه ورمز التحقق)",
+    "Imprimer la signature et le cachet sur les documents (bulletins, certificats, attestations, reçus, fiches de paie, cartes d'élève)":
+        "طباعة التوقيع والختم على الوثائق (الكشوف، الشهادات، الإفادات، الوصولات، كشوف الرواتب، بطاقات التلاميذ)",
+})
