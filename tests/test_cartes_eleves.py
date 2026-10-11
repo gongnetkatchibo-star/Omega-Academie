@@ -57,7 +57,7 @@ def test_planche_de_cartes_d_une_classe(client, db, creer_utilisateur, creer_cla
     r = client.post("/documents/cartes", data={"classe_id": classe.id, "verso": "on"})
     assert r.status_code == 200 and r.mimetype == "application/pdf"
     pages, texte = _texte_pdf(r.data)
-    assert pages == 4  # 12 cartes : deux feuilles recto, deux feuilles verso
+    assert pages == 3  # recto et verso côte à côte : cinq élèves par feuille
     for attendu in ("CARTE D'ÉLÈVE", "ÉCOLE TEST", "Élève Numéro 11", "Né le 12/03/2014 à Pala", "Nationalité : Tchadienne",
                     "Classe : CM2", "Mat : ET26-CM2-011", "Tante Zara", "66 00 00 00", "Devise test"):
         assert attendu in texte, attendu

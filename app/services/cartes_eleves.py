@@ -3,9 +3,11 @@ feuille au format d'une carte bancaire (85,6 × 54 mm).
 
 Tout est repris du dossier de l'élève et des réglages de l'école : rien
 n'est saisi au moment de l'impression. Le verso porte la personne à
-prévenir et le QR code de vérification ; il est imprimé sur la feuille
-suivante, colonnes inversées, pour tomber dos à dos avec le recto quand
-on imprime en recto verso (retournement sur le bord long)."""
+prévenir et le QR code de vérification ; il est imprimé sur la même
+feuille, à droite du recto et collé à lui : on découpe les deux d'un
+seul tenant, on plie sur le trait du milieu et on plastifie. Une seule
+impression, sur une imprimante ordinaire, sans recto verso. Avec le
+verso, une feuille porte cinq cartes ; sans lui, dix."""
 
 import io
 
@@ -85,21 +87,37 @@ def _photo(contenu):
 
 
 def position(indice, verso=False):
-    """Coin bas-gauche de la carte n° `indice` (0 à 9) sur la feuille."""
+    """Coin bas-gauche de la carte n° `indice` (0 à 9) sur une feuille de
+    rectos seuls."""
     ligne, colonne = divmod(indice, COLONNES)
-    if verso:
-        colonne = COLONNES - 1 - colonne
     x = MARGE_X + colonne * (LARGEUR + ECART_X)
     y = A4[1] - MARGE_Y - (ligne + 1) * HAUTEUR - ligne * ECART_Y
     return x, y
 
 
-def _traits_de_coupe(c, x, y):
+def position_paire(ligne):
+    """Coins bas-gauche du recto et du verso d'un même élève, côte à côte
+    sans espace (le pli est entre les deux)."""
+    x = (A4[0] - 2 * LARGEUR) / 2
+    y = A4[1] - MARGE_Y - (ligne + 1) * HAUTEUR - ligne * ECART_Y
+    return (x, y), (x + LARGEUR, y)
+
+
+def _trait_de_pli(c, x, y):
+    c.saveState()
+    c.setStrokeColor(GRIS)
+    c.setLineWidth(0.4)
+    c.setDash(1.5, 1.5)
+    c.line(x, y - 1.2 * mm, x, y + HAUTEUR + 1.2 * mm)
+    c.restoreState()
+
+
+def _traits_de_coupe(c, x, y, largeur=LARGEUR):
     """Petits repères aux quatre coins, à l'extérieur de la carte."""
     c.saveState()
     c.setStrokeColor(GRIS)
     c.setLineWidth(0.3)
-    for cx, sx in ((x, -1), (x + LARGEUR, 1)):
+    for cx, sx in ((x, -1), (x + largeur, 1)):
         for cy, sy in ((y, -1), (y + HAUTEUR, 1)):
             c.line(cx + sx * 0.8 * mm, cy, cx + sx * 2.8 * mm, cy)
             c.line(cx, cy + sy * 0.3 * mm, cx, cy + sy * 1.4 * mm)
@@ -313,19 +331,29 @@ def planche_cartes(eleves, ecole, signataire, annee, verifications=None, signatu
         "verifications": verifs,
     }
 
-    for debut in range(0, len(eleves), CARTES_PAR_PAGE):
-        page = eleves[debut:debut + CARTES_PAR_PAGE]
-        for verso in ((False, True) if avec_verso else (False,)):
-            for indice, eleve in enumerate(page):
-                x, y = position(indice, verso)
+    def pied(texte):
+        c.setFillColor(GRIS)
+        c.setFont(NORMAL, 6)
+        c.drawCentredString(A4[0] / 2, 3.2 * mm, _texte(texte))
+
+    if avec_verso:
+        for debut in range(0, len(eleves), LIGNES):
+            for ligne, eleve in enumerate(eleves[debut:debut + LIGNES]):
+                (xr, y), (xv, _) = position_paire(ligne)
+                _recto(c, xr, y, eleve, ctx)
+                _verso(c, xv, y, eleve, ctx)
+                _traits_de_coupe(c, xr, y, largeur=2 * LARGEUR)
+                _trait_de_pli(c, xv, y)
+            pied("Imprimer à 100 % (sans « ajuster à la page »). Découper le recto et le verso d'un seul tenant, "
+                 "plier sur le trait en pointillé, puis plastifier.")
+            c.showPage()
+    else:
+        for debut in range(0, len(eleves), CARTES_PAR_PAGE):
+            for indice, eleve in enumerate(eleves[debut:debut + CARTES_PAR_PAGE]):
+                x, y = position(indice)
                 _traits_de_coupe(c, x, y)
-                (_verso if verso else _recto)(c, x, y, eleve, ctx)
-            c.setFillColor(GRIS)
-            c.setFont(NORMAL, 6)
-            c.drawCentredString(A4[0] / 2, 3.2 * mm, _texte(
-                ("Verso" if verso else "Recto") + " — imprimer à 100 % (sans « ajuster à la page »)"
-                + (", en recto verso, retournement sur le bord long" if avec_verso else "") + "."
-            ))
+                _recto(c, x, y, eleve, ctx)
+            pied("Imprimer à 100 % (sans « ajuster à la page »), découper en suivant les repères, puis plastifier.")
             c.showPage()
     c.save()
     return tampon.getvalue()
