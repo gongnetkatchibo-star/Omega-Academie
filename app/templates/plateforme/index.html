@@ -26,8 +26,8 @@
               {% if st.emails_en_echec %}<br><small class="solde-du">{{ st.emails_en_echec }} {{ _("email(s) en échec cette semaine") }}</small>{% endif %}
               {% if st.demandes %}<br><a href="{{ url_for('plateforme.assistance') }}"><small>{{ st.demandes }} {{ _("demande(s) d'assistance en cours") }}</small></a>{% endif %}
             </td>
-            <td class="tdb-ton-{{ st.abonnement.niveau }}">
-              <span class="tdb-puce"></span> {{ _(st.abonnement.libelle) }}
+            <td>
+              <span class="etat-point etat-{{ st.abonnement.niveau }}"></span> {{ _(st.abonnement.libelle) }}
               {% if st.abonnement.du %}<br><small>{{ _("Dû :") }} {{ st.abonnement.du|fcfa }}</small>{% endif %}
               {% if e.date_echeance %}<br><small>{{ _("Prochaine période :") }} {{ e.date_echeance.strftime("%d/%m/%Y") }}</small>{% endif %}
             </td>

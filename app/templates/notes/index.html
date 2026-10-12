@@ -6,6 +6,25 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
+  {% if supervision %}
+    <div class="carte-attente" style="margin-bottom:16px;">
+      <p><strong>{{ _("Clôture des notes") }}</strong> — {{ _("une période clôturée ne peut plus recevoir ni corriger de notes (bulletins remis).") }}</p>
+      <ul>
+        {% for p in periodes %}
+          <li>{{ _(libelles_periode.get(p, p)) }} :
+            {% if p in cloturees %}<strong class="solde-du">{{ _("clôturée") }}</strong>{% else %}<span class="solde-ok">{{ _("ouverte") }}</span>{% endif %}
+            {% if peut_cloturer %}
+              <form method="post" action="{{ url_for('notes.cloture') }}" class="form-inline" onsubmit="return confirm({{ _('Confirmer ?')|tojson|forceescape }});">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="periode" value="{{ p }}">
+                <button type="submit" class="bouton-lien">{{ _("Rouvrir" if p in cloturees else "Clôturer") }}</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
   {% if classes %}
     <table class="table">
       <thead><tr><th>{{ _("Classe") }}</th><th>{{ _("Année") }}</th><th></th></tr></thead>

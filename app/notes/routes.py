@@ -8,7 +8,7 @@ from app.models.note import Note
 from app.notes import notes_bp
 from app.utils import roles_required
 from app.services.moyennes import bareme_pour_classe
-from app.models.bulletin import AppreciationBulletin, CoefficientMatiere
+from app.models.bulletin import AppreciationBulletin, CoefficientMatiere, PeriodeCloturee
 from app.models.evaluation import Evaluation, TYPES_EVALUATION, LIBELLES_TYPE
 from app.services.bulletins import bulletins_de_la_classe, matieres_de_la_classe, ANNUEL, LIBELLES_PERIODE
 from app.services.periodes import periodes as periodes_de_l_ecole, periodes_et_annee
@@ -39,7 +39,47 @@ def index():
         )
     else:
         abort(403)
-    return render_template("notes/index.html", classes=classes, supervision=supervision)
+    annee = Eleve.annee_scolaire_courante()
+    cloturees = {p.periode for p in PeriodeCloturee.query.filter_by(annee_scolaire=annee).all()}
+    return render_template(
+        "notes/index.html", classes=classes, supervision=supervision, periodes=periodes_de_l_ecole(),
+        libelles_periode=LIBELLES_PERIODE, cloturees=cloturees,
+        peut_cloturer=current_user.role in ("fondateur", "administrateur_general", "developpeur"),
+    )
+
+
+def periode_fermee(annee, periode):
+    """Message si les notes de cette période sont arrêtées, sinon None.
+    Une année passée est toujours arrêtée."""
+    if annee != Eleve.annee_scolaire_courante():
+        return f"Les notes de l'année {annee} sont arrêtées : elles ne peuvent plus être modifiées."
+    if PeriodeCloturee.query.filter_by(annee_scolaire=annee, periode=periode).first():
+        return f"Les notes de la période « {LIBELLES_PERIODE.get(periode, periode)} » sont clôturées par la direction."
+    return None
+
+
+@notes_bp.route("/cloture", methods=["POST"])
+@login_required
+@roles_required("fondateur", "administrateur_general")
+def cloture():
+    """La direction arrête (ou rouvre) les notes d'une période."""
+    from app.services.journal import journaliser
+
+    periode = request.form.get("periode")
+    annee = Eleve.annee_scolaire_courante()
+    if periode not in periodes_de_l_ecole():
+        abort(400)
+    existante = PeriodeCloturee.query.filter_by(annee_scolaire=annee, periode=periode).first()
+    if existante:
+        db.session.delete(existante)
+        message = f"Notes de « {LIBELLES_PERIODE.get(periode, periode)} » rouvertes."
+    else:
+        db.session.add(PeriodeCloturee(annee_scolaire=annee, periode=periode, par_id=current_user.id))
+        message = f"Notes de « {LIBELLES_PERIODE.get(periode, periode)} » clôturées : plus aucune modification possible."
+    journaliser("cloture_notes", details=message)
+    db.session.commit()
+    flash(message, "info")
+    return redirect(url_for("notes.index"))
 
 
 def _matieres_enseignees(classe_id):
@@ -78,9 +118,11 @@ def saisie(classe_id):
 
         if matiere not in matieres or trimestre not in periodes_de_l_ecole():
             flash("Merci de choisir une matière que vous enseignez et une période valide.", "error")
+        elif periode_fermee(annee, trimestre):
+            flash(periode_fermee(annee, trimestre), "error")
         elif not titre or type_evaluation not in TYPES_EVALUATION or date_evaluation is None:
             flash("Le titre, le type et la date de l'évaluation sont obligatoires.", "error")
-        elif coefficient is None or not 0 < coefficient <= 10:
+        elif coefficient is None or not 0.5 <= coefficient <= 10:
             flash("Le coefficient doit être compris entre 0,5 et 10.", "error")
         else:
             evaluation = Evaluation(
@@ -99,8 +141,13 @@ def saisie(classe_id):
             .order_by(Evaluation.trimestre, Evaluation.matiere, Evaluation.date).all()
         )
     effectif = Eleve.query.filter_by(classe_id=classe_id, actif=True).count()
+    from sqlalchemy import func
+    nb_notes = dict(
+        db.session.query(Note.evaluation_id, func.count(Note.id))
+        .filter(Note.evaluation_id.in_([e.id for e in evaluations] or [0])).group_by(Note.evaluation_id).all()
+    )
     return render_template(
-        "notes/saisie.html", classe=classe_obj, matieres=matieres, trimestres=periodes_de_l_ecole(), libelles=LIBELLES_PERIODE, evaluations=evaluations,
+        "notes/saisie.html", nb_notes=nb_notes, classe=classe_obj, matieres=matieres, trimestres=periodes_de_l_ecole(), libelles=LIBELLES_PERIODE, evaluations=evaluations,
         types=TYPES_EVALUATION, libelles_type=LIBELLES_TYPE, effectif=effectif, bareme=bareme_pour_classe(classe_obj),
         aujourd_hui=maintenant().date().isoformat(),
     )
@@ -126,6 +173,10 @@ def evaluation(evaluation_id):
     eleves = Eleve.query.filter_by(classe_id=classe_obj.id, actif=True).order_by(Eleve.nom_complet).all()
     existantes = {n.eleve_id: n for n in Note.query.filter_by(evaluation_id=evaluation.id).all()}
 
+    fermee = periode_fermee(evaluation.annee_scolaire, evaluation.trimestre)
+    if request.method == "POST" and fermee:
+        flash(fermee, "error")
+        return redirect(url_for("notes.evaluation", evaluation_id=evaluation.id))
     if request.method == "POST":
         nb_saisies, hors_bareme = 0, 0
         for eleve in eleves:
@@ -160,8 +211,38 @@ def evaluation(evaluation_id):
 
     return render_template(
         "notes/evaluation.html", evaluation=evaluation, classe=classe_obj, eleves=eleves, bareme=bareme,
-        notes={eleve_id: n.valeur for eleve_id, n in existantes.items()},
+        notes={eleve_id: n.valeur for eleve_id, n in existantes.items()}, fermee=fermee,
+        types=TYPES_EVALUATION, libelles_type=LIBELLES_TYPE,
     )
+
+
+@notes_bp.route("/evaluation/<int:evaluation_id>/modifier", methods=["POST"])
+@login_required
+@roles_required("enseignant")
+def modifier_evaluation(evaluation_id):
+    """Corriger le titre, le type, la date ou le coefficient."""
+    from datetime import datetime
+
+    evaluation, _ = _evaluation_de_l_enseignant(evaluation_id)
+    fermee = periode_fermee(evaluation.annee_scolaire, evaluation.trimestre)
+    titre = request.form.get("titre", "").strip()[:120]
+    type_evaluation = request.form.get("type")
+    coefficient = request.form.get("coefficient", type=float)
+    try:
+        date_evaluation = datetime.strptime(request.form.get("date", ""), "%Y-%m-%d").date()
+    except ValueError:
+        date_evaluation = None
+    if fermee:
+        flash(fermee, "error")
+    elif not titre or type_evaluation not in TYPES_EVALUATION or date_evaluation is None:
+        flash("Le titre, le type et la date de l'évaluation sont obligatoires.", "error")
+    elif coefficient is None or not 0.5 <= coefficient <= 10:
+        flash("Le coefficient doit être compris entre 0,5 et 10.", "error")
+    else:
+        evaluation.titre, evaluation.type, evaluation.date, evaluation.coefficient = titre, type_evaluation, date_evaluation, coefficient
+        db.session.commit()
+        flash("Évaluation modifiée.", "info")
+    return redirect(url_for("notes.evaluation", evaluation_id=evaluation.id))
 
 
 @notes_bp.route("/evaluation/<int:evaluation_id>/supprimer", methods=["POST"])
@@ -170,6 +251,10 @@ def evaluation(evaluation_id):
 def supprimer_evaluation(evaluation_id):
     evaluation, _ = _evaluation_de_l_enseignant(evaluation_id)
     classe_id = evaluation.classe_id
+    fermee = periode_fermee(evaluation.annee_scolaire, evaluation.trimestre)
+    if fermee:
+        flash(fermee, "error")
+        return redirect(url_for("notes.evaluation", evaluation_id=evaluation.id))
     db.session.delete(evaluation)  # ses notes partent avec elle
     db.session.commit()
     flash("Évaluation supprimée, avec ses notes.", "info")

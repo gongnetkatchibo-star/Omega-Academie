@@ -88,6 +88,39 @@ def _modules_pour(role):
     return modules
 
 
+def _cartes_enfants(enfants):
+    """Pour chaque enfant : solde de la scolarité, absences non
+    justifiées de l'année et prochains devoirs — de quoi voir d'un coup
+    d'œil ce qui demande attention."""
+    from app.models.absence import Absence
+    from app.models.cahier_textes import SeanceCahier
+    from app.services.alertes import requete_absences_de_l_annee
+    from app.services.paiements import resume_paiements
+    from app.services.temps import aujourd_hui
+
+    cartes = []
+    for e in enfants:
+        resume = resume_paiements(e)
+        devoirs = (
+            SeanceCahier.query.filter(SeanceCahier.classe_id == e.classe_id, SeanceCahier.devoir.isnot(None),
+                                      SeanceCahier.date_rendu >= aujourd_hui())
+            .order_by(SeanceCahier.date_rendu).limit(3).all()
+        )
+        cartes.append({
+            "eleve": e, "solde": resume["solde"], "retard": resume["retard"],
+            "absences": requete_absences_de_l_annee().filter(Absence.eleve_id == e.id).count(), "devoirs": devoirs,
+        })
+    return cartes
+
+
+def _dernieres_annonces():
+    from app.models.annonce import Annonce
+    from app.communication.routes import _peut_lire
+
+    recentes = Annonce.query.order_by(Annonce.date_publication.desc()).limit(15).all()
+    return [a for a in recentes if _peut_lire(a)][:3]
+
+
 @main_bp.route("/")
 def index():
     if not current_user.is_authenticated:
@@ -108,6 +141,7 @@ def index():
     # le rôle "parent". On affiche la section "Mes enfants" dès qu'il y
     # en a, en plus de l'espace propre au rôle.
     enfants = sorted((e for e in user.enfants if e.actif), key=lambda e: e.nom_complet)
+    cartes_enfants = _cartes_enfants(enfants)
 
     # Rappel de sauvegarde — seulement visible pour ceux qui ont
     # réellement le droit d'en déclencher une (respecte la matrice de
@@ -133,6 +167,8 @@ def index():
         user=user,
         modules=modules,
         enfants=enfants,
+        cartes_enfants=cartes_enfants,
+        dernieres_annonces=_dernieres_annonces() if (enfants or user.role in ("eleve", "parent")) else [],
         dossier_eleve=mon_dossier_eleve,
         est_personnel=user.role in ROLES_PERSONNEL,
         est_direction=user.role in ROLES_DIRECTION,

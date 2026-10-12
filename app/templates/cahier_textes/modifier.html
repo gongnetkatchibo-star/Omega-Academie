@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Modifier la séance") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Cahier de textes", url_for('cahier_textes.classe', classe_id=seance.classe_id)), ("Modifier la séance", None)) }}
+  <h1>{{ _("Modifier la séance") }} — {{ seance.matiere }}, {{ seance.date.strftime("%d/%m/%Y") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Ce qui a été fait") }}<textarea name="contenu" rows="4" maxlength="4000" required>{{ seance.contenu }}</textarea></label>
+    <label>{{ _("Travail à faire") }}<textarea name="devoir" rows="3" maxlength="2000">{{ seance.devoir or '' }}</textarea></label>
+    <label>{{ _("Pour le") }}<input type="date" name="date_rendu" value="{{ seance.date_rendu.isoformat() if seance.date_rendu else '' }}"></label>
+    <button type="submit">{{ _("Enregistrer") }}</button>
+  </form>
+{% endblock %}

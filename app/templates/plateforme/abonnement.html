@@ -9,7 +9,7 @@
   {% include "plateforme/_navigation.html" %}
 
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module tdb-ton-{{ etat.niveau }}"><h3>{{ _("Situation") }}</h3><p><span class="tdb-puce"></span> {{ _(etat.libelle) }}</p>
+    <div class="carte-module"><h3>{{ _("Situation") }}</h3><p><span class="etat-point etat-{{ etat.niveau }}"></span> {{ _(etat.libelle) }}</p>
       {% if etat.du %}<p>{{ _("Reste dû :") }} <strong>{{ etat.du|fcfa }}</strong></p>{% endif %}
       {% if etat.a_suspendre %}<p class="lien-secondaire">{{ _("Plus de 15 jours de retard : tu peux suspendre l'école depuis la liste des établissements. Rien n'est suspendu automatiquement.") }}</p>{% endif %}
     </div>

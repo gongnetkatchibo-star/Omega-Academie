@@ -20,7 +20,7 @@
               <td>{{ e.libelle_type }}</td>
               <td>{{ e.date.strftime("%d/%m/%Y") }}</td>
               <td>{{ "%g"|format(e.coefficient) }}</td>
-              <td>{{ e.notes|length }} / {{ effectif }}</td>
+              <td>{{ nb_notes.get(e.id, 0) }} / {{ effectif }}</td>
               <td><a href="{{ url_for('notes.evaluation', evaluation_id=e.id) }}">{{ _("Saisir les notes") }}</a></td>
             </tr>
           {% endfor %}

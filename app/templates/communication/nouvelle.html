@@ -1,28 +1,36 @@
 {% extends "base.html" %}
-{% block title %}{{ _("Nouvelle annonce") }}{% endblock %}
+{% block title %}{{ _("Modifier l'annonce") if annonce else _("Nouvelle annonce") }}{% endblock %}
 {% block content %}
-  <h1>{{ _("Nouvelle annonce") }}</h1>
+  {{ fil_ariane(("Annonces", url_for('communication.liste')), ("Modifier l'annonce" if annonce else "Nouvelle annonce", None)) }}
+  <h1>{{ _("Modifier l'annonce") if annonce else _("Nouvelle annonce") }}</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
-  <form method="post" enctype="multipart/form-data">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <form method="post" enctype="multipart/form-data" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Titre") }}
-      <input type="text" name="titre" maxlength="150" required>
+      <input type="text" name="titre" maxlength="150" value="{{ annonce.titre if annonce else '' }}" required>
     </label>
     <label>{{ _("Contenu") }}
-      <textarea name="contenu" rows="4" required></textarea>
+      <textarea name="contenu" rows="5" required>{{ annonce.contenu if annonce else '' }}</textarea>
     </label>
-    <label>{{ _("Destinataires") }}
-      <select name="destinataire" required>
-        {% for d in destinataires %}<option value="{{ d }}">{{ _(libelles_destinataire[d]) }}</option>{% endfor %}
-      </select>
-    </label>
-    <label>{{ _("Pièce jointe") }}
-      <input type="file" name="fichier">
-    </label>
-    <button type="submit">{{ _("Publier") }}</button>
+    {% if not annonce %}
+      <label>{{ _("Destinataires") }}
+        <select name="destinataire" required>
+          {% for d in destinataires %}<option value="{{ d }}">{{ _(libelles_destinataire[d]) }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ _("Classe concernée") }}
+        <select name="classe_id">
+          {% if current_user.role != "enseignant" %}<option value="">{{ _("Toute l'école") }}</option>{% else %}<option value="">{{ _("— Choisir —") }}</option>{% endif %}
+          {% for c in classes %}<option value="{{ c.id }}">{{ c.nom }}</option>{% endfor %}
+        </select>
+      </label>
+      {% if current_user.role == "enseignant" %}<p class="lien-secondaire">{{ _("Pour les parents et les élèves, choisis l'une de tes classes.") }}</p>{% endif %}
+      <label>{{ _("Pièce jointe") }}
+        <input type="file" name="fichier" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp">
+      </label>
+    {% endif %}
+    <button type="submit">{{ _("Enregistrer") if annonce else _("Publier") }}</button>
   </form>
-  {% if current_user.role == "enseignant" %}
-  {% endif %}
 {% endblock %}

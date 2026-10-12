@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import champ_matiere with context %}
+{% block title %}{{ _("Modifier un créneau") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Emplois du temps", url_for('emploi_du_temps.index')), (creneau.classe.nom, url_for('emploi_du_temps.classe', classe_id=creneau.classe_id)), ("Modifier un créneau", None)) }}
+  <h1>{{ _("Modifier un créneau") }} — {{ creneau.classe.nom }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Matière") }}{{ champ_matiere(valeur=creneau.matiere) }}</label>
+    <label>{{ _("Enseignant") }}
+      <select name="enseignant_id"><option value="">{{ _("Non assigné") }}</option>
+        {% for e in enseignants %}<option value="{{ e.id }}" {% if e.id == creneau.enseignant_id %}selected{% endif %}>{{ e.nom_complet }}</option>{% endfor %}</select>
+    </label>
+    <label>{{ _("Jour") }}<select name="jour">{% for j in jours %}<option value="{{ j }}" {% if j == creneau.jour %}selected{% endif %}>{{ j }}</option>{% endfor %}</select></label>
+    <label>{{ _("Heure de début") }}<input type="time" name="heure_debut" value="{{ creneau.heure_debut }}" required></label>
+    <label>{{ _("Heure de fin") }}<input type="time" name="heure_fin" value="{{ creneau.heure_fin }}" required></label>
+    <button type="submit">{{ _("Enregistrer") }}</button>
+  </form>
+{% endblock %}

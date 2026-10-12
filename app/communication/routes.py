@@ -33,8 +33,46 @@ def _publics():
     return publics
 
 
+def classes_concernees(utilisateur=None):
+    """Classes de l'année dont le compte fait partie : celles de ses
+    enfants, la sienne (élève), celles où il enseigne."""
+    from app.models.eleve import Eleve
+
+    u = utilisateur or current_user
+    ids = {e.classe_id for e in u.enfants if e.actif}
+    if u.role == "eleve":
+        ids |= {e.classe_id for e in Eleve.query.filter_by(user_id=u.id, actif=True).all()}
+    if u.role == "enseignant" and u.profil_enseignant:
+        ids |= {a.classe_id for a in u.profil_enseignant.affectations}
+    return ids
+
+
 def _peut_lire(annonce):
-    return _voit_tout() or annonce.destinataire in _publics() or annonce.auteur_id == current_user.id
+    if _voit_tout() or annonce.auteur_id == current_user.id:
+        return True
+    if annonce.destinataire not in _publics():
+        return False
+    return annonce.classe_id is None or annonce.classe_id in classes_concernees()
+
+
+def _mois(indice):
+    from app.services.langues import langue_courante
+    from app.services.traductions_ar import MOIS
+    francais = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+    return MOIS[indice] if langue_courante() == "ar" else francais[indice]
+
+
+def _classes_proposees():
+    """Classes qu'on peut viser : un enseignant, seulement les siennes."""
+    from app.models.classe import Classe
+    from app.models.eleve import Eleve
+    from app.services.cycles import cycle_du_role, filtrer_par_cycle
+
+    classes = Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau, Classe.nom).all()
+    if current_user.role == "enseignant":
+        mes = classes_concernees()
+        return [c for c in classes if c.id in mes]
+    return filtrer_par_cycle(classes, cycle_du_role(current_user.role))
 
 
 @communication_bp.route("/")
@@ -44,7 +82,11 @@ def liste():
     if not _voit_tout():
         # Ce qui m'est adressé, plus ce que j'ai moi-même publié.
         requete = requete.filter(db.or_(
-            Annonce.destinataire.in_(_publics()), Annonce.auteur_id == current_user.id,
+            db.and_(
+                Annonce.destinataire.in_(_publics()),
+                db.or_(Annonce.classe_id.is_(None), Annonce.classe_id.in_(classes_concernees() or {0})),
+            ),
+            Annonce.auteur_id == current_user.id,
         ))
 
     filtre_date_str = request.args.get("date", "").strip()
@@ -63,7 +105,8 @@ def liste():
     if filtre_annee:
         requete = requete.filter(db.extract("year", Annonce.date_publication) == filtre_annee)
 
-    annonces = requete.order_by(Annonce.date_publication.desc()).all()
+    from app.services.pagination import paginer
+    annonces = paginer(requete.order_by(Annonce.date_publication.desc()))
 
     toutes_les_annees = {
         int(annee) for (annee,) in
@@ -73,10 +116,10 @@ def liste():
     annees_disponibles = sorted(toutes_les_annees | {annee_courante}, reverse=True)
 
     return render_template(
-        "communication/liste.html", annonces=annonces,
+        "communication/liste.html", annonces=annonces, page=annonces,
         filtre_date=filtre_date_str, filtre_mois=filtre_mois, filtre_annee=filtre_annee,
         annees_disponibles=annees_disponibles, libelles_destinataire=LIBELLES_DESTINATAIRE,
-        mois_libelles=["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+        mois_libelles=[_mois(i) for i in range(12)],
     )
 
 
@@ -88,10 +131,12 @@ def nouvelle():
         DESTINATAIRES_ENSEIGNANT if current_user.role == "enseignant" else DESTINATAIRES
     )
 
+    classes = _classes_proposees()
+
     def formulaire():
         return render_template(
             "communication/nouvelle.html", destinataires=destinataires_disponibles,
-            libelles_destinataire=LIBELLES_DESTINATAIRE,
+            libelles_destinataire=LIBELLES_DESTINATAIRE, classes=classes, annonce=None,
         )
 
     if request.method == "POST":
@@ -111,7 +156,16 @@ def nouvelle():
             flash("Type de pièce jointe non autorisé (document ou image uniquement).", "error")
             return formulaire()
 
-        annonce = Annonce(titre=titre, contenu=contenu, destinataire=destinataire, auteur_id=current_user.id)
+        classe_id = request.form.get("classe_id", type=int)
+        if classe_id and classe_id not in {c.id for c in classes}:
+            flash("Classe non autorisée.", "error")
+            return formulaire()
+        if current_user.role == "enseignant" and destinataire in ("parent", "eleve") and not classe_id:
+            # Un enseignant s'adresse aux familles et aux élèves de ses classes.
+            flash("Choisis la classe concernée : un enseignant écrit aux parents et aux élèves de ses classes.", "error")
+            return formulaire()
+        annonce = Annonce(titre=titre, contenu=contenu, destinataire=destinataire, auteur_id=current_user.id,
+                          classe_id=classe_id or None)
         if fichier and fichier.filename:
             # La pièce jointe est enregistrée en base, avec l'annonce :
             # elle fait ainsi partie des sauvegardes de l'école.
@@ -150,6 +204,26 @@ def detail(annonce_id):
     if not _peut_lire(annonce):
         abort(403)
     return render_template("communication/detail.html", annonce=annonce, libelles_destinataire=LIBELLES_DESTINATAIRE)
+
+
+@communication_bp.route("/<int:annonce_id>/modifier", methods=["GET", "POST"])
+@login_required
+def modifier(annonce_id):
+    """Corriger le titre ou le texte (sans renvoyer d'email)."""
+    annonce = db.get_or_404(Annonce, annonce_id)
+    if not (current_user.role in ROLES_TOUT_VOIR or current_user.role == "developpeur" or annonce.auteur_id == current_user.id):
+        abort(403)
+    if request.method == "POST":
+        titre = request.form.get("titre", "").strip()
+        contenu = request.form.get("contenu", "").strip()
+        if not titre or not contenu:
+            flash("Le titre et le contenu sont obligatoires.", "error")
+        else:
+            annonce.titre, annonce.contenu = titre, contenu
+            db.session.commit()
+            flash("Annonce corrigée.", "info")
+            return redirect(url_for("communication.detail", annonce_id=annonce.id))
+    return render_template("communication/nouvelle.html", annonce=annonce, destinataires=[], libelles_destinataire=LIBELLES_DESTINATAIRE, classes=[])
 
 
 @communication_bp.route("/<int:annonce_id>/supprimer", methods=["POST"])

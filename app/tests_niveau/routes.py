@@ -22,11 +22,20 @@ ROLES_GESTION = ["secretaire", "directeur_primaire", "directeur_college", "fonda
 @login_required
 @roles_required(*ROLES_GESTION, module="tests_niveau")
 def liste():
-    tests = TestNiveau.query.order_by(TestNiveau.date_test.desc()).all()
+    from sqlalchemy.orm import selectinload
+    from app.models.classe import Classe
+    from app.services.cycles import filtrer_par_cycle
+    from app.services.pagination import paginer
+
+    requete = TestNiveau.query.options(selectinload(TestNiveau.eleve), selectinload(TestNiveau.classe_demandee))
     cycle = cycle_du_role(current_user.role)
     if cycle:
-        tests = [t for t in tests if classe_dans_le_cycle(t.classe_demandee, cycle)]
-    return render_template("tests_niveau/liste.html", tests=tests, bareme=bareme, libelles=LIBELLES_DECISION)
+        ids = [c.id for c in filtrer_par_cycle(Classe.query.all(), cycle)]
+        requete = requete.filter(TestNiveau.classe_demandee_id.in_(ids or [0]))
+    if request.args.get("a_traiter"):
+        requete = requete.filter(TestNiveau.decision == "en_attente")
+    page = paginer(requete.order_by(TestNiveau.date_test.desc(), TestNiveau.id.desc()))
+    return render_template("tests_niveau/liste.html", tests=page, page=page, bareme=bareme, libelles=LIBELLES_DECISION)
 
 
 @tests_niveau_bp.route("/nouveau", methods=["GET", "POST"])
@@ -78,6 +87,30 @@ def nouveau():
     return render_template("tests_niveau/nouveau.html", classes=classes, bareme=bareme)
 
 
+def _resultat_a_la_famille(test, eleve, note, note_max):
+    """La pré-inscription liée passe à « admis » ou « non admis », et la
+    famille reçoit le résultat (si elle a laissé un email)."""
+    from app.models.preinscription import PreInscription
+    from app.preinscriptions.routes import _ecrire_a_la_famille
+
+    demande = PreInscription.query.filter_by(test_niveau_id=test.id).first()
+    if demande is None:
+        return
+    demande.statut = "admise" if test.decision != "refuse" else "non_admise"
+    if test.decision != "refuse":
+        texte = (f"{test.nom_candidat} a réussi le test de niveau ({note:g}/{note_max:g}) "
+                 + (f"et est inscrit(e) en {test.classe_demandee.nom} avec le matricule {eleve.matricule}. "
+                    "Ce matricule permet de créer le compte de l'élève." if eleve else
+                    f"pour la classe {test.classe_demandee.nom}. Le secrétariat vous contactera pour finaliser l'inscription."))
+    else:
+        texte = (f"{test.nom_candidat} a obtenu {note:g}/{note_max:g} au test de niveau, ce qui ne permet pas "
+                 f"l'admission en {test.classe_demandee.nom}. Le secrétariat reste à votre disposition.")
+    try:
+        _ecrire_a_la_famille(demande, f"Pré-inscription {demande.reference} — résultat du test", texte)
+    except Exception:  # un email en échec ne bloque pas la décision
+        pass
+
+
 @tests_niveau_bp.route("/<int:test_id>/decision", methods=["POST"])
 @login_required
 @roles_required(*ROLES_GESTION, module="tests_niveau")
@@ -101,14 +134,16 @@ def decision(test_id):
 
     test.note_obtenue = note
     test.decision = decision_pour_note(note, test.classe_demandee)
-    test.observation = request.form.get("observation", "").strip() or test.observation
+    test.observation = request.form.get("observation", "").strip()[:500] or test.observation
 
     if test.decision == "refuse":
+        _resultat_a_la_famille(test, None, note, note_max)
         db.session.commit()
         flash(f"{test.nom_candidat} : {note:g}/{note_max:g} — non admis (seuil {seuil:g}).", "info")
         return redirect(url_for("tests_niveau.liste"))
 
     eleve = inscrire_candidat_admis(test)
+    _resultat_a_la_famille(test, eleve, note, note_max)
     db.session.commit()
     if eleve:
         flash(

@@ -48,6 +48,9 @@ def saisie(classe_id):
         date_selectionnee = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         date_selectionnee = maintenant().date()
+    if date_selectionnee > maintenant().date():
+        flash("On ne fait pas l'appel d'un jour à venir : date ramenée à aujourd'hui.", "error")
+        date_selectionnee = maintenant().date()
 
     absences_existantes = {
         a.eleve_id: a for a in Absence.query.filter_by(classe_id=classe_id, date=date_selectionnee).all()
@@ -58,7 +61,7 @@ def saisie(classe_id):
         for eleve in eleves:
             est_absent = request.form.get(f"absent_{eleve.id}") == "on"
             justifiee = request.form.get(f"justifiee_{eleve.id}") == "on"
-            motif = request.form.get(f"motif_{eleve.id}", "").strip()
+            motif = request.form.get(f"motif_{eleve.id}", "").strip()[:200]
             existante = absences_existantes.get(eleve.id)
 
             if est_absent:
@@ -77,14 +80,22 @@ def saisie(classe_id):
                 # laisse pas une absence fantôme.
                 db.session.delete(existante)
 
-        db.session.commit()
+        from sqlalchemy.exc import IntegrityError
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # Un collègue a enregistré le même appel au même instant.
+            db.session.rollback()
+            flash("L'appel vient d'être enregistré par quelqu'un d'autre : vérifie et recommence si besoin.", "error")
+            return redirect(url_for("absences.saisie", classe_id=classe_id, date=date_selectionnee.isoformat()))
 
         # Alerte automatique au parent dès que le seuil est franchi
         # (pile à ce moment, pas à chaque absence suivante — sept. 2026).
         from app.services.alertes import SEUIL_ABSENCES_INJUSTIFIEES
         from app.services.notifications import notifier, signature
         for eleve in eleves_nouvellement_absents:
-            nb = Absence.query.filter_by(eleve_id=eleve.id, justifiee=False).count()
+            from app.services.alertes import requete_absences_de_l_annee
+            nb = requete_absences_de_l_annee().filter(Absence.eleve_id == eleve.id).count()
             if not eleve.parents:
                 continue
             if nb != SEUIL_ABSENCES_INJUSTIFIEES:
@@ -147,6 +158,28 @@ def historique(eleve_id):
     peut_signaler = eleve.actif and (est_enseignant_de_la_classe or supervise(eleve.classe, "discipline", ROLES_DISCIPLINE))
     return render_template(
         "absences/historique.html", eleve=eleve, absences=absences, nb_injustifiees=nb_injustifiees,
+        peut_justifier=est_supervision or current_user.role == "developpeur",
         incidents=incidents, nb_retards=sum(1 for i in incidents if i.type == "retard"),
         peut_signaler=peut_signaler,
     )
+
+
+@absences_bp.route("/<int:absence_id>/justifier", methods=["POST"])
+@login_required
+@roles_required(*ROLES_SUPERVISION, module="absences")
+def justifier(absence_id):
+    """Le secrétariat ou la direction justifie une absence quand la
+    famille apporte un mot (l'enseignant n'est pas toujours là)."""
+    from app.services.journal import journaliser
+
+    absence = db.get_or_404(Absence, absence_id)
+    cycle = cycle_du_role(current_user.role)
+    if cycle and not classe_dans_le_cycle(absence.classe, cycle):
+        abort(403)
+    absence.justifiee = request.form.get("justifiee", "1") == "1"
+    absence.motif = request.form.get("motif", "").strip()[:200] or absence.motif
+    journaliser("justification_absence", details=f"{absence.eleve.nom_complet} — {absence.date:%d/%m/%Y} — {absence.motif or ''}",
+                cible_type="Absence", cible_id=absence.id)
+    db.session.commit()
+    flash("Absence justifiée." if absence.justifiee else "Justification retirée.", "info")
+    return redirect(url_for("absences.historique", eleve_id=absence.eleve_id))

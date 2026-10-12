@@ -12,7 +12,7 @@
     {% if messages %}
       {% for m in messages %}
         <p>
-          <strong>{{ "École" if m.auteur_id != parent.id else parent.nom_complet }}</strong>
+          <strong>{{ _("École") if m.auteur_id != parent.id else parent.nom_complet }}</strong>
           <span class="lien-secondaire">— {{ m.date_envoi.strftime("%d/%m/%Y %H:%M") }}</span><br>
           {{ m.contenu }}
         </p>
@@ -22,10 +22,11 @@
     {% endif %}
   </div>
 
+  {% if messages and messages[-1].auteur_id != parent.id %}<p class="lien-secondaire">{{ _("Dernière réponse lue par le parent.") if messages[-1].lu_par_parent else _("Dernière réponse pas encore lue par le parent.") }}</p>{% endif %}
   <form method="post" action="{{ url_for('messagerie.repondre', parent_id=parent.id) }}" class="formulaire-etroit">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Réponse") }}
-      <textarea name="contenu" rows="4" required></textarea>
+      <textarea name="contenu" rows="4" maxlength="3000" required></textarea>
     </label>
     <button type="submit">{{ _("Envoyer") }}</button>
   </form>

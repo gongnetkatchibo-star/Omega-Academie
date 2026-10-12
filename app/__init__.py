@@ -494,6 +494,11 @@ def create_app(config_name=None):
         return non_lues_ecole(ecole_courante_id())
 
     @app.template_global()
+    def messages_non_lus():
+        from app.messagerie.routes import non_lus_pour
+        return non_lus_pour(current_user) if current_user.is_authenticated else 0
+
+    @app.template_global()
     def aujourdhui_iso():
         from app.services.temps import aujourd_hui
         return aujourd_hui().isoformat()

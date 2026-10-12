@@ -135,8 +135,9 @@
           </details>
         {% endif %}
 
-        {% if current_user.role == "parent" or acces("secretaire", *direction, module="messagerie") %}
-          <a href="{{ url_for('messagerie.index') }}">{{ icone("messagerie") }} {{ _("Messages") }}</a>
+        {% if current_user.role == "parent" or current_user.enfants or acces("secretaire", *direction, module="messagerie") %}
+          {% set nb_messages = messages_non_lus() %}
+          <a href="{{ url_for('messagerie.index') }}">{{ icone("messagerie") }} {{ _("Messages") }}{% if nb_messages %} <span class="pastille">{{ nb_messages }}</span>{% endif %}</a>
         {% endif %}
         {% if acces("responsable_pedagogique", "secretaire", *direction, module="absences") or acces("comptable", "fondateur", "administrateur_general", module="finances") %}
           <a href="{{ url_for('relances.index') }}" {% if module_actif == "relances" %}class="lien-actif"{% endif %}>{{ icone("relances") }} {{ _("Relances WhatsApp") }}</a>

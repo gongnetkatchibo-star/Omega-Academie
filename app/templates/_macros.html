@@ -18,15 +18,15 @@
 
 {# Matière : choisie dans la liste de l'école s'il y en a une, sinon
    saisie librement (comportement d'origine). #}
-{% macro champ_matiere(name="matiere") %}
+{% macro champ_matiere(name="matiere", valeur=None) %}
   {% set liste = matieres_officielles() %}
   {% if liste %}
     <select name="{{ name }}" required>
       <option value="">{{ _("— Choisir —") }}</option>
-      {% for m in liste %}<option value="{{ m }}">{{ _(m) }}</option>{% endfor %}
+      {% for m in liste %}<option value="{{ m }}" {% if m == valeur %}selected{% endif %}>{{ _(m) }}</option>{% endfor %}
     </select>
   {% else %}
-    <input type="text" name="{{ name }}" maxlength="80" required>
+    <input type="text" name="{{ name }}" maxlength="80" value="{{ valeur or '' }}" required>
   {% endif %}
 {% endmacro %}
 

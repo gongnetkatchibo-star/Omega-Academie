@@ -34,8 +34,12 @@ class Annonce(AppartientEcole, db.Model):
     fichier_mime = db.Column(db.String(100))
     auteur_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     date_publication = db.Column(db.DateTime, default=maintenant)
+    # Annonce réservée à une classe (ses élèves, leurs parents, ses
+    # enseignants) ; vide = tous les destinataires choisis de l'école.
+    classe_id = db.Column(db.Integer, db.ForeignKey("classes.id"), index=True)
 
     auteur = db.relationship("User")
+    classe = db.relationship("Classe")
 
     @property
     def libelle_destinataire(self):

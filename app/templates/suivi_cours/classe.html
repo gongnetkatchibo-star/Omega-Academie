@@ -39,6 +39,14 @@
             <strong>{{ s.matiere }} — {{ s.chapitre }}{% if s.en_retard %} <span class="badge-retard">{{ _("En retard") }}</span>{% endif %}</strong>
             <span>{{ s.pourcentage }}% · {{ s.date_maj.strftime("%d/%m/%Y") }}{% if s.difficultes %} · {{ s.difficultes }}{% endif %}</span>
           </div>
+          {% if (current_user.profil_enseignant and s.enseignant_id == current_user.profil_enseignant.id) or acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="suivi_cours") %}
+            <div class="actions">
+              <form method="post" action="{{ url_for('suivi_cours.supprimer', suivi_id=s.id) }}" onsubmit="return confirm({{ _('Retirer cette ligne ?')|tojson|forceescape }});">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="bouton-lien">{{ _("Retirer") }}</button>
+              </form>
+            </div>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>

@@ -5,6 +5,8 @@ from app.services.temps import maintenant
 STATUTS_PREINSCRIPTION = [
     ("nouvelle", "Nouvelle"),
     ("convoquee", "Convoqué au test"),
+    ("admise", "Admis et inscrit"),
+    ("non_admise", "Non admis au test"),
     ("refusee", "Refusée"),
 ]
 LIBELLES_STATUT_PREINSCRIPTION = dict(STATUTS_PREINSCRIPTION)

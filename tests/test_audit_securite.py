@@ -338,3 +338,134 @@ def test_arriere_de_l_annee_precedente(client, db, creer_utilisateur, creer_clas
     assert f"Arriéré {passee}" not in _texte(client.get(f"/finances/{eleve.id}"))
     # Une année qui n'est pas un arriéré : refusée.
     assert "montant valide" in _texte(_payer(client, eleve, 1000, annee="2001-2002"))
+
+
+# ------------------------------------------------------- lot 4 : modules
+def test_notes_cloturees_par_la_direction(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.enseignant import Enseignant, Affectation
+    from app.models.evaluation import Evaluation
+    from app.models.note import Note
+    from app.services.periodes import periodes
+
+    creer_utilisateur("Fond", "f@t.td", "fondateur")
+    prof = creer_utilisateur("Prof", "p@t.td", "enseignant")
+    classe = creer_classe("CM1", 4)
+    eleve = creer_eleve("Awa", classe)
+    profil = Enseignant(user_id=prof.id)
+    db.session.add(profil)
+    db.session.flush()
+    db.session.add(Affectation(enseignant_id=profil.id, classe_id=classe.id, matiere="Français"))
+    db.session.commit()
+    connecter(client, "p@t.td")
+    from datetime import date
+    with client.application.test_request_context():
+        from flask import g
+        g.ecole_id = 1
+        periode = periodes()[0]
+    client.post(f"/notes/classe/{classe.id}", data={"matiere": "Français", "trimestre": periode, "titre": "Dictée",
+                                                  "type": "devoir", "coefficient": "1", "date": date.today().isoformat()})
+    evaluation = Evaluation.query.one()
+    client.post(f"/notes/evaluation/{evaluation.id}", data={f"note_{eleve.id}": "7"})
+    client.post("/auth/deconnexion")
+    from flask import g
+    g.pop("_login_user", None)
+    connecter(client, "f@t.td")
+    client.post("/notes/cloture", data={"periode": periode})
+    client.post("/auth/deconnexion")
+    g.pop("_login_user", None)
+    connecter(client, "p@t.td")
+    r = client.post(f"/notes/evaluation/{evaluation.id}", data={f"note_{eleve.id}": "10"}, follow_redirects=True)
+    assert "clôturées" in _texte(r)
+    assert client.post(f"/notes/evaluation/{evaluation.id}/supprimer").status_code == 302
+    db.session.remove()
+    assert Note.query.one().valeur == 7 and Evaluation.query.count() == 1
+
+
+def test_emploi_du_temps_modifier_retirer_et_annees(client, db, creer_utilisateur, creer_classe):
+    from app.models.emploi_du_temps import Creneau
+    from app.models.eleve import Eleve
+
+    creer_utilisateur("Fond", "f@t.td", "fondateur")
+    debut = int(Eleve.annee_scolaire_courante()[:4])
+    ancienne = creer_classe("CE1", 2, annee=f"{debut - 1}-{debut}")
+    classe = creer_classe("CE1", 2)
+    db.session.add(Creneau(classe_id=ancienne.id, matiere="Français", jour="Lundi", heure_debut="08:00", heure_fin="09:00"))
+    db.session.commit()
+    connecter(client, "f@t.td")
+    r = client.post(f"/emploi-du-temps/classe/{classe.id}", data={"matiere": "Français", "jour": "Lundi", "heure_debut": "08:00",
+                                                                 "heure_fin": "09:00"}, follow_redirects=True)
+    assert "Créneau ajouté" in _texte(r)  # le créneau de l'an dernier ne bloque plus
+    r = client.post(f"/emploi-du-temps/classe/{classe.id}", data={"matiere": "Français", "jour": "Dimanche", "heure_debut": "08:00",
+                                                                 "heure_fin": "09:00"}, follow_redirects=True)
+    assert "Jour invalide" in _texte(r)
+    creneau = Creneau.query.filter_by(classe_id=classe.id).one()
+    client.post(f"/emploi-du-temps/creneau/{creneau.id}/modifier", data={"matiere": "Français", "jour": "Mardi",
+                                                                       "heure_debut": "10:00", "heure_fin": "11:00"})
+    assert db.session.get(Creneau, creneau.id).jour == "Mardi"
+    client.post(f"/emploi-du-temps/creneau/{creneau.id}/supprimer")
+    assert Creneau.query.filter_by(classe_id=classe.id).count() == 0
+
+
+def test_secretariat_justifie_une_absence(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from datetime import date
+    from app.models.absence import Absence
+
+    creer_utilisateur("Sec", "s@t.td", "secretaire")
+    classe = creer_classe("CM1", 4)
+    eleve = creer_eleve("Awa", classe)
+    absence = Absence(eleve_id=eleve.id, classe_id=classe.id, date=date.today(), justifiee=False)
+    db.session.add(absence)
+    db.session.commit()
+    connecter(client, "s@t.td")
+    client.post(f"/absences/{absence.id}/justifier", data={"justifiee": "1", "motif": "Mot du parent"})
+    db.session.remove()
+    a = Absence.query.one()
+    assert a.justifiee and a.motif == "Mot du parent"
+
+
+def test_resultat_du_test_met_a_jour_la_preinscription(client, db, creer_utilisateur, creer_classe):
+    from datetime import date
+    from app.models.preinscription import PreInscription
+    from app.models.test_niveau import TestNiveau
+
+    creer_utilisateur("Sec", "s@t.td", "secretaire")
+    classe = creer_classe("CM1", 4)
+    test = TestNiveau(nom_candidat="Candidat", classe_demandee_id=classe.id, date_test=date.today())
+    db.session.add(test)
+    db.session.flush()
+    demande = PreInscription(nom_candidat="Candidat", nom_parent="Parent", telephone_parent="66000000",
+                             classe_demandee_id=classe.id, statut="convoquee", test_niveau_id=test.id, reference="PRE-1")
+    db.session.add(demande)
+    db.session.commit()
+    connecter(client, "s@t.td")
+    client.post(f"/tests-niveau/{test.id}/decision", data={"note_obtenue": "3"})
+    db.session.remove()
+    assert PreInscription.query.one().statut == "non_admise"
+
+
+def test_annonce_d_une_classe_invisible_des_autres_familles(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.annonce import Annonce
+
+    creer_utilisateur("Sec", "s@t.td", "secretaire")
+    p1 = creer_utilisateur("Parent CM1", "p1@t.td", "parent")
+    p2 = creer_utilisateur("Parent CM2", "p2@t.td", "parent")
+    cm1, cm2 = creer_classe("CM1", 4), creer_classe("CM2", 5)
+    e1, e2 = creer_eleve("Un", cm1), creer_eleve("Deux", cm2)
+    e1.parents.append(p1)
+    e2.parents.append(p2)
+    db.session.commit()
+    connecter(client, "s@t.td")
+    client.post("/communication/nouvelle", data={"titre": "Sortie du CM1", "contenu": "x", "destinataire": "parent",
+                                                "classe_id": str(cm1.id)}, content_type="multipart/form-data")
+    annonce = Annonce.query.one()
+    assert annonce.classe_id == cm1.id
+    client.post("/auth/deconnexion")
+    from flask import g
+    g.pop("_login_user", None)
+    connecter(client, "p1@t.td")
+    assert "Sortie du CM1" in _texte(client.get("/"))  # sur le tableau de bord de la famille
+    client.post("/auth/deconnexion")
+    g.pop("_login_user", None)
+    connecter(client, "p2@t.td")
+    assert "Sortie du CM1" not in _texte(client.get("/communication/"))
+    assert client.get(f"/communication/{annonce.id}").status_code == 403

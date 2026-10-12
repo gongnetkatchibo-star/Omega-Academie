@@ -35,6 +35,7 @@
         {% endfor %}
       </tbody>
     </table>
+    {{ pagination(page) }}
   {% else %}
     {{ etat_vide("Aucun test de niveau enregistré.") }}
   {% endif %}

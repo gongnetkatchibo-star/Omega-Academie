@@ -63,7 +63,10 @@ def notifier_annonce(annonce):
                         deja.add(parent.id)
                         comptes.append(parent)
 
-    destinataires = [u.email for u in comptes]
+    if annonce.classe_id:
+        from app.communication.routes import classes_concernees
+        comptes = [u for u in comptes if annonce.classe_id in classes_concernees(u) or u.role not in ("parent", "eleve", "enseignant")]
+    destinataires = [u.email for u in comptes if u.email and not u.email.endswith(".local")]
     lien = url_for("communication.detail", annonce_id=annonce.id, _external=True)
     corps = (
         f"Bonjour,\n\n"

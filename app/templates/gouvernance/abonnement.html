@@ -4,7 +4,7 @@
   {{ fil_ariane(("Abonnement", None)) }}
   <h1>{{ _("Abonnement et espace de stockage") }}</h1>
   <div class="grille-cartes" style="margin-bottom:20px;">
-    <div class="carte-module tdb-ton-{{ etat.niveau }}"><h3>{{ _("Situation") }}</h3><p><span class="tdb-puce"></span> {{ _(etat.libelle.replace(" — à suspendre ?", "")) }}</p>
+    <div class="carte-module"><h3>{{ _("Situation") }}</h3><p><span class="etat-point etat-{{ etat.niveau }}"></span> {{ _(etat.libelle.replace(" — à suspendre ?", "")) }}</p>
       {% if etat.du %}<p>{{ _("Reste à payer :") }} <strong>{{ etat.du|fcfa }}</strong></p>{% endif %}</div>
     <div class="carte-module"><h3>{{ _("Formule") }}</h3><p>{{ etat.formule }}</p>
       {% if etat.prochaine_periode %}<p><small>{{ _("Prochaine période à partir du") }} {{ etat.prochaine_periode.strftime("%d/%m/%Y") }}</small></p>{% endif %}

@@ -85,6 +85,31 @@ def classe(classe_id):
     )
 
 
+@cahier_textes_bp.route("/seance/<int:seance_id>/modifier", methods=["GET", "POST"])
+@login_required
+def modifier(seance_id):
+    """L'auteur corrige sa séance (contenu, travail à faire, date de remise)."""
+    seance = db.get_or_404(SeanceCahier, seance_id)
+    profil = current_user.profil_enseignant if current_user.role == "enseignant" else None
+    if profil is None or seance.enseignant_id != profil.id:
+        abort(403)
+    if request.method == "POST":
+        contenu = request.form.get("contenu", "").strip()
+        devoir = request.form.get("devoir", "").strip()
+        date_rendu = date_du_formulaire("date_rendu", facultative=True)
+        if not contenu:
+            flash("Décris la séance.", "error")
+        elif date_rendu and date_rendu < seance.date:
+            flash("La date de remise du devoir ne peut pas précéder la séance.", "error")
+        else:
+            seance.contenu, seance.devoir = contenu[:4000], devoir[:2000] or None
+            seance.date_rendu = date_rendu if devoir else None
+            db.session.commit()
+            flash("Séance corrigée.", "info")
+            return redirect(url_for("cahier_textes.classe", classe_id=seance.classe_id))
+    return render_template("cahier_textes/modifier.html", seance=seance)
+
+
 @cahier_textes_bp.route("/seance/<int:seance_id>/supprimer", methods=["POST"])
 @login_required
 def supprimer(seance_id):

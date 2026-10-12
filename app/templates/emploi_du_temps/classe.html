@@ -15,6 +15,7 @@
     <p class="lien-secondaire"><a href="{{ url_for('emploi_du_temps.classe_pdf', classe_id=classe.id) }}">{{ icone("telecharger") }} {{ _("Télécharger en PDF") }}</a></p>
   {% endif %}
 
+  {% set peut_modifier = acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="emploi_du_temps") and not vue_enseignant and not lecture_seule %}
   {% if grille %}
     <table class="table table-edt">
       <thead>
@@ -33,6 +34,13 @@
                 {% if c %}
                   <strong>{{ c.matiere }}</strong>
                   {% if c.enseignant %}<br><span class="lien-secondaire">{{ c.enseignant.nom_complet }}</span>{% endif %}
+                  {% if peut_modifier %}
+                    <br><a href="{{ url_for('emploi_du_temps.modifier_creneau', creneau_id=c.id) }}" class="lien-secondaire">{{ _("Modifier") }}</a>
+                    <form method="post" action="{{ url_for('emploi_du_temps.supprimer_creneau', creneau_id=c.id) }}" class="form-inline" onsubmit="return confirm({{ _('Retirer ce créneau ?')|tojson|forceescape }});">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="bouton-lien">{{ _("Retirer") }}</button>
+                    </form>
+                  {% endif %}
                 {% endif %}
               </td>
             {% endfor %}

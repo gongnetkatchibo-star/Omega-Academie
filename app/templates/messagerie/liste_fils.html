@@ -3,15 +3,17 @@
 {% block content %}
   {{ fil_ariane(("Messages", None)) }}
   {{ banniere("messagerie", "Messagerie") }}
-  {% if parents %}
+  {% if est_famille %}<p class="lien-secondaire"><a href="{{ url_for('messagerie.mon_fil') }}">{{ _("Mes propres messages avec l'école (en tant que parent)") }}</a></p>{% endif %}
+  {% if fils %}
     <ul class="liste-demandes">
-      {% for p in parents %}
+      {% for f in fils %}
         <li class="carte-demande">
           <div class="infos">
-            <strong>{{ p.nom_complet }}</strong>
-            {% if non_lus.get(p.id) %}<span class="badge-retard">{{ non_lus[p.id] }} {{ _("non lu(s)") }}</span>{% endif %}
+            <strong>{{ f.parent.nom_complet }}</strong>
+            <span>{{ _("Dernier message :") }} {{ f.dernier.strftime("%d/%m/%Y %H:%M") if f.dernier else "—" }}</span>
+            {% if f.non_lus %}<span class="badge-retard">{{ f.non_lus }} {{ _("non lu(s)") }}</span>{% endif %}
           </div>
-          <div class="actions"><a href="{{ url_for('messagerie.fil', parent_id=p.id) }}">{{ _("Ouvrir le fil") }}</a></div>
+          <div class="actions"><a href="{{ url_for('messagerie.fil', parent_id=f.parent.id) }}">{{ _("Ouvrir le fil") }}</a></div>
         </li>
       {% endfor %}
     </ul>

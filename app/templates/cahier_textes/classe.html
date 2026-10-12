@@ -50,6 +50,7 @@
             {% endif %}
             {% if s.enseignant %}<span class="lien-secondaire">{{ s.enseignant.nom_complet }}</span>{% endif %}
           </div>
+          {% if mon_profil and s.enseignant_id == mon_profil.id %}<a href="{{ url_for('cahier_textes.modifier', seance_id=s.id) }}">{{ _("Modifier") }}</a>{% endif %}
           {% if (mon_profil and s.enseignant_id == mon_profil.id) or supervise_cahier %}
             <form method="post" action="{{ url_for('cahier_textes.supprimer', seance_id=s.id) }}" onsubmit="return confirm({{ _('Retirer cette séance du cahier ?')|tojson|forceescape }});">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

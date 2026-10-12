@@ -13,13 +13,23 @@
   <h2>{{ _("Absences") }}</h2>
   {% if absences %}
     <table class="table">
-      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Justifiée") }}</th><th>{{ _("Motif") }}</th></tr></thead>
+      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("Justifiée") }}</th><th>{{ _("Motif") }}</th>{% if peut_justifier %}<th></th>{% endif %}</tr></thead>
       <tbody>
         {% for a in absences %}
           <tr>
             <td>{{ a.date.strftime("%d/%m/%Y")|ltr }}</td>
             <td class="{% if a.justifiee %}solde-ok{% else %}solde-du{% endif %}">{{ _("Oui" if a.justifiee else "Non") }}</td>
             <td>{{ a.motif or "—" }}</td>
+            {% if peut_justifier %}
+              <td>
+                <form method="post" action="{{ url_for('absences.justifier', absence_id=a.id) }}" class="form-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="justifiee" value="{{ '0' if a.justifiee else '1' }}">
+                  {% if not a.justifiee %}<input type="text" name="motif" maxlength="200" placeholder="{{ _('Motif') }}" aria-label="{{ _('Motif') }}" style="width:9em;">{% endif %}
+                  <button type="submit" class="bouton-lien">{{ _("Retirer la justification" if a.justifiee else "Justifier") }}</button>
+                </form>
+              </td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>

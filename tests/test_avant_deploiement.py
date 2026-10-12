@@ -198,8 +198,10 @@ def test_suppression_refusee_quand_un_lien_obligatoire_existe(client, db, ecole_
 
 
 # ----------------------------------------------------------------- annonces
-def _publier(client, titre, destinataire, fichier=None):
+def _publier(client, titre, destinataire, fichier=None, classe_id=None):
     donnees = {"titre": titre, "contenu": "Ligne 1\nLigne 2", "destinataire": destinataire}
+    if classe_id:
+        donnees["classe_id"] = str(classe_id)
     if fichier:
         donnees["fichier"] = fichier
     return client.post("/communication/nouvelle", data=donnees, content_type="multipart/form-data", follow_redirects=True)
@@ -237,11 +239,20 @@ def test_la_direction_voit_les_annonces_qu_elle_adresse_aux_parents(client, db, 
     assert voit("compta@t.td") == (False, 403)
 
 
-def test_un_enseignant_retrouve_ses_propres_annonces(client, db, creer_utilisateur):
-    creer_utilisateur("Prof", "prof@t.td", "enseignant")
+def test_un_enseignant_retrouve_ses_propres_annonces(client, db, creer_utilisateur, creer_classe):
+    from app.models.enseignant import Enseignant, Affectation
+    prof = creer_utilisateur("Prof", "prof@t.td", "enseignant")
     creer_utilisateur("Collègue", "prof2@t.td", "enseignant")
+    classe = creer_classe("CM1", 4)
+    profil = Enseignant(user_id=prof.id)
+    db.session.add(profil)
+    db.session.flush()
+    db.session.add(Affectation(enseignant_id=profil.id, classe_id=classe.id, matiere="Français"))
+    db.session.commit()
     connecter(client, "prof@t.td")
-    _publier(client, "Devoir de vacances", "eleve")
+    # Sans classe, un enseignant ne peut pas écrire à tous les élèves.
+    assert "Choisis la classe" in _texte(_publier(client, "Sans classe", "eleve"))
+    _publier(client, "Devoir de vacances", "eleve", classe_id=classe.id)
     page = _texte(client.get("/communication/"))
     assert "Devoir de vacances" in page and "Supprimer" in page
     client.post("/auth/deconnexion")

@@ -40,6 +40,46 @@
     </div>
   {% endif %}
 
+  {% if cartes_enfants %}
+    <section class="tdb-enfants" aria-label="{{ _('Mes enfants') }}">
+      <h2>{{ _("Mes enfants") }}</h2>
+      <div class="grille-cartes">
+        {% for c in cartes_enfants %}
+          {% set e = c.eleve %}
+          <div class="carte-module carte-enfant">
+            <h3>{{ e.nom_complet }}</h3>
+            <p class="lien-secondaire">{{ e.classe.nom }} · {{ e.matricule }}</p>
+            <ul>
+              <li>{{ _("Scolarité :") }}
+                {% if c.solde %}<span class="{{ 'solde-du' if c.retard else '' }}">{{ _("reste") }} {{ c.solde|fcfa }}{% if c.retard %} ({{ _("dont") }} {{ c.retard|fcfa }} {{ _("en retard") }}){% endif %}</span>
+                {% else %}<span class="solde-ok">{{ _("à jour") }}</span>{% endif %}</li>
+              <li>{{ _("Absences non justifiées cette année :") }} <strong class="{{ 'solde-du' if c.absences else 'solde-ok' }}">{{ c.absences }}</strong></li>
+              {% for d in c.devoirs %}<li>{{ _("Devoir") }} {{ d.matiere }} {{ _("pour le") }} {{ d.date_rendu.strftime("%d/%m") }}</li>{% endfor %}
+            </ul>
+            <p class="carte-enfant-liens">
+              <a href="{{ url_for('notes.bulletin', eleve_id=e.id) }}">{{ _("Bulletin") }}</a> ·
+              <a href="{{ url_for('cahier_textes.eleve', eleve_id=e.id) }}">{{ _("Devoirs") }}</a> ·
+              <a href="{{ url_for('finances.detail', eleve_id=e.id) }}">{{ _("Scolarité", contexte="frais") }}</a> ·
+              <a href="{{ url_for('absences.historique', eleve_id=e.id) }}">{{ _("Absences") }}</a> ·
+              <a href="{{ url_for('emploi_du_temps.eleve', eleve_id=e.id) }}">{{ _("Emploi du temps") }}</a>
+            </p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+  {% if dernieres_annonces %}
+    <section aria-label="{{ _('Dernières annonces') }}" style="margin-bottom:20px;">
+      <h2>{{ _("Dernières annonces") }}</h2>
+      <ul class="liste-demandes">
+        {% for a in dernieres_annonces %}
+          <li class="carte-demande"><div class="infos"><strong><a href="{{ url_for('communication.detail', annonce_id=a.id) }}">{{ a.titre }}</a></strong>
+            <span>{{ a.date_publication.strftime("%d/%m/%Y") }}{% if a.classe %} · {{ a.classe.nom }}{% endif %}</span></div></li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   {% if user.role == "parent" and not enfants %}
     {{ etat_vide("Aucun enfant n'est encore rattaché à ton compte. Contacte le secrétariat.") }}
   {% endif %}
