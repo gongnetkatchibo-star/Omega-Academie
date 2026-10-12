@@ -143,3 +143,10 @@ def test_journal_et_sauvegarde_depuis_la_console(client, db, creer_utilisateur):
     assert "sauvegarde_exportee" in page
     page = _texte(client.get("/plateforme/"))
     assert "Abonnement et stockage" in page and "utilisés sur" in page
+
+
+def test_pages_sensibles_jamais_gardees_sur_l_appareil(client, creer_utilisateur):
+    creer_utilisateur("Compt", "c@t.td", "comptable")
+    connecter(client, "c@t.td")
+    assert client.get("/caisse/").headers["Cache-Control"] == "no-store"
+    assert "no-store" not in client.get("/calendrier/").headers.get("Cache-Control", "")

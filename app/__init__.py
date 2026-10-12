@@ -186,6 +186,21 @@ def create_app(config_name=None):
         db.session.rollback()
         return render_template("errors/429.html"), 429
 
+    # Pages qui ne doivent jamais rester sur l'appareil (copie hors ligne
+    # de l'application, cache du navigateur) : argent, messages, bulletins,
+    # documents officiels, console de la plateforme (audit oct. 2026).
+    PREFIXES_SENSIBLES = (
+        "/finances", "/caisse", "/salaires", "/messagerie", "/notes/bulletin", "/notes/classe/",
+        "/documents", "/plateforme", "/etablissement", "/developpeur", "/sauvegarde", "/statistiques",
+    )
+
+    @app.after_request
+    def interdire_la_copie_des_pages_sensibles(reponse):
+        from flask import request as req
+        if req.path.startswith(PREFIXES_SENSIBLES) and "Cache-Control" not in reponse.headers:
+            reponse.headers["Cache-Control"] = "no-store"
+        return reponse
+
     @app.after_request
     def ajouter_en_tetes_securite(reponse):
         """En-têtes de sécurité HTTP de base (sept. 2026). Le CSP autorise
