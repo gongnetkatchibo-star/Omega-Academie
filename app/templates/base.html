@@ -48,7 +48,7 @@
       <nav class="sidebar-liens">
         <a href="{{ url_for('main.index') }}" {% if request.endpoint == "main.index" %}class="lien-actif"{% endif %}>{{ icone("tableau_de_bord") }} {{ _("Tableau de bord") }}</a>
         {% if current_user.role == "developpeur" %}
-          <a href="{{ url_for('plateforme.index') }}" class="sidebar-lien-plateforme">{{ icone("plateforme") }} {{ _("Plateforme") }}</a>
+          <a href="{{ url_for('plateforme.index') }}" class="sidebar-lien-plateforme">{{ icone("plateforme") }} {{ _("Plateforme") }}{% if demandes_non_lues_plateforme() %} <span class="pastille">{{ demandes_non_lues_plateforme() }}</span>{% endif %}</a>
         {% endif %}
         {% for e in current_user.enfants if e.actif %}
           <details class="sidebar-deroulant" {% if request.view_args and request.view_args.get('eleve_id') == e.id %}open{% endif %}>
@@ -154,7 +154,8 @@
         {% set peut_etablissement = acces("developpeur", "fondateur", module="gestion_roles") %}
         {% set peut_sauvegarde = acces("developpeur", module="sauvegarde") %}
         {% set peut_permissions = acces("fondateur", "secretaire") %}
-        {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde or peut_permissions %}
+        {% set peut_abonnement = acces("fondateur", "administrateur_general") %}
+        {% if peut_demandes or peut_roles or peut_etablissement or peut_sauvegarde or peut_permissions or peut_abonnement %}
           <details class="sidebar-deroulant" {% if module_actif in ["secretariat", "dev", "sauvegarde"] %}open{% endif %}>
             <summary>{{ icone("administration") }} {{ _("Administration") }}</summary>
             {% if peut_demandes %}<a href="{{ url_for('secretariat.demandes') }}">{{ _("Demandes de comptes") }}</a>{% endif %}
@@ -162,6 +163,10 @@
             {% if peut_etablissement %}<a href="{{ url_for('dev.parametres') }}">{{ _("Établissement") }}</a>{% endif %}
             {% if peut_permissions %}<a href="{{ url_for('dev.permissions') }}">{{ _("Permissions") }}</a>{% endif %}
             {% if peut_sauvegarde %}<a href="{{ url_for('sauvegarde.exporter') }}">{{ _("Télécharger une sauvegarde") }}</a>{% endif %}
+            {% if peut_abonnement %}
+              <a href="{{ url_for('gouvernance.abonnement') }}">{{ _("Abonnement et stockage") }}</a>
+              <a href="{{ url_for('gouvernance.assistance') }}">{{ _("Assistance de la plateforme") }}{% if demandes_non_lues_ecole() %} <span class="pastille">{{ demandes_non_lues_ecole() }}</span>{% endif %}</a>
+            {% endif %}
           </details>
         {% endif %}
 

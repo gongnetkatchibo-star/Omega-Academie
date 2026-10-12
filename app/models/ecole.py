@@ -51,6 +51,18 @@ class Ecole(db.Model):
     actif = db.Column(db.Boolean, default=True, nullable=False)
     # Espace de stockage accordé (octets) ; vide = quota par défaut (5 Go).
     quota_stockage = db.Column(db.BigInteger)
+    # Abonnement (réglé par l'administrateur de la plateforme, école par
+    # école) : voir models/gouvernance.py et services/abonnements.py.
+    mode_facturation = db.Column(db.String(12))       # par_eleve | forfait ; vide = non facturée
+    nom_formule = db.Column(db.String(60))
+    tarif = db.Column(db.Integer)                       # FCFA par élève ou forfait, par période
+    periodicite = db.Column(db.String(12), default="annuel")
+    date_echeance = db.Column(db.Date)                  # début de la prochaine période à facturer
+    # Fiche contact (console de la plateforme).
+    contact_nom = db.Column(db.String(120))
+    contact_telephone = db.Column(db.String(30))
+    contact_email = db.Column(db.String(120))
+    notes_plateforme = db.Column(db.Text)
     date_creation = db.Column(db.DateTime, default=maintenant)
 
     utilisateurs = db.relationship("User", back_populates="ecole")

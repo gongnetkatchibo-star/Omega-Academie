@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Abonnement") }} — {{ etab.nom }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), (etab.nom, None)) }}
+  <h1>{{ _("Abonnement et stockage") }} — {{ etab.nom }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% include "plateforme/_navigation.html" %}
+
+  <div class="grille-cartes" style="margin-bottom:20px;">
+    <div class="carte-module tdb-ton-{{ etat.niveau }}"><h3>{{ _("Situation") }}</h3><p><span class="tdb-puce"></span> {{ _(etat.libelle) }}</p>
+      {% if etat.du %}<p>{{ _("Reste dû :") }} <strong>{{ etat.du|fcfa }}</strong></p>{% endif %}
+      {% if etat.a_suspendre %}<p class="lien-secondaire">{{ _("Plus de 15 jours de retard : tu peux suspendre l'école depuis la liste des établissements. Rien n'est suspendu automatiquement.") }}</p>{% endif %}
+    </div>
+    <div class="carte-module"><h3>{{ _("Formule") }}</h3><p>{{ etat.formule }}</p><p><small>{{ eleves_actifs }} {{ _("élèves inscrits aujourd'hui") }}</small></p></div>
+    <div class="carte-module"><h3>{{ _("Stockage") }}</h3>{% include "gouvernance/_jauge.html" %}
+      {% for nom, taille in stockage.parts %}<small>{{ _(nom) }} : {{ taille }}</small><br>{% endfor %}</div>
+  </div>
+
+  <h2>{{ _("Réglage") }}</h2>
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Mode de facturation") }}
+      <select name="mode_facturation">
+        <option value="">{{ _("Non facturée") }}</option>
+        {% for cle, libelle in modes.items() %}<option value="{{ cle }}" {% if etab.mode_facturation == cle %}selected{% endif %}>{{ _(libelle) }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ _("Nom de la formule (facultatif)") }}<input type="text" name="nom_formule" maxlength="60" value="{{ etab.nom_formule or '' }}" placeholder="Essentiel, Standard, Premium…"></label>
+    <label>{{ _("Montant en FCFA (par élève ou forfait, pour une période)") }}<input type="number" name="tarif" min="0" step="1" value="{{ etab.tarif or '' }}"></label>
+    <label>{{ _("Rythme") }}
+      <select name="periodicite">{% for cle, (libelle, mois) in periodicites.items() %}<option value="{{ cle }}" {% if (etab.periodicite or 'annuel') == cle %}selected{% endif %}>{{ _(libelle) }}</option>{% endfor %}</select>
+    </label>
+    <label>{{ _("Début de la prochaine période à facturer") }}<input type="date" name="date_echeance" value="{{ etab.date_echeance.isoformat() if etab.date_echeance else '' }}"></label>
+    <label>{{ _("Espace de stockage accordé (Go)") }}<input type="number" name="quota_go" min="0.1" max="1000" step="0.1" value="{{ '%g'|format((etab.quota_stockage or 5 * 1024 ** 3) / 1024 ** 3) }}"></label>
+    <h3>{{ _("Contact de l'école") }}</h3>
+    <label>{{ _("Nom") }}<input type="text" name="contact_nom" maxlength="120" value="{{ etab.contact_nom or '' }}"></label>
+    <label>{{ _("Téléphone") }}<input type="tel" name="contact_telephone" maxlength="30" value="{{ etab.contact_telephone or '' }}"></label>
+    <label>{{ _("Email (reçoit aussi les factures)") }}<input type="email" name="contact_email" maxlength="120" value="{{ etab.contact_email or '' }}"></label>
+    <label>{{ _("Notes internes") }}<textarea name="notes_plateforme" rows="3">{{ etab.notes_plateforme or '' }}</textarea></label>
+    <button type="submit" class="bouton bouton-plein">{{ _("Enregistrer") }}</button>
+  </form>
+
+  <h2>{{ _("Factures") }}</h2>
+  {% if proposition %}
+    <form method="post" action="{{ url_for('plateforme.emettre_facture', ecole_id=etab.id) }}" class="carte-attente formulaire-etroit" onsubmit="return confirm({{ _('Émettre cette facture et la notifier à la direction ?')|tojson|forceescape }});">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p><strong>{{ _("Prochaine facture :") }}</strong> {{ proposition.libelle }} — {{ proposition.montant|fcfa }}</p>
+      {% if etab.mode_facturation == "par_eleve" %}<label>{{ _("Nombre d'élèves facturés") }}<input type="number" name="quantite" min="0" value="{{ proposition.quantite }}"></label>{% endif %}
+      <label>{{ _("Note sur la facture (facultatif)") }}<input type="text" name="note" maxlength="300"></label>
+      <button type="submit">{{ _("Émettre la facture") }}</button>
+    </form>
+  {% else %}
+    <p class="lien-secondaire">{{ _("Règle le mode de facturation et le montant pour pouvoir émettre une facture.") }}</p>
+  {% endif %}
+  {% include "plateforme/_factures_tableau.html" %}
+{% endblock %}

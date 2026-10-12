@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Abonnement") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Abonnement", None)) }}
+  <h1>{{ _("Abonnement et espace de stockage") }}</h1>
+  <div class="grille-cartes" style="margin-bottom:20px;">
+    <div class="carte-module tdb-ton-{{ etat.niveau }}"><h3>{{ _("Situation") }}</h3><p><span class="tdb-puce"></span> {{ _(etat.libelle.replace(" — à suspendre ?", "")) }}</p>
+      {% if etat.du %}<p>{{ _("Reste à payer :") }} <strong>{{ etat.du|fcfa }}</strong></p>{% endif %}</div>
+    <div class="carte-module"><h3>{{ _("Formule") }}</h3><p>{{ etat.formule }}</p>
+      {% if etat.prochaine_periode %}<p><small>{{ _("Prochaine période à partir du") }} {{ etat.prochaine_periode.strftime("%d/%m/%Y") }}</small></p>{% endif %}
+      <p><small>{{ eleves_actifs }} {{ _("élèves inscrits aujourd'hui") }}</small></p></div>
+    <div class="carte-module"><h3>{{ _("Espace de stockage") }}</h3>{% include "gouvernance/_jauge.html" %}
+      {% for nom, taille in stockage.parts %}<small>{{ _(nom) }} : {{ taille }}</small><br>{% endfor %}</div>
+  </div>
+  {% if etat.retard %}
+    <div class="carte-attente" style="border-left:4px solid #a32d2d;"><p>{{ _("Une facture est en retard de paiement. Après 15 jours de retard, l'accès de l'école peut être suspendu. Règle-la ou écris à l'administration de la plateforme.") }}</p></div>
+  {% endif %}
+  <p class="lien-secondaire">{{ _("Pour une question sur une facture ou pour obtenir plus d'espace :") }} <a href="{{ url_for('gouvernance.assistance') }}">{{ _("écrire à l'administration de la plateforme") }}</a>.</p>
+
+  <h2>{{ _("Factures") }}</h2>
+  {% if factures %}
+    <table class="table">
+      <thead><tr><th>{{ _("Numéro") }}</th><th>{{ _("Période") }}</th><th>{{ _("Montant") }}</th><th>{{ _("À régler avant le") }}</th><th>{{ _("Statut") }}</th><th></th></tr></thead>
+      <tbody>
+        {% for f in factures %}
+          <tr>
+            <td>{{ f.numero }}</td>
+            <td>{{ f.periode_debut.strftime("%d/%m/%Y") }} → {{ f.periode_fin.strftime("%d/%m/%Y") }}</td>
+            <td>{{ f.montant|fcfa }}</td>
+            <td>{{ f.date_echeance.strftime("%d/%m/%Y") }}</td>
+            <td class="{{ 'solde-ok' if f.statut == 'payee' else ('solde-du' if f.statut == 'emise' else '') }}">{{ _(f.libelle_statut) }}</td>
+            <td><a href="{{ url_for('gouvernance.facture_pdf', facture_id=f.id) }}">{{ _("Télécharger") }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucune facture pour l'instant.") }}
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{# Annonces de la plateforme et alerte d'abonnement, en haut du tableau de bord. #}
+{% for b in bandeaux_plateforme() %}
+  <div class="bandeau-plateforme bandeau-{{ b.niveau }}" role="status">
+    <strong>{{ b.titre }}</strong>
+    <span>{{ b.texte }}</span>
+    {% if b.lien %}<a href="{{ b.lien }}">{{ _(b.lien_libelle) }}</a>{% endif %}
+  </div>
+{% endfor %}

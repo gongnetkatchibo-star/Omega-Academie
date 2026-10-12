@@ -3777,3 +3777,30 @@ a.lien-ecole-copier {
   background: none; border: 0; padding: 0; margin: 0; color: var(--critique-vif, #a32d2d);
   font: inherit; text-decoration: underline; cursor: pointer;
 }
+
+
+/* ========== Gouvernance de la plateforme (oct. 2026) ========== */
+
+.pastille {
+  display: inline-block; min-width: 1.4em; padding: 0 6px; border-radius: 999px;
+  background: var(--critique-vif, #c0392b); color: #fff; font-size: 0.72rem; font-weight: 700;
+  line-height: 1.5; text-align: center; vertical-align: middle;
+}
+.jauge { height: 10px; border-radius: 999px; background: #e3eaf1; overflow: hidden; margin: 6px 0 4px; }
+.jauge span { display: block; height: 100%; background: var(--ok-vif, #1e8e5a); border-radius: inherit; }
+.jauge-attention span { background: var(--attention-vif, #c98a00); }
+.jauge-critique span { background: var(--critique-vif, #c0392b); }
+.jauge-legende { font-size: 0.8rem; color: #5b6775; margin: 0 0 6px; }
+.bandeau-plateforme {
+  display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline;
+  padding: 10px 14px; margin: 0 0 12px; border-radius: 10px; border-left: 4px solid #0f5fa6; background: #eef5fb;
+}
+.bandeau-attention { border-left-color: var(--attention-vif, #c98a00); background: #fdf6e7; }
+.bandeau-critique { border-left-color: var(--critique-vif, #c0392b); background: #fbecea; }
+.bandeau-plateforme span { flex: 1 1 260px; white-space: pre-line; }
+.fil-messages { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+.message-support { max-width: 720px; padding: 10px 14px; border-radius: 12px; border: 1px solid #d5dfe8; background: #fff; }
+.message-plateforme { align-self: flex-start; background: #eef5fb; }
+.message-ecole { align-self: flex-end; }
+.message-entete { margin: 0 0 4px; font-size: 0.8rem; color: #5b6775; }
+.message-texte { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }

@@ -6,20 +6,32 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
   {% endwith %}
+  {% include "plateforme/_navigation.html" %}
   <div class="barre-actions"><a class="bouton bouton-plein" href="{{ url_for('plateforme.nouvelle') }}">{{ icone("plus") }} {{ _("Nouvel établissement") }}</a></div>
 
   {% if ecoles %}
     <table class="table">
-      <thead><tr><th></th><th>{{ _("Établissement") }}</th><th>{{ _("Ville") }}</th><th>{{ _("Comptes") }}</th><th>{{ _("Élèves") }}</th><th>{{ _("État") }}</th><th></th></tr></thead>
+      <thead><tr><th></th><th>{{ _("Établissement") }}</th><th>{{ _("Activité") }}</th><th>{{ _("Abonnement") }}</th><th>{{ _("Stockage") }}</th><th>{{ _("État") }}</th><th></th></tr></thead>
       <tbody>
         {% for e in ecoles %}
+          {% set st = stats[e.id] %}
           <tr>
-            <td>{% if e.logo %}<img src="{{ url_for('plateforme.image', ecole_id=e.id, image='logo') }}" alt="" style="height:44px;">{% else %}—{% endif %}</td>
+            <td>{% if e.logo_mime %}<img src="{{ url_for('plateforme.image', ecole_id=e.id, image='logo') }}" alt="" style="height:44px;">{% else %}—{% endif %}</td>
             <td><strong>{{ e.nom }}</strong>{% if e.sigle %} ({{ e.sigle }}){% endif %}{% if e.id == ecole().id %} <span class="badge-retard">{{ _("en cours") }}</span>{% endif %}
+              <br><small>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}{% if e.contact_nom or e.contact_telephone %} · {{ e.contact_nom or "" }} {{ e.contact_telephone or "" }}{% endif %}</small>
               {% if e.identifiant %}{% include "plateforme/_lien.html" %}{% endif %}</td>
-            <td>{{ e.ville or "—" }}{% if e.pays %}, {{ e.pays }}{% endif %}</td>
-            <td>{{ stats[e.id].comptes }}</td>
-            <td>{{ stats[e.id].eleves }}</td>
+            <td>
+              {{ st.eleves }} {{ _("élèves") }} · {{ st.comptes }} {{ _("comptes") }}<br>
+              <small>{{ _("Dernière connexion :") }} {{ st.derniere_connexion.strftime("%d/%m/%Y %H:%M") if st.derniere_connexion else "—" }}</small>
+              {% if st.emails_en_echec %}<br><small class="solde-du">{{ st.emails_en_echec }} {{ _("email(s) en échec cette semaine") }}</small>{% endif %}
+              {% if st.demandes %}<br><a href="{{ url_for('plateforme.assistance') }}"><small>{{ st.demandes }} {{ _("demande(s) d'assistance en cours") }}</small></a>{% endif %}
+            </td>
+            <td class="tdb-ton-{{ st.abonnement.niveau }}">
+              <span class="tdb-puce"></span> {{ _(st.abonnement.libelle) }}
+              {% if st.abonnement.du %}<br><small>{{ _("Dû :") }} {{ st.abonnement.du|fcfa }}</small>{% endif %}
+              {% if e.date_echeance %}<br><small>{{ _("Prochaine période :") }} {{ e.date_echeance.strftime("%d/%m/%Y") }}</small>{% endif %}
+            </td>
+            <td style="min-width:150px;">{% set stockage = st.stockage %}{% include "gouvernance/_jauge.html" %}</td>
             <td class="{{ 'solde-ok' if e.actif else 'solde-du' }}">{{ _("Actif" if e.actif else "Suspendu") }}</td>
             <td>
               <div class="actions-tableau actions-console">
@@ -28,6 +40,8 @@
                   <button type="submit">{{ _("Entrer") }}</button>
                 </form>
                 <a href="{{ url_for('plateforme.modifier', ecole_id=e.id) }}">{{ _("Modifier") }}</a>
+                <a href="{{ url_for('plateforme.abonnement', ecole_id=e.id) }}">{{ _("Abonnement et stockage") }}</a>
+                <a href="{{ url_for('plateforme.sauvegarde', ecole_id=e.id) }}">{{ _("Sauvegarde") }}</a>
                 <a href="{{ url_for('plateforme.restaurer', ecole_id=e.id) }}">{{ _("Restaurer") }}</a>
                 <form method="post" action="{{ url_for('plateforme.basculer', ecole_id=e.id) }}" onsubmit="return confirm({{ ((('Suspendre ' if e.actif else 'Réactiver ') ~ e.nom ~ ' ?'))|tojson|forceescape }});">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

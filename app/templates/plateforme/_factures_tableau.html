@@ -1,0 +1,40 @@
+{% if factures %}
+  <table class="table">
+    <thead><tr><th>{{ _("Numéro") }}</th>{% if avec_ecole %}<th>{{ _("École") }}</th>{% endif %}<th>{{ _("Période") }}</th><th>{{ _("Montant") }}</th><th>{{ _("Échéance") }}</th><th>{{ _("Statut") }}</th><th></th></tr></thead>
+    <tbody>
+      {% for f in factures %}
+        <tr>
+          <td>{{ f.numero }}</td>
+          {% if avec_ecole %}<td><a href="{{ url_for('plateforme.abonnement', ecole_id=f.ecole_id) }}">{{ f.ecole.nom }}</a></td>{% endif %}
+          <td>{{ f.periode_debut.strftime("%d/%m/%Y") }} → {{ f.periode_fin.strftime("%d/%m/%Y") }}</td>
+          <td>{{ f.montant|fcfa }}</td>
+          <td>{{ f.date_echeance.strftime("%d/%m/%Y") }}{% if f.jours_de_retard %} <span class="solde-du">({{ f.jours_de_retard }} {{ _("j de retard") }})</span>{% endif %}</td>
+          <td class="{{ 'solde-ok' if f.statut == 'payee' else ('solde-du' if f.statut == 'emise' else '') }}">{{ _(f.libelle_statut) }}{% if f.date_paiement %} — {{ f.date_paiement.strftime("%d/%m/%Y") }}{% endif %}</td>
+          <td>
+            <a href="{{ url_for('plateforme.facture_pdf', facture_id=f.id) }}">PDF</a>
+            {% if f.statut == "emise" %}
+              <details>
+                <summary>{{ _("Enregistrer le règlement") }}</summary>
+                <form method="post" action="{{ url_for('plateforme.payer_facture', facture_id=f.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="retour" value="{{ request.full_path }}">
+                  <label>{{ _("Date") }}<input type="date" name="date_paiement" value="{{ aujourdhui_iso() }}" required></label>
+                  <label>{{ _("Mode") }}<select name="mode_reglement">{% for cle, libelle in modes_reglement.items() %}<option value="{{ cle }}">{{ _(libelle) }}</option>{% endfor %}</select></label>
+                  <label>{{ _("Référence") }}<input type="text" name="reference_reglement" maxlength="80"></label>
+                  <button type="submit">{{ _("Marquer payée") }}</button>
+                </form>
+                <form method="post" action="{{ url_for('plateforme.annuler_facture', facture_id=f.id) }}" onsubmit="return confirm({{ _('Annuler cette facture ?')|tojson|forceescape }});">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="text" name="motif" maxlength="300" placeholder="{{ _('Motif') }}">
+                  <button type="submit" class="bouton-lien">{{ _("Annuler la facture") }}</button>
+                </form>
+              </details>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  {{ etat_vide("Aucune facture pour l'instant.") }}
+{% endif %}

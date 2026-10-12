@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Journal des écoles") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Journal des écoles", None)) }}
+  <h1>{{ _("Journal de toutes les écoles") }}</h1>
+  {% include "plateforme/_navigation.html" %}
+  <form method="get" class="barre-recherche barre-recherche-large">
+    <select name="ecole_id" aria-label="{{ _('École') }}"><option value="">{{ _("Toutes les écoles") }}</option>{% for id, e in ecoles.items() %}<option value="{{ id }}" {% if filtre_ecole == id %}selected{% endif %}>{{ e.nom }}</option>{% endfor %}</select>
+    <select name="action" aria-label="{{ _('Action') }}"><option value="">{{ _("Toutes les actions") }}</option>{% for a in actions %}<option value="{{ a }}" {% if filtre_action == a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+    <button type="submit">{{ _("Filtrer") }}</button>
+  </form>
+  {% if entrees %}
+    <table class="table">
+      <thead><tr><th>{{ _("Date") }}</th><th>{{ _("École") }}</th><th>{{ _("Utilisateur") }}</th><th>{{ _("Action") }}</th><th>{{ _("Détails") }}</th></tr></thead>
+      <tbody>
+        {% for j in entrees %}
+          <tr>
+            <td>{{ j.date_action.strftime("%d/%m/%Y %H:%M") }}</td>
+            <td>{{ ecoles[j.ecole_id].nom if j.ecole_id in ecoles else "—" }}</td>
+            <td>{{ j.utilisateur.nom_complet if j.utilisateur else "—" }}</td>
+            <td>{{ j.action }}</td>
+            <td>{{ j.details or "" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {{ pagination(page) }}
+  {% else %}
+    {{ etat_vide("Aucune entrée.") }}
+  {% endif %}
+{% endblock %}

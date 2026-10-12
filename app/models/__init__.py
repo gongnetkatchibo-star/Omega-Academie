@@ -10,6 +10,7 @@ from app.models.suivi_cours import SuiviCours
 from app.models.paiement import Paiement
 from app.models.ressource import Ressource
 from app.models.annonce import Annonce
+from app.models.gouvernance import Facture, DemandeSupport, MessageSupport, AnnoncePlateforme
 
 __all__ = [
     "Ecole", "User", "Classe", "Eleve", "HistoriqueScolaire",

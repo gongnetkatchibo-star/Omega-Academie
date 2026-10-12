@@ -1,0 +1,5 @@
+{# Jauge d'espace de stockage : `stockage` vient de services/stockage.etat #}
+<div class="jauge {{ 'jauge-critique' if stockage.pourcent >= 90 else ('jauge-attention' if stockage.pourcent >= 75 else '') }}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ stockage.pourcent }}" aria-label="{{ _('Espace de stockage utilisé') }}">
+  <span style="width: {{ [stockage.pourcent, 1]|max }}%"></span>
+</div>
+<p class="jauge-legende">{{ stockage.utilise_lisible }} {{ _("utilisés sur") }} {{ stockage.quota_lisible }} ({{ stockage.pourcent }} %)</p>

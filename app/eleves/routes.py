@@ -158,6 +158,10 @@ def _appliquer_dossier(eleve):
         setattr(eleve, champ, request.form.get(champ, "").strip()[:longueur] or None)
     contenu, resultat = photo_identite(request.files.get("photo"))
     if contenu:
+        from app.services.stockage import place_disponible
+        plein = place_disponible(len(contenu))
+        if plein:
+            return plein
         eleve.photo, eleve.photo_mime = contenu, resultat
     elif resultat:
         return resultat
@@ -248,6 +252,11 @@ def enregistrer_photo(eleve_id):
     contenu, resultat = photo_identite(request.files.get("photo"))
     erreur = None if contenu else (resultat or "Aucune photo reçue.")
     if contenu:
+        from app.services.stockage import place_disponible
+        erreur = place_disponible(len(contenu))
+        if erreur:
+            contenu = None
+    if contenu:
         eleve.photo, eleve.photo_mime = contenu, resultat
         journaliser("photo_eleve", details=eleve.nom_complet, cible_type="Eleve", cible_id=eleve.id)
         db.session.commit()
@@ -293,6 +302,11 @@ def importer_photos():
         contenu, resultat = photo_identite(fichier)
         if not contenu:
             refusees.append((nom, (resultat or "fichier vide").replace("Photo refusée : ", "")))
+            continue
+        from app.services.stockage import place_disponible
+        plein = place_disponible(len(contenu))
+        if plein:
+            refusees.append((nom, plein))
             continue
         eleve.photo, eleve.photo_mime = contenu, resultat
         rangees.append((nom, eleve))

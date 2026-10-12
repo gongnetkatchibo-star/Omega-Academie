@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Assistance") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Assistance", None)) }}
+  <h1>{{ _("Demandes d'assistance des écoles") }}</h1>
+  {% include "plateforme/_navigation.html" %}
+  <form method="get" class="barre-recherche">
+    <select name="statut" aria-label="{{ _('Statut') }}">
+      <option value="">{{ _("En attente (ouvertes et en cours)") }}</option>
+      {% for cle, libelle in statuts.items() %}<option value="{{ cle }}" {% if filtre == cle %}selected{% endif %}>{{ _(libelle) }}</option>{% endfor %}
+    </select>
+    <button type="submit">{{ _("Filtrer") }}</button>
+  </form>
+  {% if demandes %}
+    <table class="table">
+      <thead><tr><th>{{ _("Sujet") }}</th><th>{{ _("École") }}</th><th>{{ _("Catégorie") }}</th><th>{{ _("Statut") }}</th><th>{{ _("Dernier message") }}</th></tr></thead>
+      <tbody>
+        {% for d in demandes %}
+          <tr>
+            <td><a href="{{ url_for('plateforme.demande', demande_id=d.id) }}">{% if d.non_lu_plateforme %}<strong>{{ d.sujet }}</strong> <span class="pastille">{{ _("nouveau") }}</span>{% else %}{{ d.sujet }}{% endif %}</a></td>
+            <td>{{ d.ecole.nom }}</td>
+            <td>{{ _(d.libelle_categorie) }}</td>
+            <td>{{ _(d.libelle_statut) }}</td>
+            <td>{{ d.date_maj.strftime("%d/%m/%Y %H:%M") }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    {{ etat_vide("Aucune demande.") }}
+  {% endif %}
+{% endblock %}

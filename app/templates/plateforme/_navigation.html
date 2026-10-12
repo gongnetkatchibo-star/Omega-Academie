@@ -1,0 +1,7 @@
+<nav class="barre-actions" aria-label="{{ _('Console de la plateforme') }}">
+  <a class="bouton" href="{{ url_for('plateforme.index') }}">{{ _("Établissements") }}</a>
+  <a class="bouton" href="{{ url_for('plateforme.factures') }}">{{ _("Factures") }}</a>
+  <a class="bouton" href="{{ url_for('plateforme.assistance') }}">{{ _("Assistance") }}{% if demandes_non_lues_plateforme() %} <span class="pastille">{{ demandes_non_lues_plateforme() }}</span>{% endif %}</a>
+  <a class="bouton" href="{{ url_for('plateforme.annonces') }}">{{ _("Annonces aux écoles") }}</a>
+  <a class="bouton" href="{{ url_for('plateforme.journal') }}">{{ _("Journal des écoles") }}</a>
+</nav>

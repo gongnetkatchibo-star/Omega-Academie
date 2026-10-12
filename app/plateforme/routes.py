@@ -85,10 +85,39 @@ def _appliquer_formulaire(ecole):
 @login_required
 @super_admin_requis
 def index():
+    from datetime import timedelta
+    from app.models.journal_email import JournalEmail
+    from app.models.gouvernance import DemandeSupport
+    from app.services import abonnements, stockage
+    from app.services.temps import maintenant
+
     ecoles = db.session.query(Ecole).order_by(Ecole.nom).all()
-    stats = {e.id: {"comptes": _compter(User, e.id), "eleves": _compter(Eleve, e.id)} for e in ecoles}
+
+    def par_ecole(requete):
+        return dict(db.session.execute(requete.execution_options(tous_etablissements=True)).all())
+
+    comptes = par_ecole(select(User.ecole_id, func.count()).group_by(User.ecole_id))
+    eleves = par_ecole(select(Eleve.ecole_id, func.count()).where(Eleve.actif.is_(True)).group_by(Eleve.ecole_id))
+    connexions = par_ecole(select(User.ecole_id, func.max(User.derniere_connexion)).group_by(User.ecole_id))
+    echecs = par_ecole(
+        select(JournalEmail.ecole_id, func.count()).where(
+            JournalEmail.reussi.is_(False), JournalEmail.date_envoi >= maintenant() - timedelta(days=7)
+        ).group_by(JournalEmail.ecole_id)
+    )
+    demandes = dict(db.session.execute(
+        select(DemandeSupport.ecole_id, func.count()).where(DemandeSupport.statut != "resolue").group_by(DemandeSupport.ecole_id)
+    ).all())
+    stats = {
+        e.id: {
+            "comptes": comptes.get(e.id, 0), "eleves": eleves.get(e.id, 0), "derniere_connexion": connexions.get(e.id),
+            "emails_en_echec": echecs.get(e.id, 0), "demandes": demandes.get(e.id, 0),
+            "abonnement": abonnements.etat(e), "stockage": stockage.etat(e),
+        }
+        for e in ecoles
+    }
     return render_template("plateforme/index.html", ecoles=ecoles, stats=stats,
-                           ecole_active_id=session.get("ecole_active"))
+                           ecole_active_id=session.get("ecole_active"),
+                           demandes_non_lues=DemandeSupport.query.filter_by(non_lu_plateforme=True).count())
 
 
 @plateforme_bp.route("/nouvelle", methods=["GET", "POST"])

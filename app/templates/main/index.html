@@ -2,6 +2,7 @@
 {% block title %}{{ _("Tableau de bord") }}{% endblock %}
 {% block content %}
 <div class="accueil" id="tableau-de-bord">
+  {% include "gouvernance/_bandeaux.html" %}
   {% set direction = ("directeur_primaire", "directeur_college", "fondateur", "administrateur_general") %}
   {% if tableau %}
     <header class="tdb-entete">

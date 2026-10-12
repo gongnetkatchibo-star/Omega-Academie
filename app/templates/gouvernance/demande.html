@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ demande.sujet }}{% endblock %}
+{% block content %}
+  {% if cote_plateforme %}
+    {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Assistance", url_for('plateforme.assistance')), (demande.sujet, None)) }}
+  {% else %}
+    {{ fil_ariane(("Assistance", url_for('gouvernance.assistance')), (demande.sujet, None)) }}
+  {% endif %}
+  <h1>{{ demande.sujet }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  <p class="lien-secondaire">{% if cote_plateforme %}{{ demande.ecole.nom }} · {% endif %}{{ _(demande.libelle_categorie) }} · {{ _(demande.libelle_statut) }} · {{ _("ouverte le") }} {{ demande.date_creation.strftime("%d/%m/%Y") }}</p>
+  <div class="fil-messages">
+    {% for m in demande.messages %}
+      <div class="message-support {{ 'message-plateforme' if m.de_la_plateforme else 'message-ecole' }}">
+        <p class="message-entete"><strong>{{ _("Administration de la plateforme") if m.de_la_plateforme else (m.auteur.nom_complet if m.auteur else demande.ecole.nom) }}</strong> · {{ m.date_envoi.strftime("%d/%m/%Y %H:%M") }}</p>
+        <p class="message-texte">{{ m.contenu }}</p>
+      </div>
+    {% endfor %}
+  </div>
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Réponse") }}<textarea name="contenu" rows="4" maxlength="5000" {% if not cote_plateforme %}required{% endif %}></textarea></label>
+    {% if cote_plateforme %}
+      <label>{{ _("Statut") }}<select name="statut">{% for cle, libelle in statuts.items() %}<option value="{{ cle }}" {% if demande.statut == cle %}selected{% endif %}>{{ _(libelle) }}</option>{% endfor %}</select></label>
+    {% endif %}
+    <button type="submit" class="bouton bouton-plein">{{ _("Envoyer") }}</button>
+  </form>
+{% endblock %}

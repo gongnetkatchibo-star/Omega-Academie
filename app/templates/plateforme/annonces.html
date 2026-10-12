@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Annonces aux écoles") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Annonces aux écoles", None)) }}
+  <h1>{{ _("Annonces aux écoles") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% include "plateforme/_navigation.html" %}
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ _("Titre") }}<input type="text" name="titre" maxlength="150" required></label>
+    <label>{{ _("Message") }}<textarea name="contenu" rows="4" required></textarea></label>
+    <label>{{ _("École") }}
+      <select name="ecole_id"><option value="">{{ _("Toutes les écoles") }}</option>{% for e in ecoles %}<option value="{{ e.id }}">{{ e.nom }}</option>{% endfor %}</select>
+    </label>
+    <label>{{ _("Affichée pour") }}
+      <select name="public"><option value="direction">{{ _("La direction (fondateur, administrateur général)") }}</option><option value="tous">{{ _("Tous les utilisateurs") }}</option></select>
+    </label>
+    <label>{{ _("Ne plus afficher après le (facultatif)") }}<input type="date" name="date_fin"></label>
+    <button type="submit" class="bouton bouton-plein">{{ _("Publier") }}</button>
+  </form>
+  <h2>{{ _("Annonces publiées") }}</h2>
+  {% if annonces %}
+    <ul class="liste-demandes">
+      {% for a in annonces %}
+        <li class="carte-demande">
+          <div class="infos"><strong>{{ a.titre }}</strong>
+            <span>{{ a.ecole.nom if a.ecole else _("Toutes les écoles") }} · {{ _("direction") if a.public == "direction" else _("tous les utilisateurs") }} · {{ a.date_publication.strftime("%d/%m/%Y") }}{% if a.date_fin %} → {{ a.date_fin.strftime("%d/%m/%Y") }}{% endif %}{% if not a.active %} · {{ _("retirée") }}{% endif %}</span>
+            <span>{{ a.contenu }}</span></div>
+          {% if a.active %}
+            <div class="actions"><form method="post" action="{{ url_for('plateforme.retirer_annonce', annonce_id=a.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">{{ _("Retirer") }}</button></form></div>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ etat_vide("Aucune annonce pour l'instant.") }}
+  {% endif %}
+{% endblock %}

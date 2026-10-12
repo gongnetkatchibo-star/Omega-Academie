@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Factures") }}{% endblock %}
+{% block content %}
+  {{ fil_ariane(("Plateforme", url_for('plateforme.index')), ("Factures", None)) }}
+  <h1>{{ _("Factures des écoles") }}</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<ul class="flashes">{% for category, message in messages %}<li class="flash-{{ category }}">{{ _(message) }}</li>{% endfor %}</ul>{% endif %}
+  {% endwith %}
+  {% include "plateforme/_navigation.html" %}
+  <p>{{ nb_impayees }} {{ _("facture(s) à payer, pour un total de") }} <strong>{{ total_du|fcfa }}</strong>.</p>
+  <form method="get" class="barre-recherche">
+    <select name="statut" aria-label="{{ _('Statut') }}">
+      <option value="">{{ _("Toutes") }}</option>
+      <option value="emise" {% if filtre == 'emise' %}selected{% endif %}>{{ _("À payer") }}</option>
+      <option value="payee" {% if filtre == 'payee' %}selected{% endif %}>{{ _("Payées") }}</option>
+      <option value="annulee" {% if filtre == 'annulee' %}selected{% endif %}>{{ _("Annulées") }}</option>
+    </select>
+    <button type="submit">{{ _("Filtrer") }}</button>
+  </form>
+  {% set avec_ecole = True %}
+  {% include "plateforme/_factures_tableau.html" %}
+  {{ pagination(page) }}
+{% endblock %}

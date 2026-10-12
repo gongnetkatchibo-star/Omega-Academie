@@ -481,6 +481,65 @@ def create_app(config_name=None):
         g.ecole_id = ecole_id
 
     @app.template_global()
+    def demandes_non_lues_plateforme():
+        from app.services.assistance import non_lues_plateforme
+        return non_lues_plateforme() if current_user.is_authenticated and current_user.role == "developpeur" else 0
+
+    @app.template_global()
+    def demandes_non_lues_ecole():
+        from app.services.assistance import non_lues_ecole
+        from app.services.tenant import ecole_courante_id
+        if not current_user.is_authenticated or current_user.role not in ("fondateur", "administrateur_general"):
+            return 0
+        return non_lues_ecole(ecole_courante_id())
+
+    @app.template_global()
+    def aujourdhui_iso():
+        from app.services.temps import aujourd_hui
+        return aujourd_hui().isoformat()
+
+    @app.template_global()
+    def bandeaux_plateforme():
+        """Annonces de la plateforme et retard d'abonnement à afficher."""
+        from app.models.gouvernance import AnnoncePlateforme
+        from app.services.tenant import ecole_courante
+        from app.services.temps import aujourd_hui
+
+        if not current_user.is_authenticated:
+            return []
+        etab = ecole_courante()
+        if etab is None:
+            return []
+        direction = current_user.role in ("fondateur", "administrateur_general", "developpeur")
+        bandeaux = []
+        annonces = AnnoncePlateforme.query.filter(
+            AnnoncePlateforme.active.is_(True),
+            db.or_(AnnoncePlateforme.ecole_id.is_(None), AnnoncePlateforme.ecole_id == etab.id),
+            db.or_(AnnoncePlateforme.date_fin.is_(None), AnnoncePlateforme.date_fin >= aujourd_hui()),
+        ).order_by(AnnoncePlateforme.date_publication.desc()).limit(3).all()
+        for a in annonces:
+            if a.public == "tous" or direction:
+                bandeaux.append({"niveau": "info", "titre": a.titre, "texte": a.contenu, "lien": None})
+        if direction and current_user.role != "developpeur":
+            from app.services.abonnements import etat
+            situation = etat(etab)
+            if situation["retard"]:
+                bandeaux.append({
+                    "niveau": "critique" if situation["retard"] > 15 else "attention",
+                    "titre": "Abonnement", "texte": f"Facture en retard de {situation['retard']} jour(s).",
+                    "lien": url_for("gouvernance.abonnement"), "lien_libelle": "Voir les factures",
+                })
+            from app.services.stockage import etat as etat_stockage
+            place = etat_stockage(etab)
+            if place["pourcent"] >= 90:
+                bandeaux.append({
+                    "niveau": "attention", "titre": "Espace de stockage",
+                    "texte": f"{place['pourcent']} % de l'espace est utilisé ({place['utilise_lisible']} sur {place['quota_lisible']}).",
+                    "lien": url_for("gouvernance.abonnement"), "lien_libelle": "Voir le détail",
+                })
+        return bandeaux
+
+    @app.template_global()
     def ecole():
         from app.services.tenant import ecole_courante
         return ecole_courante()
@@ -581,6 +640,8 @@ def create_app(config_name=None):
 
     from app.plateforme import plateforme_bp
     app.register_blueprint(plateforme_bp)
+    from app.gouvernance import gouvernance_bp
+    app.register_blueprint(gouvernance_bp)
 
     from app.notes import notes_bp
     app.register_blueprint(notes_bp)
