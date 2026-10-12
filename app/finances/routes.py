@@ -182,18 +182,34 @@ def detail(eleve_id):
         if request.method == "POST":
             abort(403)
 
+    from app.services.paiements import arrieres, controler_montant, periode_close
+    from app.services.temps import aujourd_hui
+
     if request.method == "POST":
         montant = montant_entier(request.form.get("montant"))
         mode = request.form.get("mode")
-        choix = analyser_echeance(request.form.get("echeance"), eleve)
-        reference = request.form.get("reference", "").strip()
+        reference = request.form.get("reference", "").strip()[:80]
+        # Année de l'échéance : l'année en cours, ou une année passée
+        # restée impayée (arriéré), jamais une autre.
+        annee = request.form.get("annee") or Eleve.annee_scolaire_courante()
+        annees_permises = {Eleve.annee_scolaire_courante()} | {a for a, _ in arrieres(eleve)}
+        if annee == Eleve.annee_scolaire_courante():
+            choix = analyser_echeance(request.form.get("echeance"), eleve)
+        else:
+            choix = (request.form.get("echeance"), None) if request.form.get("echeance") in ECHEANCES else None
 
-        if not montant or mode not in MODES_PAIEMENT or choix is None:
-            flash("Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance.", "error")
+        erreur = None
+        if not montant or mode not in MODES_PAIEMENT or choix is None or annee not in annees_permises:
+            erreur = "Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance."
+        else:
+            erreur = periode_close(aujourd_hui()) or controler_montant(eleve, choix[0], choix[1], montant, annee)
+        if erreur:
+            flash(erreur, "error")
         else:
             echeance, frais_annexe = choix
             paiement = enregistrer_paiement(
                 eleve, montant, mode, echeance, current_user, reference=reference or None, frais_annexe=frais_annexe,
+                annee=annee,
             )
             flash(f"Paiement enregistré — reçu {paiement.numero_recu}. Visible immédiatement dans la Caisse.", "info")
         return redirect(url_for("finances.detail", eleve_id=eleve.id))
@@ -204,7 +220,7 @@ def detail(eleve_id):
         "finances/detail.html", eleve=eleve, resume=resume,
         paiements=paiements, modes=MODES_PAIEMENT, echeances=ECHEANCES,
         libelles_echeance=LIBELLES_ECHEANCE, peut_remise=current_user.role in ROLES_SUPPRESSION + ["developpeur"],
-        contacts_whatsapp=contacts_whatsapp(eleve),
+        contacts_whatsapp=contacts_whatsapp(eleve), arrieres=arrieres(eleve) if est_gestionnaire else [],
     )
 
 
@@ -221,10 +237,18 @@ def modifier_paiement(paiement_id):
         choix = analyser_echeance(request.form.get("echeance"), eleve)
         reference = request.form.get("reference", "").strip()
 
+        from app.services.paiements import controler_montant, periode_close, annuler_recus
+        erreur = None
         if not montant or mode not in MODES_PAIEMENT or choix is None:
-            flash("Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance.", "error")
+            erreur = "Merci de saisir un montant valide (sans centimes), un mode de paiement et une échéance."
+        else:
+            erreur = periode_close(paiement.date_paiement.date()) or controler_montant(
+                eleve, choix[0], choix[1], montant, paiement.annee_scolaire, sauf_paiement=paiement)
+        if erreur:
+            flash(erreur, "error")
             return redirect(url_for("finances.modifier_paiement", paiement_id=paiement.id))
 
+        ancien = f"{paiement.montant:.0f} ({paiement.mode}, {paiement.libelle_echeance})"
         echeance, frais_annexe = choix
         paiement.montant = montant
         paiement.mode = mode
@@ -234,7 +258,7 @@ def modifier_paiement(paiement_id):
 
         journaliser(
             "correction_paiement",
-            details=f"{eleve.nom_complet} — reçu {paiement.numero_recu} → {montant:.0f} ({mode})",
+            details=f"{eleve.nom_complet} — reçu {paiement.numero_recu} : {ancien} → {montant:.0f} ({mode})",
             cible_type="Paiement", cible_id=paiement.id,
         )
 
@@ -242,6 +266,9 @@ def modifier_paiement(paiement_id):
         # ressaisit jamais la même correction à deux endroits.
         mouvement = MouvementCaisse.query.filter_by(origine_module="finances", origine_id=paiement.id).first()
         if mouvement:
+            # Le reçu déjà remis ne correspond plus : il s'affiche « annulé »
+            # à la vérification ; un nouveau reçu se réimprime depuis la caisse.
+            annuler_recus(mouvement.id)
             mouvement.recette = montant
             mouvement.reference = paiement.numero_recu
             mouvement.libelle = (
@@ -265,18 +292,32 @@ def modifier_paiement(paiement_id):
 @roles_required(*ROLES_SUPPRESSION)
 @module_ouvert("finances", ROLES_GESTION)
 def supprimer_paiement(paiement_id):
+    """Annulation d'un paiement : il sort des montants payés par l'élève,
+    mais rien ne disparaît de la caisse — sa ligne y reste, marquée
+    « annulée », avec une écriture inverse datée d'aujourd'hui. Le reçu
+    remis à la famille s'affiche « annulé » à la vérification."""
+    from app.services.paiements import contrepasser, periode_close
+    from app.services.temps import aujourd_hui
+
     paiement = db.get_or_404(Paiement, paiement_id)
     eleve_id = paiement.eleve_id
     numero = paiement.numero_recu
+    erreur = periode_close(aujourd_hui())
+    if erreur:
+        flash(erreur, "error")
+        return redirect(url_for("finances.detail", eleve_id=eleve_id))
+    motif = request.form.get("motif", "").strip()[:200]
 
     journaliser(
-        "suppression_paiement",
-        details=f"{paiement.eleve.nom_complet} — reçu {numero} ({paiement.montant:.0f})",
+        "annulation_paiement",
+        details=f"{paiement.eleve.nom_complet} — reçu {numero} ({paiement.montant:.0f}, {paiement.mode}, "
+                f"{paiement.libelle_echeance}, {paiement.date_paiement:%d/%m/%Y}){' — ' + motif if motif else ''}",
         cible_type="Paiement", cible_id=paiement.id,
     )
-    MouvementCaisse.query.filter_by(origine_module="finances", origine_id=paiement.id).delete()
+    for mouvement in MouvementCaisse.query.filter_by(origine_module="finances", origine_id=paiement.id).all():
+        contrepasser(mouvement, motif or f"Annulation du reçu {numero}", current_user)
     db.session.delete(paiement)
     db.session.commit()
 
-    flash(f"Paiement {numero} supprimé (et sa ligne de Caisse associée).", "info")
+    flash(f"Paiement {numero} annulé : la caisse garde la ligne d'origine et une écriture inverse.", "info")
     return redirect(url_for("finances.detail", eleve_id=eleve_id))

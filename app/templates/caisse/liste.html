@@ -18,6 +18,21 @@
     {% endif %}
   {% endwith %}
 
+  {% if date_cloture %}<p class="lien-secondaire">{{ _("Caisse clôturée jusqu'au") }} <strong>{{ date_cloture.strftime("%d/%m/%Y") }}</strong> : {{ _("cette période ne peut plus être modifiée.") }}</p>{% endif %}
+  {% if peut_cloturer %}
+    <details class="carte-attente" style="margin-bottom:16px;">
+      <summary>{{ _("Clôturer la caisse") }}</summary>
+      <form method="post" action="{{ url_for('caisse.cloturer') }}" class="barre-recherche">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ _("Arrêter la caisse jusqu'au (inclus)") }}
+          <input type="date" name="date_cloture" value="{{ date_cloture.isoformat() if date_cloture else '' }}">
+        </label>
+        <button type="submit">{{ _("Enregistrer") }}</button>
+      </form>
+      <p class="lien-secondaire">{{ _("Après un arrêté de caisse (fin de mois, contrôle), plus aucun mouvement de cette période ne peut être ajouté, corrigé ou annulé. Seul le fondateur peut rouvrir une période.") }}</p>
+    </details>
+  {% endif %}
+
   <div class="grille-cartes" style="margin-bottom:20px;">
     <div class="carte-module carte-stat carte-stat-vert">
       <h3>{{ _("Total recettes") }}</h3>
@@ -63,9 +78,9 @@
               {% if not l.mouvement.automatique %}
                 · <a href="{{ url_for('caisse.modifier', mouvement_id=l.mouvement.id) }}">{{ _("Corriger") }}</a>
                 {% if acces("fondateur", "administrateur_general") %}
-                  · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" style="display:inline;" onsubmit="return confirm({{ _("Supprimer ce mouvement de caisse ?")|tojson|forceescape }});">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit">{{ _("Supprimer") }}</button>
+                  · <form method="post" action="{{ url_for('caisse.supprimer', mouvement_id=l.mouvement.id) }}" class="form-inline" onsubmit="return confirm({{ _("Annuler ce mouvement ? Il restera visible, compensé par une écriture inverse.")|tojson|forceescape }});">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="bouton-lien">{{ _("Annuler") }}</button>
                     </form>
                 {% endif %}
               {% endif %}

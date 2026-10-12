@@ -33,7 +33,7 @@ def test_suppression_paiement_est_journalisee(client, creer_utilisateur, creer_c
     paiement = Paiement.query.first()
     client.post(f"/finances/paiement/{paiement.id}/supprimer")
 
-    entrees = JournalAction.query.filter_by(action="suppression_paiement").all()
+    entrees = JournalAction.query.filter_by(action="annulation_paiement").all()
     assert len(entrees) == 1
 
 

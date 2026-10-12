@@ -57,7 +57,7 @@ def test_comptable_ne_peut_pas_supprimer_un_paiement(client, creer_utilisateur, 
     assert Paiement.query.count() == 1
 
 
-def test_fondateur_peut_supprimer_un_paiement_et_sa_ligne_de_caisse(client, creer_utilisateur, creer_classe, creer_eleve):
+def test_fondateur_annule_un_paiement_et_la_caisse_garde_la_trace(client, creer_utilisateur, creer_classe, creer_eleve):
     from app.models.paiement import Paiement
     from app.models.mouvement_caisse import MouvementCaisse
 
@@ -69,9 +69,13 @@ def test_fondateur_peut_supprimer_un_paiement_et_sa_ligne_de_caisse(client, cree
     client.post(f"/finances/{eleve.id}", data={"echeance": "inscription", "montant": "15000", "mode": "especes"})
     paiement = Paiement.query.first()
 
-    client.post(f"/finances/paiement/{paiement.id}/supprimer", follow_redirects=True)
+    client.post(f"/finances/paiement/{paiement.id}/supprimer", data={"motif": "erreur de saisie"}, follow_redirects=True)
     assert Paiement.query.count() == 0
-    assert MouvementCaisse.query.count() == 0
+    # La ligne d'origine reste, compensée par une écriture inverse : solde nul.
+    lignes = MouvementCaisse.query.order_by(MouvementCaisse.id).all()
+    assert len(lignes) == 2 and "[annulé]" in lignes[0].libelle
+    assert sum(float(l.recette) - float(l.depense) for l in lignes) == 0
+    assert lignes[1].observation == "erreur de saisie"
 
 
 def test_salaire_capture_fonction_et_contact(client, creer_utilisateur):

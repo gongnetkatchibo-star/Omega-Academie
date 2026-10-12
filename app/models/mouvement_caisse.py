@@ -4,15 +4,20 @@ from datetime import datetime
 from app.extensions import db
 from app.services.temps import maintenant
 
+# Types proposés à la saisie manuelle. « Salaire » n'y est plus : un
+# salaire passe par le module Salaires, sinon il serait compté deux fois.
 TYPES_CAISSE = [
     "Uniforme",
     "Fournitures",
-    "Salaire",
     "Loyer / Charges",
     "Transport",
     "Entretien",
     "Divers",
 ]
+TYPE_SALAIRE_AUTO = "Salaire"
+# Écriture inverse d'une ligne annulée (contre-passation) : la ligne
+# d'origine reste dans le registre, le solde est corrigé par celle-ci.
+TYPE_ANNULATION = "Annulation"
 
 # Type réservé aux lignes générées automatiquement depuis Finances —
 # n'apparaît jamais comme choix dans le formulaire de saisie manuelle.

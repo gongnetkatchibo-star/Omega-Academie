@@ -16,6 +16,9 @@ class ParametreEtablissement(AppartientEcole, db.Model):
     documents_bilingues = db.Column(db.Boolean, nullable=False, default=False)
     # Signature et cachet imprimés sur les documents (sinon : à la main).
     signature_imprimee = db.Column(db.Boolean, nullable=False, default=False)
+    # Caisse arrêtée jusqu'à cette date incluse : plus aucun mouvement ne
+    # peut y être ajouté, corrigé ou supprimé (audit oct. 2026).
+    date_cloture_caisse = db.Column(db.Date)
     # Dates limites de paiement de l'année en cours ; au-delà, ce qui
     # reste dû sur l'échéance est compté en retard.
     date_limite_inscription = db.Column(db.Date)

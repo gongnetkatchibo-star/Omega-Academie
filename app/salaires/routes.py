@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 
 from app.extensions import db
 from app.services.tenant import nom_ecole_courante
 from app.models.user import User
 from app.models.salaire import Salaire, STATUTS_SALAIRE, LIBELLES_STATUT_SALAIRE, MOIS_LIBELLES
-from app.models.mouvement_caisse import MouvementCaisse
+from app.models.mouvement_caisse import MouvementCaisse, TYPE_SALAIRE_AUTO
 from app.salaires import salaires_bp
 from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
 from app.services.journal import journaliser
@@ -112,18 +112,22 @@ def nouveau():
         personnel_id = request.form.get("personnel_id", type=int)
         mois = request.form.get("mois", type=int)
         annee = request.form.get("annee", type=int)
-        base = request.form.get("montant", type=float)
-        primes = max(request.form.get("primes", type=float) or 0, 0)
-        retenues = max(request.form.get("retenues", type=float) or 0, 0)
-        montant = (base or 0) + primes - retenues
+        from app.utils import montant_entier, montant_positif_ou_nul
+        base = montant_entier(request.form.get("montant"))
+        primes = montant_positif_ou_nul(request.form.get("primes", "").strip())
+        retenues = montant_positif_ou_nul(request.form.get("retenues", "").strip())
+        montant = (base or 0) + (primes or 0) - (retenues or 0)
         fonction = request.form.get("fonction", "").strip()
         email_contact = request.form.get("email_contact", "").strip()
         telephone_contact = request.form.get("telephone_contact", "").strip()
 
         employe = db.session.get(User, personnel_id) if personnel_id else None
         erreur = None
-        if not employe or not mois or not 1 <= mois <= 12 or not annee or not base or base <= 0:
-            erreur = "Merci de remplir tous les champs avec des valeurs valides."
+        annee_actuelle = maintenant().year
+        if not employe or not mois or not 1 <= mois <= 12 or not annee or not base or primes is None or retenues is None:
+            erreur = "Merci de remplir tous les champs avec des montants entiers valides (sans centimes)."
+        elif not annee_actuelle - 1 <= annee <= annee_actuelle + 1:
+            erreur = "L'année du salaire doit être l'année en cours, la précédente ou la suivante."
         elif montant <= 0:
             erreur = "Les retenues dépassent le salaire : le net à payer doit rester positif."
         elif Salaire.query.filter_by(personnel_id=personnel_id, mois=mois, annee=annee).first():
@@ -140,8 +144,9 @@ def nouveau():
             motif_primes=request.form.get("motif_primes", "").strip()[:150] or None if primes else None,
             motif_retenues=request.form.get("motif_retenues", "").strip()[:150] or None if retenues else None,
             responsable_id=current_user.id, fonction=fonction or None,
-            email_contact=email_contact or employe.email, telephone_contact=telephone_contact or employe.telephone,
+            email_contact=(email_contact or employe.email)[:120], telephone_contact=(telephone_contact or employe.telephone or "")[:30] or None,
         ))
+        journaliser("nouveau_salaire", details=f"{employe.nom_complet} — {MOIS_LIBELLES[mois-1]} {annee} ({montant:.0f})")
         db.session.commit()
         flash(f"Salaire de {employe.nom_complet} enregistré pour {MOIS_LIBELLES[mois-1]} {annee} — statut impayé.", "info")
         return redirect(url_for("salaires.liste"))
@@ -157,9 +162,19 @@ def marquer_paye(salaire_id):
     """Enregistre le versement — crée automatiquement la dépense
     correspondante dans la Caisse, même principe que les paiements de
     scolarité (Option A, sept. 2026) : jamais de ressaisie."""
-    salaire = db.get_or_404(Salaire, salaire_id)
-    if salaire.statut == "paye":
+    from app.services.paiements import periode_close
+
+    # Verrou sur la ligne : un double clic ne crée jamais deux dépenses.
+    salaire = db.session.execute(
+        db.select(Salaire).where(Salaire.id == salaire_id).with_for_update()
+    ).scalar_one_or_none() or abort(404)
+    deja = MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).first()
+    if salaire.statut == "paye" or deja:
         flash("Ce salaire est déjà marqué comme payé.", "error")
+        return redirect(url_for("salaires.liste"))
+    erreur = periode_close(maintenant().date())
+    if erreur:
+        flash(erreur, "error")
         return redirect(url_for("salaires.liste"))
 
     salaire.statut = "paye"
@@ -169,7 +184,7 @@ def marquer_paye(salaire_id):
 
     db.session.add(MouvementCaisse(
         date=salaire.date_paiement,
-        type="Salaire",
+        type=TYPE_SALAIRE_AUTO,
         reference=f"SAL-{salaire.id}",
         libelle=f"Salaire — {salaire.personnel.nom_complet} ({salaire.libelle_periode})",
         recette=0,
@@ -202,14 +217,27 @@ def marquer_paye(salaire_id):
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
 def supprimer(salaire_id):
+    """Un salaire pas encore payé se supprime ; un salaire payé s'annule :
+    la dépense reste dans la caisse, compensée par une écriture inverse."""
+    from app.services.paiements import contrepasser, periode_close
+
     salaire = db.get_or_404(Salaire, salaire_id)
-    journaliser("suppression_salaire", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode}", cible_type="Salaire", cible_id=salaire.id)
-    MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).delete()
+    mouvements = MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).all()
+    if mouvements:
+        erreur = periode_close(maintenant().date())
+        if erreur:
+            flash(erreur, "error")
+            return redirect(url_for("salaires.liste"))
+    journaliser("suppression_salaire", details=f"{salaire.personnel.nom_complet} — {salaire.libelle_periode} ({salaire.montant:.0f}, {salaire.statut})",
+                cible_type="Salaire", cible_id=salaire.id)
+    for mouvement in mouvements:
+        contrepasser(mouvement, f"Annulation du salaire {salaire.libelle_periode}", current_user)
+    from app.models.document_verifiable import DocumentVerifiable
+    DocumentVerifiable.query.filter_by(cle_objet=f"fiche_paie:{salaire.id}", annule=False).update({"annule": True})
     db.session.delete(salaire)
     db.session.commit()
-    flash("Ligne de salaire supprimée (et sa dépense de Caisse associée si elle existait).", "info")
+    flash("Salaire supprimé." if not mouvements else "Salaire annulé : la dépense reste visible en caisse, compensée par une écriture inverse.", "info")
     return redirect(url_for("salaires.liste"))
-
 
 def _fiche_pdf(salaire):
     from flask import make_response

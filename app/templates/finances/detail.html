@@ -87,6 +87,25 @@
     </label>
     <button type="submit">{{ _("Enregistrer le paiement") }}</button>
   </form>
+
+  {% for annee_arr, resume_arr in arrieres %}
+    <h2>{{ _("Arriéré") }} {{ annee_arr }} — {{ _("reste") }} {{ resume_arr.solde|fcfa }}</h2>
+    <form method="post" class="formulaire-etroit">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="annee" value="{{ annee_arr }}">
+      <label>{{ _("Échéance") }}
+        <select name="echeance" required>
+          {% for e in resume_arr.echeances if e.reste > 0 %}<option value="{{ e.cle }}">{{ e.libelle }} {{ _("— reste") }} {{ e.reste|fcfa }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ _("Montant") }}<input type="number" step="1" min="1" name="montant" required></label>
+      <label>{{ _("Mode de paiement") }}
+        <select name="mode" required>{% for m in modes %}<option value="{{ m }}">{{ m.replace('_', ' ') }}</option>{% endfor %}</select>
+      </label>
+      <label>{{ _("Référence") }}<input type="text" name="reference" maxlength="80"></label>
+      <button type="submit">{{ _("Encaisser l'arriéré") }}</button>
+    </form>
+  {% endfor %}
   {% endif %}
 
   <h2>{{ _("Historique des paiements") }}</h2>
@@ -106,9 +125,10 @@
               <td>
                 <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">{{ _("Corriger") }}</a>
                 {% if acces("fondateur", "administrateur_general") %}
-                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" style="display:inline;" onsubmit="return confirm({{ _("Supprimer ce paiement et sa ligne de Caisse associée ?")|tojson|forceescape }});">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit">{{ _("Supprimer") }}</button>
+                  · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" class="form-inline" onsubmit="return confirm({{ _("Annuler ce paiement ? La caisse gardera une trace de l'annulation.")|tojson|forceescape }});">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="text" name="motif" maxlength="200" placeholder="{{ _("Motif") }}" aria-label="{{ _("Motif de l'annulation") }}" style="width:9em;">
+                      <button type="submit" class="bouton-lien">{{ _("Annuler") }}</button>
                     </form>
                 {% endif %}
               </td>

@@ -215,3 +215,126 @@ def test_secretaire_valide_l_eleve_qui_cree_son_compte(client, db, creer_utilisa
                                                "date_naissance_eleve": "2014-05-20", "mot_de_passe": "eleve12345",
                                                "confirmation": "eleve12345"}, follow_redirects=True)
     assert "activé après vérification" in _texte(r)
+
+
+# --------------------------------------------------------------- lot 2 : argent
+def _payer(client, eleve, montant, echeance="inscription", **extra):
+    donnees = {"echeance": echeance, "montant": str(montant), "mode": "especes"}
+    donnees.update(extra)
+    return client.post(f"/finances/{eleve.id}", data=donnees, follow_redirects=True)
+
+
+def test_caisse_refuse_montants_negatifs_decimaux_ou_absurdes(client, db, creer_utilisateur):
+    from datetime import date
+    from app.models.mouvement_caisse import MouvementCaisse
+
+    creer_utilisateur("Compt", "c@t.td", "comptable")
+    connecter(client, "c@t.td")
+    for recette in ("-50000", "12.5", "nan", "inf"):
+        client.post("/caisse/nouveau", data={"type": "Divers", "libelle": "x", "recette": recette, "depense": "",
+                                            "date": date.today().isoformat()})
+    assert MouvementCaisse.query.count() == 0
+    r = client.post("/caisse/nouveau", data={"type": "Salaire", "libelle": "x", "depense": "1000", "recette": "",
+                                             "date": date.today().isoformat()}, follow_redirects=True)
+    assert "type de mouvement" in _texte(r)  # un salaire passe par le module Salaires
+
+
+def test_trop_percu_refuse(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.paiement import Paiement
+
+    creer_utilisateur("Compt", "c@t.td", "comptable")
+    eleve = creer_eleve("Awa", creer_classe(frais_inscription=50000))
+    connecter(client, "c@t.td")
+    assert "dépasse ce qui reste dû" in _texte(_payer(client, eleve, 500000))
+    _payer(client, eleve, 30000)
+    assert "dépasse" in _texte(_payer(client, eleve, 30000))
+    _payer(client, eleve, 20000)
+    assert "déjà entièrement payée" in _texte(_payer(client, eleve, 1000))
+    assert sum(p.montant for p in Paiement.query.all()) == 50000
+
+
+def test_cloture_de_caisse(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from datetime import date, timedelta
+    from app.models.mouvement_caisse import MouvementCaisse
+
+    creer_utilisateur("Fond", "f@t.td", "fondateur")
+    connecter(client, "f@t.td")
+    hier = (date.today() - timedelta(days=1)).isoformat()
+    client.post("/caisse/nouveau", data={"type": "Divers", "libelle": "Achat", "depense": "1000", "recette": "", "date": hier})
+    mouvement = MouvementCaisse.query.one()
+    client.post("/caisse/cloture", data={"date_cloture": hier})
+    r = client.post(f"/caisse/mouvement/{mouvement.id}/modifier", data={"type": "Divers", "libelle": "Truqué", "depense": "10",
+                                                                         "recette": "", "date": hier}, follow_redirects=True)
+    assert "clôturée" in _texte(r)
+    r = client.post("/caisse/nouveau", data={"type": "Divers", "libelle": "Oubli", "depense": "500", "recette": "", "date": hier},
+                    follow_redirects=True)
+    assert "clôturée" in _texte(r)
+    db.session.remove()
+    assert MouvementCaisse.query.one().libelle == "Achat"
+    r = client.post("/caisse/cloture", data={"date_cloture": (date.today() + timedelta(days=3)).isoformat()}, follow_redirects=True)
+    assert "futur" in _texte(r)
+
+
+def test_recu_d_un_paiement_annule_signale_a_la_verification(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.mouvement_caisse import MouvementCaisse
+    from app.models.document_verifiable import DocumentVerifiable
+    from app.models.paiement import Paiement
+
+    creer_utilisateur("Fond", "f@t.td", "fondateur")
+    eleve = creer_eleve("Awa", creer_classe(frais_inscription=50000))
+    connecter(client, "f@t.td")
+    _payer(client, eleve, 50000)
+    mouvement_id = MouvementCaisse.query.one().id
+    assert client.get(f"/caisse/recu/{mouvement_id}/pdf").status_code == 200
+    code = DocumentVerifiable.query.one().code
+    client.post(f"/finances/paiement/{Paiement.query.one().id}/supprimer")
+    db.session.remove()
+    assert DocumentVerifiable.query.one().annule
+    from flask import g
+    g.pop("_login_user", None)
+    assert client.get(f"/caisse/recu/{mouvement_id}/pdf").status_code == 302
+    assert code
+
+
+def test_salaire_paye_une_seule_fois_et_annule_avec_trace(client, db, creer_utilisateur):
+    from app.models.mouvement_caisse import MouvementCaisse
+    from app.models.salaire import Salaire
+    from app.services.temps import maintenant
+
+    creer_utilisateur("Fond", "f@t.td", "fondateur")
+    prof = creer_utilisateur("Prof", "p@t.td", "enseignant")
+    connecter(client, "f@t.td")
+    r = client.post("/salaires/nouveau", data={"personnel_id": prof.id, "mois": "9", "annee": "1990", "montant": "100000"},
+                    follow_redirects=True)
+    assert "L'année du salaire" in _texte(r)
+    client.post("/salaires/nouveau", data={"personnel_id": prof.id, "mois": "9", "annee": str(maintenant().year), "montant": "100000"})
+    salaire = Salaire.query.one()
+    client.post(f"/salaires/{salaire.id}/payer")
+    client.post(f"/salaires/{salaire.id}/payer")
+    assert MouvementCaisse.query.count() == 1
+    client.post(f"/salaires/{salaire.id}/supprimer")
+    lignes = MouvementCaisse.query.all()
+    assert len(lignes) == 2 and sum(float(l.recette) - float(l.depense) for l in lignes) == 0
+
+
+def test_arriere_de_l_annee_precedente(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.eleve import Eleve
+    from app.models.historique import HistoriqueScolaire
+    from app.models.paiement import Paiement
+
+    creer_utilisateur("Compt", "c@t.td", "comptable")
+    debut = int(Eleve.annee_scolaire_courante()[:4])
+    passee = f"{debut - 1}-{debut}"
+    ancienne = creer_classe("CE2", 4, annee=passee, frais_inscription=20000)
+    eleve = creer_eleve("Awa", creer_classe("CM1", 5, frais_inscription=30000))
+    db.session.add(HistoriqueScolaire(eleve_id=eleve.id, classe_id=ancienne.id, annee_scolaire=passee, resultat="admis"))
+    db.session.commit()
+    connecter(client, "c@t.td")
+    page = _texte(client.get(f"/finances/{eleve.id}"))
+    assert f"Arriéré {passee}" in page
+    _payer(client, eleve, 20000, annee=passee)
+    paiement = Paiement.query.one()
+    assert paiement.annee_scolaire == passee
+    assert f"Arriéré {passee}" not in _texte(client.get(f"/finances/{eleve.id}"))
+    # Une année qui n'est pas un arriéré : refusée.
+    assert "montant valide" in _texte(_payer(client, eleve, 1000, annee="2001-2002"))

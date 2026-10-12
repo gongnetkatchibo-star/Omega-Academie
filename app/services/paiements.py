@@ -1,7 +1,7 @@
 from app.extensions import db
 from app.models.eleve import Eleve
 from app.models.paiement import Paiement, LIBELLES_ECHEANCE, ECHEANCES, ECHEANCE_ANNEXE
-from app.models.mouvement_caisse import MouvementCaisse, TYPE_SCOLARITE_AUTO
+from app.models.mouvement_caisse import MouvementCaisse, TYPE_SCOLARITE_AUTO, TYPE_ANNULATION
 
 
 def _contexte_frais(annee):
@@ -116,6 +116,80 @@ def resume_paiements(eleve, annee=None, classe=None, paiements=None):
     }
 
 
+def date_cloture():
+    from app.models.parametre import ParametreEtablissement
+
+    parametre = ParametreEtablissement.query.first()
+    return parametre.date_cloture_caisse if parametre else None
+
+
+def periode_close(une_date):
+    """Message d'erreur si la caisse est arrêtée à cette date, sinon None."""
+    cloture = date_cloture()
+    if cloture and une_date and une_date <= cloture:
+        return f"La caisse est clôturée jusqu'au {cloture.strftime('%d/%m/%Y')} : cette période ne peut plus être modifiée."
+    return None
+
+
+def reste_a_payer(eleve, echeance, frais_annexe=None, annee=None, sauf_paiement=None):
+    """Ce qui reste dû sur une échéance (ou un frais annexe), sans compter
+    `sauf_paiement` (celui qu'on est en train de corriger)."""
+    annee = annee or Eleve.annee_scolaire_courante()
+    classe = eleve.classe
+    if annee != eleve.classe.annee_scolaire:
+        from app.models.historique import HistoriqueScolaire
+        h = (HistoriqueScolaire.query.filter_by(eleve_id=eleve.id, annee_scolaire=annee)
+             .order_by(HistoriqueScolaire.id.desc()).first())
+        classe = h.classe if h and h.classe else classe
+    paiements = [p for p in Paiement.query.filter_by(eleve_id=eleve.id, annee_scolaire=annee).all()
+                 if sauf_paiement is None or p.id != sauf_paiement.id]
+    resume = resume_paiements(eleve, annee, classe=classe, paiements=paiements)
+    cle = f"annexe_{frais_annexe.id}" if frais_annexe else echeance
+    for ligne in resume["echeances"] + resume["annexes"]:
+        if ligne["cle"] == cle:
+            return ligne["reste"]
+    return 0
+
+
+def controler_montant(eleve, echeance, frais_annexe, montant, annee=None, sauf_paiement=None):
+    """Message d'erreur si le montant dépasse ce qui reste dû, sinon None."""
+    reste = reste_a_payer(eleve, echeance, frais_annexe, annee, sauf_paiement)
+    if montant > reste:
+        from app.services.notifications import montant_fcfa
+        if reste <= 0:
+            return "Cette échéance est déjà entièrement payée : choisis une autre échéance."
+        return f"Le montant dépasse ce qui reste dû sur cette échéance ({montant_fcfa(reste)})."
+    return None
+
+
+def annuler_recus(mouvement_id):
+    """Le reçu déjà remis s'affiche « annulé » sur la page de vérification."""
+    from app.models.document_verifiable import DocumentVerifiable
+
+    DocumentVerifiable.query.filter_by(cle_objet=f"recu:{mouvement_id}", annule=False).update({"annule": True})
+
+
+def contrepasser(mouvement, motif, utilisateur):
+    """Annule une ligne de caisse sans l'effacer : elle reste, marquée
+    « annulée », et une écriture inverse datée d'aujourd'hui remet le
+    solde d'aplomb. Rien ne disparaît du registre."""
+    from app.services.temps import aujourd_hui
+
+    mouvement.origine_module = f"{mouvement.origine_module or 'caisse'}_annule"[:30]
+    if "[annulé]" not in mouvement.libelle:
+        mouvement.libelle = f"{mouvement.libelle} [annulé]"[:200]
+    inverse = MouvementCaisse(
+        date=aujourd_hui(), type=TYPE_ANNULATION, reference=(f"ANN-{mouvement.reference or mouvement.id}")[:60],
+        libelle=f"Annulation : {mouvement.libelle.replace(' [annulé]', '')}"[:200],
+        recette=mouvement.depense or 0, depense=mouvement.recette or 0,
+        observation=(motif or "")[:300] or None, responsable_id=utilisateur.id, eleve_id=mouvement.eleve_id,
+        origine_module="annulation", origine_id=mouvement.id, automatique=True,
+    )
+    db.session.add(inverse)
+    annuler_recus(mouvement.id)
+    return inverse
+
+
 def analyser_echeance(valeur, eleve):
     """Valeur du formulaire → (echeance, frais annexe ou None), ou None
     si elle ne correspond à rien de payable par cet élève."""
@@ -125,12 +199,12 @@ def analyser_echeance(valeur, eleve):
         return valeur, None
     if valeur and valeur.startswith("annexe_") and valeur[7:].isdigit():
         frais = db.session.get(FraisAnnexe, int(valeur[7:]))
-        if frais and frais.classe_id in (None, eleve.classe_id):
+        if frais and frais.classe_id in (None, eleve.classe_id) and frais.annee_scolaire == eleve.classe.annee_scolaire:
             return ECHEANCE_ANNEXE, frais
     return None
 
 
-def enregistrer_paiement(eleve, montant, mode, echeance, utilisateur, reference=None, frais_annexe=None):
+def enregistrer_paiement(eleve, montant, mode, echeance, utilisateur, reference=None, frais_annexe=None, annee=None):
     """Point d'entrée UNIQUE pour enregistrer un paiement de scolarité,
     utilisé à la fois par Finances et par le formulaire officiel de Caisse.
 
@@ -150,7 +224,7 @@ def enregistrer_paiement(eleve, montant, mode, echeance, utilisateur, reference=
     paiement = Paiement(
         eleve_id=eleve.id, montant=montant, mode=mode, echeance=echeance,
         numero_recu=numero_recu, reference=(reference or None),
-        annee_scolaire=Eleve.annee_scolaire_courante(),
+        annee_scolaire=annee or Eleve.annee_scolaire_courante(),
         enregistre_par_id=utilisateur.id,
         frais_annexe_id=frais_annexe.id if frais_annexe else None,
     )
@@ -164,8 +238,9 @@ def enregistrer_paiement(eleve, montant, mode, echeance, utilisateur, reference=
         reference=numero_recu,
         libelle=(
             f"{frais_annexe.libelle} — {eleve.nom_complet}{parent_txt}" if frais_annexe
-            else f"Scolarité — {eleve.nom_complet} ({LIBELLES_ECHEANCE[echeance]}){parent_txt}"
-        ),
+            else f"Scolarité — {eleve.nom_complet} ({LIBELLES_ECHEANCE[echeance]}"
+                 f"{', ' + annee if annee and annee != Eleve.annee_scolaire_courante() else ''}){parent_txt}"
+        )[:200],
         recette=montant,
         depense=0,
         responsable_id=utilisateur.id,
@@ -181,3 +256,21 @@ def enregistrer_paiement(eleve, montant, mode, echeance, utilisateur, reference=
     notifier_paiement(paiement, eleve)
 
     return paiement
+
+
+def arrieres(eleve):
+    """[(année, résumé)] des années passées où il reste quelque chose à
+    payer, d'après les classes fréquentées (historique scolaire)."""
+    from app.models.historique import HistoriqueScolaire
+
+    courante = Eleve.annee_scolaire_courante()
+    resultat = []
+    vues = set()
+    for h in HistoriqueScolaire.query.filter_by(eleve_id=eleve.id).order_by(HistoriqueScolaire.annee_scolaire.desc()).all():
+        if h.annee_scolaire >= courante or h.annee_scolaire in vues or h.classe is None:
+            continue
+        vues.add(h.annee_scolaire)
+        resume = resume_paiements(eleve, h.annee_scolaire, classe=h.classe)
+        if resume["solde"] > 0:
+            resultat.append((h.annee_scolaire, resume))
+    return resultat
