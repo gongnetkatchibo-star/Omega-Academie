@@ -18,14 +18,14 @@ def test_ecole_voit_et_repond_au_fil_dun_parent(client, creer_utilisateur):
 
     connecter(client, "parent@test.com")
     client.post("/messagerie/envoyer", data={"contenu": "Bonjour"})
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "secr@test.com")
     r = client.get("/messagerie/")
     assert "Parent" in r.data.decode() and "1 non lu" in r.data.decode()
 
     client.post(f"/messagerie/{parent.id}/repondre", data={"contenu": "Réponse de l'école"})
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "parent@test.com")
     r = client.get("/messagerie/")

@@ -86,7 +86,7 @@ def test_hors_campagne_le_formulaire_est_ferme_et_l_administration_l_ouvre(clien
     creer_utilisateur("Parent", "p@t.td", "parent")
     connecter(client, "p@t.td")
     assert client.post("/pre-inscriptions/campagne", data={"ouvrir": "1"}).status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     creer_utilisateur("Secrétaire", "sec@t.td", "secretaire")
     connecter(client, "sec@t.td")
@@ -94,7 +94,7 @@ def test_hors_campagne_le_formulaire_est_ferme_et_l_administration_l_ouvre(clien
     assert "Ouvrir la campagne" in page and "/e/ecole-test/pre-inscription" not in page
     page = _texte(client.post("/pre-inscriptions/campagne", data={"ouvrir": "1"}, follow_redirects=True))
     assert "Fermer la campagne" in page and "/e/ecole-test/pre-inscription" in page and "wa.me" in page
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     # Campagne ouverte : le lien partagé mène au formulaire.
     r = client.get("/e/ecole-test/pre-inscription")
@@ -105,7 +105,7 @@ def test_hors_campagne_le_formulaire_est_ferme_et_l_administration_l_ouvre(clien
 
     connecter(client, "sec@t.td")
     client.post("/pre-inscriptions/campagne", data={"ouvrir": "0"})
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     assert "Les pré-inscriptions sont fermées" in _texte(client.get("/pre-inscriptions/demande/1"))
 
 
@@ -147,7 +147,7 @@ def test_refus_et_droits(client, db, creer_utilisateur, monkeypatch):
     creer_utilisateur("Parent", "p@t.td", "parent")
     connecter(client, "p@t.td")
     assert client.get("/pre-inscriptions/").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     creer_utilisateur("Secrétaire", "sec@t.td", "secretaire")
     connecter(client, "sec@t.td")
     client.post(f"/pre-inscriptions/{demande.id}/refuser", data={"motif_refus": "Classe complète"})
@@ -198,7 +198,7 @@ def test_retard_signale_et_relance_aux_parents(client, db, bibliotheque, monkeyp
     assert "Le Petit Prince" in _texte(client.get("/bibliotheque/livres/prets?retard=1"))
     client.post(f"/bibliotheque/livres/pret/{pret.id}/relancer")
     assert envois == [["parent@t.td"]]
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     # Le parent voit le livre emprunté sur la fiche de son enfant.
     connecter(client, "parent@t.td")
     assert "Le Petit Prince" in _texte(client.get(f"/eleves/{bibliotheque['eleve'].id}"))

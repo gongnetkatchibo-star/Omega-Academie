@@ -11,7 +11,7 @@ from app.models.historique import HistoriqueScolaire
 from app.models.user import User
 from app.eleves import eleves_bp
 from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
-from app.services.cycles import cycle_du_role, filtrer_par_cycle, classe_dans_le_cycle
+from app.services.cycles import cycle_du_role, filtrer_par_cycle, classe_dans_le_cycle, exiger_classe_du_cycle
 from app.services.whatsapp import contacts as contacts_whatsapp
 from app.services.temps import maintenant
 
@@ -364,10 +364,13 @@ def nouveau():
     # On n'inscrit un nouvel élève que dans une classe de l'année en
     # cours — les classes des années passées restent consultables mais
     # ne doivent jamais recevoir de nouvelle inscription.
-    classes = Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau).all()
+    classes = filtrer_par_cycle(
+        Classe.query.filter_by(annee_scolaire=Eleve.annee_scolaire_courante()).order_by(Classe.niveau).all(),
+        cycle_du_role(current_user.role),
+    )
 
     if request.method == "POST":
-        nom_complet = request.form.get("nom_complet", "").strip()
+        nom_complet = request.form.get("nom_complet", "").strip()[:120]
         classe_id = request.form.get("classe_id", type=int)
         date_naissance_str = request.form.get("date_naissance", "")
         sexe = request.form.get("sexe")
@@ -382,18 +385,25 @@ def nouveau():
             try:
                 date_naissance = datetime.strptime(date_naissance_str, "%Y-%m-%d").date()
             except ValueError:
-                pass
+                flash("Date de naissance invalide.", "error")
+                return render_template("eleves/nouveau.html", classes=classes)
+            if date_naissance >= maintenant().date() or date_naissance.year < 1950:
+                flash("Date de naissance invalide.", "error")
+                return render_template("eleves/nouveau.html", classes=classes)
 
-        classe = db.session.get(Classe, classe_id)
+        # Seulement une classe de l'année en cours et du cycle de la personne.
+        classe = next((c for c in classes if c.id == classe_id), None)
         if classe is None:
             flash("Classe introuvable.", "error")
             return render_template("eleves/nouveau.html", classes=classes)
+        from app.services.numeros import normaliser_numero_ecole
+        telephone_parent = normaliser_numero_ecole(telephone_parent)
         eleve = Eleve(
             matricule=Eleve.generer_matricule(classe),
             nom_complet=nom_complet,
             classe_id=classe_id,
             date_naissance=date_naissance,
-            sexe=sexe,
+            sexe=sexe if sexe in ("M", "F") else None,
             telephone_parent=telephone_parent or None,
         )
         erreur_dossier = _appliquer_dossier(eleve)
@@ -536,6 +546,7 @@ def reintegrer(eleve_id):
 @roles_required(*ROLES_GESTION, module="eleves")
 def ajouter_parent(eleve_id):
     eleve = db.get_or_404(Eleve, eleve_id)
+    exiger_classe_du_cycle(eleve.classe)
     parent_id = request.form.get("parent_id", type=int)
 
     # Tout compte actif peut être lié comme parent (personnel compris),
@@ -543,6 +554,8 @@ def ajouter_parent(eleve_id):
     parent = User.query.filter(User.id == parent_id, User.statut == "actif", User.role != "eleve").first()
     if not parent:
         flash("Compte introuvable ou pas encore actif.", "error")
+    elif parent.id == current_user.id:
+        flash("Tu ne peux pas te lier toi-même à un élève : un autre membre de la direction ou du secrétariat doit le faire.", "error")
     elif parent in eleve.parents:
         flash(f"{parent.nom_complet} est déjà lié à {eleve.nom_complet}.", "error")
     elif len(eleve.parents) >= MAX_PARENTS_PAR_ELEVE:
@@ -555,6 +568,8 @@ def ajouter_parent(eleve_id):
         if not eleve.telephone_parent and parent.telephone:
             eleve.telephone_parent = parent.telephone
         eleve.actualiser_statut_dossier()
+        from app.services.journal import journaliser
+        journaliser("liaison_parent", details=f"{parent.nom_complet} → {eleve.nom_complet}", cible_type="Eleve", cible_id=eleve.id)
         db.session.commit()
         flash(f"{parent.nom_complet} est maintenant lié à {eleve.nom_complet}.", "info")
     return redirect(url_for("eleves.detail", eleve_id=eleve.id))
@@ -565,13 +580,34 @@ def ajouter_parent(eleve_id):
 @roles_required(*ROLES_GESTION, module="eleves")
 def retirer_parent(eleve_id, parent_id):
     eleve = db.get_or_404(Eleve, eleve_id)
+    exiger_classe_du_cycle(eleve.classe)
     parent = db.get_or_404(User, parent_id)
     if parent in eleve.parents:
         eleve.parents.remove(parent)
         eleve.actualiser_statut_dossier()
+        from app.services.journal import journaliser
+        journaliser("retrait_parent", details=f"{parent.nom_complet} ← {eleve.nom_complet}", cible_type="Eleve", cible_id=eleve.id)
         db.session.commit()
         flash(f"{parent.nom_complet} délié de {eleve.nom_complet}.", "info")
     return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+
+
+def _suffixe(nom):
+    """« 6e A » → « A », « CM2 » → « » : ce qui distingue les classes d'un même niveau."""
+    morceaux = (nom or "").split(maxsplit=1)
+    return morceaux[1].strip().upper() if len(morceaux) > 1 else ""
+
+
+def _classe_choisie(candidates, choix_id, origine):
+    """La classe choisie si elle est parmi les candidates ; sinon celle qui
+    porte le même suffixe que la classe d'origine ; sinon la première."""
+    if not candidates:
+        return None
+    for c in candidates:
+        if c.id == choix_id:
+            return c
+    meme_suffixe = [c for c in candidates if _suffixe(c.nom) == _suffixe(origine.nom) and (c.serie or None) == (origine.serie or None)]
+    return (meme_suffixe or [c for c in candidates if _suffixe(c.nom) == _suffixe(origine.nom)] or candidates)[0]
 
 
 DECISIONS_PASSAGE = {
@@ -593,15 +629,24 @@ def passage_en_masse():
     toutes = filtrer_par_cycle(Classe.query.order_by(Classe.annee_scolaire.desc(), Classe.niveau, Classe.nom).all(), cycle)
     classe = next((c for c in toutes if c.id == request.values.get("classe_id", type=int)), None)
     if classe is None:
-        avec_eleves = [c for c in toutes if Eleve.query.filter_by(classe_id=c.id, actif=True).count()]
+        from sqlalchemy import func
+        effectifs = dict(
+            db.session.query(Eleve.classe_id, func.count(Eleve.id)).filter(Eleve.actif.is_(True)).group_by(Eleve.classe_id).all()
+        )
+        avec_eleves = [c for c in toutes if effectifs.get(c.id)]
         return render_template("eleves/passage_en_masse.html", classe=None, classes=avec_eleves)
 
     annees_suivantes = sorted({c.annee_scolaire for c in toutes if c.annee_scolaire > classe.annee_scolaire})
     annee_cible = request.values.get("annee_cible") or (annees_suivantes[0] if annees_suivantes else None)
     if annee_cible not in annees_suivantes:
         annee_cible = None
-    superieure = Classe.query.filter_by(niveau=classe.niveau + 1, annee_scolaire=annee_cible).order_by(Classe.nom).first() if annee_cible else None
-    meme_niveau = Classe.query.filter_by(niveau=classe.niveau, annee_scolaire=annee_cible).order_by(Classe.nom).first() if annee_cible else None
+    # Classes d'arrivée possibles ; la direction choisit (6e A → 5e A ou 5e B).
+    candidates_sup = filtrer_par_cycle(
+        Classe.query.filter_by(niveau=classe.niveau + 1, annee_scolaire=annee_cible).order_by(Classe.nom).all(), cycle,
+    ) if annee_cible else []
+    candidates_meme = Classe.query.filter_by(niveau=classe.niveau, annee_scolaire=annee_cible).order_by(Classe.nom).all() if annee_cible else []
+    superieure = _classe_choisie(candidates_sup, request.values.get("dest_admis", type=int), classe)
+    meme_niveau = _classe_choisie(candidates_meme, request.values.get("dest_redouble", type=int), classe)
 
     eleves = Eleve.query.filter_by(classe_id=classe.id, actif=True).order_by(Eleve.nom_complet).all()
     calcul = bulletins_de_la_classe(classe, "AN", classe.annee_scolaire)
@@ -651,6 +696,7 @@ def passage_en_masse():
     return render_template(
         "eleves/passage_en_masse.html", classe=classe, eleves=eleves, calcul=calcul, annee_cible=annee_cible,
         annees_suivantes=annees_suivantes, superieure=superieure, meme_niveau=meme_niveau,
+        candidates_sup=candidates_sup, candidates_meme=candidates_meme,
         propositions={e.id: proposition(e) for e in eleves}, decisions=DECISIONS_PASSAGE,
     )
 
@@ -659,18 +705,24 @@ def passage_en_masse():
 @login_required
 @roles_required(*ROLES_GESTION, module="eleves")
 def passage(eleve_id):
+    """Passage d'un seul élève vers la classe supérieure de l'année
+    suivante (comme le passage en masse), d'après sa moyenne annuelle."""
     eleve = db.get_or_404(Eleve, eleve_id)
-    classe_actuelle = eleve.classe
-    annee = Eleve.annee_scolaire_courante()
+    classe_actuelle = exiger_classe_du_cycle(eleve.classe)
+    annee = classe_actuelle.annee_scolaire
 
-    classe_suivante = Classe.query.filter_by(niveau=classe_actuelle.niveau + 1, annee_scolaire=classe_actuelle.annee_scolaire).first()
+    suivantes = sorted({c.annee_scolaire for c in Classe.query.filter(Classe.annee_scolaire > annee).all()})
+    if not suivantes:
+        flash("L'année scolaire suivante n'existe pas encore : démarre-la depuis « Classes », puis reviens ici.", "error")
+        return redirect(url_for("eleves.detail", eleve_id=eleve.id))
+    candidates = Classe.query.filter_by(niveau=classe_actuelle.niveau + 1, annee_scolaire=suivantes[0]).order_by(Classe.nom).all()
+    classe_suivante = _classe_choisie(candidates, None, classe_actuelle)
     if not classe_suivante:
-        flash("Aucune classe supérieure n'est encore définie après cette classe.", "error")
+        flash("Aucune classe supérieure n'existe dans l'année suivante.", "error")
         return redirect(url_for("eleves.detail", eleve_id=eleve.id))
 
     # Admission automatique selon la moyenne (document complémentaire,
-    # sept. 2026) : Primaire >= 5/10, Collège >= 10/20. Le secrétariat ne
-    # décide plus lui-même — le système calcule et applique le critère.
+    # sept. 2026) : Primaire >= 5/10, Collège >= 10/20.
     moyenne = moyenne_eleve(eleve, annee)
     reussite = a_reussi(eleve, annee)
 
@@ -694,8 +746,8 @@ def passage(eleve_id):
         db.session.commit()
         flash(
             f"{eleve.nom_complet} n'atteint pas la moyenne requise ({moyenne} — "
-            f"seuil {seuil_reussite_pour_classe(classe_actuelle)}) : il/elle redouble "
-            f"{classe_actuelle.nom}, pas de passage en classe supérieure.",
+            f"seuil {seuil_reussite_pour_classe(classe_actuelle)}) : utilise « Passage de classe » "
+            f"pour l'inscrire comme redoublant dans l'année suivante.",
             "error",
         )
         return redirect(url_for("eleves.detail", eleve_id=eleve.id))
@@ -707,7 +759,7 @@ def passage(eleve_id):
     db.session.add(HistoriqueScolaire(
         eleve_id=eleve.id,
         classe_id=classe_suivante.id,
-        annee_scolaire=annee,
+        annee_scolaire=suivantes[0],
         resultat="en_cours",
     ))
     db.session.commit()

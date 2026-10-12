@@ -10,7 +10,7 @@ def test_verrouiller_bloque_la_connexion(client, creer_utilisateur):
 
     connecter(client, "dev@test.com")
     client.post(f"/developpeur/utilisateur/{secr.id}/verrouiller")
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     r = connecter(client, "secr@test.com")
     assert "verrouillé" in r.data.decode()
@@ -51,7 +51,7 @@ def test_deverrouiller_permet_de_nouveau_la_connexion(client, creer_utilisateur)
 
     connecter(client, "dev@test.com")
     client.post(f"/developpeur/utilisateur/{secr.id}/verrouiller")
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     r = connecter(client, "secr@test.com")
     assert r.status_code == 200

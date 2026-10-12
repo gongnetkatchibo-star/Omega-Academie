@@ -38,9 +38,10 @@ class Ecole(db.Model):
     # comptabilité (sauf sur un appareil de confiance).
     double_authentification = db.Column(db.Boolean, nullable=False, default=False)
     logo_path = db.Column(db.String(255))
-    logo = db.Column(db.LargeBinary)
+    # Chargés seulement quand on les affiche (jusqu'à 2 Mo chacun).
+    logo = db.deferred(db.Column(db.LargeBinary))
     logo_mime = db.Column(db.String(50))
-    filigrane = db.Column(db.LargeBinary)
+    filigrane = db.deferred(db.Column(db.LargeBinary))
     filigrane_mime = db.Column(db.String(50))
     # Signature du signataire et cachet de l'école (PNG à fond transparent),
     # imprimés sur les documents si l'école le choisit — voir
@@ -48,6 +49,8 @@ class Ecole(db.Model):
     signature = db.deferred(db.Column(db.LargeBinary))
     cachet = db.deferred(db.Column(db.LargeBinary))
     actif = db.Column(db.Boolean, default=True, nullable=False)
+    # Espace de stockage accordé (octets) ; vide = quota par défaut (5 Go).
+    quota_stockage = db.Column(db.BigInteger)
     date_creation = db.Column(db.DateTime, default=maintenant)
 
     utilisateurs = db.relationship("User", back_populates="ecole")

@@ -226,7 +226,7 @@ def test_la_direction_voit_les_annonces_qu_elle_adresse_aux_parents(client, db, 
     assert client.get(f"/communication/{annonce_id}").status_code == 200
 
     def voit(email):
-        client.get("/auth/deconnexion")
+        client.post("/auth/deconnexion")
         connecter(client, email)
         return "Réunion des parents" in _texte(client.get("/communication/")), client.get(f"/communication/{annonce_id}").status_code
 
@@ -244,7 +244,7 @@ def test_un_enseignant_retrouve_ses_propres_annonces(client, db, creer_utilisate
     _publier(client, "Devoir de vacances", "eleve")
     page = _texte(client.get("/communication/"))
     assert "Devoir de vacances" in page and "Supprimer" in page
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "prof2@t.td")
     assert "Devoir de vacances" not in _texte(client.get("/communication/"))
 
@@ -268,12 +268,12 @@ def test_piece_jointe_enregistree_en_base_et_dans_la_sauvegarde(app, client, db,
     assert annonce.fichier == b"%PDF-1.4 fournitures" and annonce.fichier_mime == "application/pdf"
     assert not os.path.exists(os.path.join(app.instance_path, "communication", "Liste_fournitures.pdf"))
 
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "parent@t.td")
     r = client.get(f"/communication/{annonce.id}/fichier")
     assert r.status_code == 200 and r.data == b"%PDF-1.4 fournitures"
     assert "attachment" in r.headers["Content-Disposition"] and "Liste_fournitures.pdf" in r.headers["Content-Disposition"]
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "eleve@t.td")
     assert client.get(f"/communication/{annonce.id}/fichier").status_code == 403
 

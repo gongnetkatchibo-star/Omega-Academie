@@ -5,6 +5,10 @@ from app.extensions import db
 from app.services.temps import maintenant
 
 TYPES_RESSOURCE = ["livre", "cours", "exercice", "video"]
+LIBELLES_TYPE = {"livre": "Livre", "cours": "Cours", "exercice": "Exercice", "video": "Vidéo"}
+# Public d'une ressource : toute l'école, ou le personnel seulement
+# (corrigés, guides du maître… invisibles des parents et des élèves).
+PUBLICS_RESSOURCE = {"tous": "Toute l'école", "personnel": "Personnel seulement"}
 
 
 class Ressource(AppartientEcole, db.Model):
@@ -23,6 +27,7 @@ class Ressource(AppartientEcole, db.Model):
     # elle reste consultable en ligne (lecture inline) mais ne peut plus
     # être téléchargée ni sortir dans un export groupé (sept. 2026).
     consultation_sur_place = db.Column(db.Boolean, default=False, nullable=False)
+    public = db.Column(db.String(20), nullable=False, default="tous")
 
     # Le fichier lui-même est stocké EN BASE (pas sur le disque du
     # serveur) : Render efface le disque à chaque redéploiement sur le

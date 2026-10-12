@@ -39,13 +39,13 @@ def test_matrice_de_permissions_peut_accorder_un_acces(client, creer_utilisateur
     # Par défaut, le secrétariat n'a pas accès aux salaires.
     connecter(client, "secr@test.com")
     assert client.get("/salaires/").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     # Le développeur accorde l'accès via la matrice de permissions.
     connecter(client, "dev@test.com")
     r = client.post("/developpeur/permissions/enregistrer", data={"secretaire__salaires": "on"}, follow_redirects=True)
     assert r.status_code == 200
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     # Le secrétariat y a maintenant accès.
     connecter(client, "secr@test.com")

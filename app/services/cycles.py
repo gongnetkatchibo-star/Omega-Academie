@@ -27,6 +27,18 @@ def classe_dans_le_cycle(classe, cycle):
     return cycle is None or cycle_de_la_classe(classe) == cycle
 
 
+def exiger_classe_du_cycle(classe):
+    """403 si la personne connectée est un directeur de cycle et que la
+    classe n'est pas dans son cycle (audit oct. 2026 : plusieurs actions
+    ne faisaient pas ce contrôle)."""
+    from flask import abort
+    from flask_login import current_user
+
+    if classe is None or not classe_dans_le_cycle(classe, cycle_du_role(current_user.role)):
+        abort(403)
+    return classe
+
+
 def filtrer_par_cycle(classes, cycle):
     if cycle is None:
         return classes

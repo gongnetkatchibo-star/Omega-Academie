@@ -59,7 +59,7 @@ def test_remise_reservee_a_la_direction(client, db, scolarite, creer_utilisateur
     from flask import g
 
     creer_utilisateur("Compta", "c@t.com", "comptable")
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     g.pop("_login_user", None)
     connecter(client, "c@t.com")
     assert client.post(f"/finances/{scolarite['eleve']}/remise", data={"remise_pourcent": "100"}).status_code == 403

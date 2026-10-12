@@ -437,9 +437,18 @@ def create_app(config_name=None):
         # Chargé sans filtre d'école : c'est justement ce compte qui
         # détermine l'école de la requête.
         from sqlalchemy import select
-        return db.session.execute(
-            select(User).where(User.id == int(user_id)).execution_options(tous_etablissements=True)
+        identifiant, _, version = str(user_id).partition(".")
+        try:
+            identifiant, version = int(identifiant), int(version or 0)
+        except ValueError:
+            return None
+        user = db.session.execute(
+            select(User).where(User.id == identifiant).execution_options(tous_etablissements=True)
         ).scalar_one_or_none()
+        # Session ouverte avant un changement de mot de passe : refusée.
+        if user is None or (user.version_session or 0) != version:
+            return None
+        return user
 
     @app.before_request
     def fixer_ecole_courante():
@@ -455,6 +464,11 @@ def create_app(config_name=None):
         g.ecole_obj = None
         if req.endpoint == "static" or not current_user.is_authenticated:
             return
+        if not current_user.is_active:
+            # Compte verrouillé ou refusé pendant qu'il était connecté.
+            logout_user()
+            flash("Ce compte n'est plus actif. Contacte l'administration de l'école.", "error")
+            return redirect(url_for("auth.connexion"))
         ecole_id = determiner_ecole(current_user)
         if not est_super_admin(current_user):
             ecole = db.session.get(Ecole, ecole_id) if ecole_id else None
@@ -674,5 +688,7 @@ def create_app(config_name=None):
         rattacher_notes_sans_evaluation(app)
         from app.services.liens_ecole import attribuer_identifiants_manquants
         attribuer_identifiants_manquants(app)
+        from app.communication.routes import migrer_pieces_jointes_disque
+        migrer_pieces_jointes_disque(app)
 
     return app

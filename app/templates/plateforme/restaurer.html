@@ -17,6 +17,9 @@
     <label>{{ _("Pour confirmer, retape «") }} {{ etab.sigle or etab.nom }} »
       <input type="text" name="confirmation" autocomplete="off" required>
     </label>
+    <label class="ligne-case"><input type="checkbox" name="autre_ecole"> {{ _("Restaurer quand même si l'archive vient d'une autre école (migration)") }}</label>
+    <label class="ligne-case"><input type="checkbox" name="ignorer_signature"> {{ _("Ignorer la signature (archive produite par un autre serveur)") }}</label>
+    <p class="lien-secondaire">{{ _("Par sécurité, une restauration ne crée jamais de compte administrateur de la plateforme.") }}</p>
     <button type="submit" class="bouton-danger">{{ _("Restaurer") }}</button>
   </form>
 {% endblock %}

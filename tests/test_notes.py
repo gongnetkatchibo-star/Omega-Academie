@@ -89,7 +89,7 @@ def test_evaluation_reservee_a_l_enseignant_de_la_matiere(client, creer_utilisat
     db.session.commit()
     connecter(client, "prof@test.com")
     evaluation_id = _creer_evaluation(client, classe)
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     g.pop("_login_user", None)
     connecter(client, "autre@test.com")
     assert client.get(f"/notes/evaluation/{evaluation_id}").status_code == 403
@@ -137,7 +137,9 @@ def test_admission_automatique_valide_au_dessus_du_seuil(client, creer_utilisate
 
     creer_utilisateur("Fond", "fond@test.com", "fondateur")
     cp1 = creer_classe(nom="CP1", niveau=1)
-    creer_classe(nom="CP2", niveau=2)
+    debut = int(Eleve.annee_scolaire_courante()[:4])
+    # Le passage se fait vers la classe supérieure de l'année suivante.
+    creer_classe(nom="CP2", niveau=2, annee=f"{debut + 1}-{debut + 2}")
     eleve = creer_eleve("Eleve Bon", cp1)
     db.session.add(Note(eleve_id=eleve.id, classe_id=cp1.id, matiere="Français", valeur=8, bareme=10, trimestre="T1", annee_scolaire=Eleve.annee_scolaire_courante()))
     db.session.commit()

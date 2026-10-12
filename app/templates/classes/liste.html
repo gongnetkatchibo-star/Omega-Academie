@@ -42,8 +42,9 @@
         <li class="carte-demande">
           <div class="infos">
             <strong>{{ c.nom }}{% if c.serie %} <span class="badge-retard">{{ _("série") }} {{ c.serie }}</span>{% endif %}</strong>
-            <span>{{ _(c.cycle) }} · {{ c.annee_scolaire }} · {{ c.eleves.count() }} {{ _("élève(s) · total annuel") }} {{ c.frais_annuel|fcfa }}</span>
-            {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "comptable") %}
+            {% set voit_frais = acces("comptable", "fondateur", "administrateur_general", module="finances") %}
+            <span>{{ _(c.cycle) }} · {{ c.annee_scolaire }} · {{ effectifs.get(c.id, 0) }} {{ _("élève(s)") }}{% if voit_frais %} · {{ _("total annuel") }} {{ c.frais_annuel|fcfa }}{% endif %}</span>
+            {% if voit_frais %}
               <form method="post" action="{{ url_for('classes.modifier_frais', classe_id=c.id) }}" class="ligne-frais">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label>{{ _("Inscription") }}
@@ -62,6 +63,9 @@
           <div class="actions">
             <a href="{{ url_for('eleves.liste', classe_id=c.id) }}">{{ _("Élèves") }}</a>
             <a href="{{ url_for('emploi_du_temps.classe', classe_id=c.id) }}">{{ _("Emploi du temps") }}</a>
+            {% if acces("secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general", module="classes") %}
+              <a href="{{ url_for('classes.modifier', classe_id=c.id) }}">{{ _("Modifier") }}</a>
+            {% endif %}
             {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", "enseignant") %}
               <a href="{{ url_for('suivi_cours.classe', classe_id=c.id) }}">{{ _("Suivi") }}</a>
             {% endif %}

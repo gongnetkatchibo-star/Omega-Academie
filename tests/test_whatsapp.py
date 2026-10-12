@@ -78,7 +78,7 @@ def test_droits_par_type_d_envoi(client, creer_utilisateur, eleve_absent):
     creer_utilisateur("Prof", "e@t.com", "enseignant")
     connecter(client, "e@t.com")
     assert client.get("/relances/").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     creer_utilisateur("Secr", "s@t.com", "secretaire")
     connecter(client, "s@t.com")
@@ -93,7 +93,7 @@ def test_le_comptable_relance_un_paiement_en_retard(client, db, creer_utilisateu
     client.post("/developpeur/parametres", data={
         "nom": "École Test", "sigle": "ET", "prefixe_matricule": "ET26", "date_limite_inscription": hier.isoformat(),
     })
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     from flask import g
     g.pop("_contexte_frais", None)  # les tests partagent le même g d'une requête à l'autre
 

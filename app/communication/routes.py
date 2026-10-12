@@ -2,9 +2,8 @@ import io
 import os
 from datetime import datetime
 
-from flask import render_template, redirect, url_for, flash, request, send_from_directory, send_file, current_app, abort
+from flask import render_template, redirect, url_for, flash, request, send_file, abort
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.annonce import Annonce, DESTINATAIRES, DESTINATAIRES_ENSEIGNANT, LIBELLES_DESTINATAIRE
@@ -18,14 +17,6 @@ ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "admini
 # annonces de l'école, y compris celles adressées aux parents ou aux
 # élèves : ce sont eux qui les publient et qui en répondent.
 ROLES_TOUT_VOIR = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire"]
-
-
-def _dossier_upload():
-    """Ancien emplacement des pièces jointes (sur le disque). Les
-    nouvelles sont enregistrées en base, avec l'annonce."""
-    dossier = os.path.join(current_app.instance_path, "communication")
-    os.makedirs(dossier, exist_ok=True)
-    return dossier
 
 
 def _voit_tout():
@@ -124,9 +115,19 @@ def nouvelle():
         if fichier and fichier.filename:
             # La pièce jointe est enregistrée en base, avec l'annonce :
             # elle fait ainsi partie des sauvegardes de l'école.
-            annonce.nom_fichier = secure_filename(fichier.filename)[:255] or "piece_jointe"
-            annonce.fichier = fichier.read()
-            annonce.fichier_mime = (fichier.mimetype or "application/octet-stream")[:100]
+            from app.utils import nom_fichier_sur, type_mime_sur
+            contenu = fichier.read()
+            if not contenu:
+                flash("La pièce jointe est vide.", "error")
+                return formulaire()
+            from app.services.stockage import place_disponible
+            erreur = place_disponible(len(contenu))
+            if erreur:
+                flash(erreur, "error")
+                return formulaire()
+            annonce.nom_fichier = nom_fichier_sur(fichier.filename)[:255] or "piece_jointe"
+            annonce.fichier = contenu
+            annonce.fichier_mime = type_mime_sur(annonce.nom_fichier)[:100]
         db.session.add(annonce)
         db.session.commit()
 
@@ -163,10 +164,6 @@ def supprimer(annonce_id):
     if current_user.role not in ROLES_TOUT_VOIR and not (current_user.role == "enseignant" and est_auteur):
         abort(403)
 
-    if annonce.nom_fichier:
-        chemin = os.path.join(_dossier_upload(), annonce.nom_fichier)
-        if os.path.exists(chemin):
-            os.remove(chemin)
     db.session.delete(annonce)
     db.session.commit()
     flash("Annonce supprimée.", "info")
@@ -181,12 +178,43 @@ def telecharger(annonce_id):
         abort(403)
     if not annonce.nom_fichier:
         abort(404)
-    if annonce.fichier:
-        # Toujours en téléchargement, jamais affichée dans la page : un
-        # fichier envoyé par un utilisateur ne s'exécute pas dans le site.
-        return send_file(
-            io.BytesIO(annonce.fichier), as_attachment=True, download_name=annonce.nom_fichier,
-            mimetype=annonce.fichier_mime or "application/octet-stream",
-        )
-    # Pièce jointe d'avant l'enregistrement en base : encore sur le disque.
-    return send_from_directory(_dossier_upload(), annonce.nom_fichier, as_attachment=True)
+    if not annonce.fichier:
+        # Les anciennes pièces jointes sur disque ont été reprises en base
+        # au démarrage (migrer_pieces_jointes_disque) ; le dossier commun à
+        # toutes les écoles n'est plus jamais lu.
+        abort(404)
+    # Toujours en téléchargement, jamais affichée dans la page : un
+    # fichier envoyé par un utilisateur ne s'exécute pas dans le site.
+    return send_file(
+        io.BytesIO(annonce.fichier), as_attachment=True, download_name=annonce.nom_fichier,
+        mimetype=annonce.fichier_mime or "application/octet-stream",
+    )
+
+
+def migrer_pieces_jointes_disque(app):
+    """Reprend en base les pièces jointes d'avant l'enregistrement en base
+    (dossier instance/communication, commun à toutes les écoles). Une
+    seule annonce reçoit chaque fichier ; le fichier disque n'est pas
+    effacé, par prudence."""
+    from sqlalchemy import select
+
+    dossier = os.path.join(app.instance_path, "communication")
+    if not os.path.isdir(dossier):
+        return 0
+    with app.app_context():
+        reprises = 0
+        deja = set()
+        annonces = db.session.execute(
+            select(Annonce).where(Annonce.nom_fichier.isnot(None)).execution_options(tous_etablissements=True)
+        ).scalars().all()
+        for annonce in annonces:
+            if annonce.fichier or annonce.nom_fichier in deja:
+                continue
+            chemin = os.path.join(dossier, os.path.basename(annonce.nom_fichier))
+            if os.path.isfile(chemin):
+                with open(chemin, "rb") as f:
+                    annonce.fichier = f.read()
+                deja.add(annonce.nom_fichier)
+                reprises += 1
+        db.session.commit()
+        return reprises

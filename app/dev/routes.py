@@ -44,6 +44,15 @@ def basculer_verrouillage_utilisateur(user_id):
     if utilisateur.id == current_user.id:
         flash("Tu ne peux pas verrouiller ton propre compte.", "error")
         return redirect(url_for("dev.utilisateurs"))
+    # On ne verrouille que quelqu'un placé sous soi : l'administrateur
+    # général ne verrouille pas le fondateur.
+    rang = {"developpeur": 0, "fondateur": 1, "administrateur_general": 2}
+    if rang.get(utilisateur.role, 3) <= rang.get(current_user.role, 3):
+        flash("Tu ne peux pas verrouiller ce compte : son rôle est égal ou supérieur au tien.", "error")
+        return redirect(url_for("dev.utilisateurs"))
+    if utilisateur.statut in ("en_attente", "refuse"):
+        flash("Ce compte n'a pas encore été validé : traite-le dans « Demandes de comptes ».", "error")
+        return redirect(url_for("dev.utilisateurs"))
 
     if utilisateur.statut == "verrouille":
         utilisateur.statut = "actif"

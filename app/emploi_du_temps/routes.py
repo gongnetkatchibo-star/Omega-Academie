@@ -72,7 +72,7 @@ def _conflit_creneau(classe_id, enseignant_id, jour, heure_debut, heure_fin, exc
 
 @emploi_du_temps_bp.route("/")
 @login_required
-@roles_required(*ROLES_GESTION)
+@roles_required(*ROLES_GESTION, module="emploi_du_temps")
 def index():
     """Entrée du menu : les classes de l'année, chacune avec son emploi du temps."""
     from app.models.eleve import Eleve

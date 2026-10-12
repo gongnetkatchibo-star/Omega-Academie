@@ -46,6 +46,7 @@ def enregistrer_commandes(app):
 
         dossier = dossier or os.path.join(app.instance_path, "sauvegardes")
         os.makedirs(dossier, exist_ok=True)
+        os.chmod(dossier, 0o700)  # les archives contiennent les mots de passe hachés
         url = make_url(app.config["SQLALCHEMY_DATABASE_URI"])
         horodatage = maintenant().strftime("%Y%m%d_%H%M%S")
 
@@ -115,7 +116,8 @@ def enregistrer_commandes(app):
                 tampon, nom_fichier = construire_archive()
                 chemin = os.path.join(dossier, prefixe + nom_fichier)
                 # Écriture en deux temps : jamais d'archive à moitié écrite.
-                with open(chemin + ".partiel", "wb") as fichier:
+                descripteur = os.open(chemin + ".partiel", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+                with os.fdopen(descripteur, "wb") as fichier:
                     fichier.write(tampon.getvalue())
                 os.replace(chemin + ".partiel", chemin)
                 click.echo(f"✓ {ecole.nom} : {chemin}")

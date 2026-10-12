@@ -99,7 +99,7 @@ def test_sauvegarde_puis_restauration_complete(client, db, creer_utilisateur, cr
     assert User.query.filter_by(role="developpeur").count() == 0  # le super-admin n'appartient à aucune école
 
     # Les comptes restaurés peuvent se reconnecter avec leur mot de passe.
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     r = connecter(client, "f@t.com")
     assert 'id="tableau-de-bord"' in r.get_data(as_text=True)
 
@@ -148,7 +148,7 @@ def test_conflit_avec_une_autre_ecole_annule_tout(client, db, creer_utilisateur,
     creer_utilisateur("Fond B", "b@t.com", "fondateur", ecole_id=2)
     archive = _sauvegarder(client)
     r = client.post("/plateforme/2/restaurer", data={
-        "confirmation": "AU", "archive": (io.BytesIO(archive), "s.zip"),
+        "confirmation": "AU", "archive": (io.BytesIO(archive), "s.zip"), "autre_ecole": "on",
     }, content_type="multipart/form-data", follow_redirects=True)
     assert "Restauration annulée" in r.get_data(as_text=True)
     db.session.remove()
@@ -169,3 +169,48 @@ def _zip(fichiers):
         for nom, contenu in fichiers.items():
             z.writestr(nom, contenu)
     return tampon.getvalue()
+
+
+def _archive_modifiee(archive, modifier):
+    with zipfile.ZipFile(io.BytesIO(archive)) as source:
+        donnees = json.loads(source.read("donnees.json"))
+    modifier(donnees)
+    tampon = io.BytesIO()
+    with zipfile.ZipFile(tampon, "w") as z:
+        z.writestr("donnees.json", json.dumps(donnees))
+    return tampon.getvalue()
+
+
+def test_archive_retouchee_ou_d_une_autre_ecole_refusee(client, db, creer_utilisateur, creer_classe, creer_eleve):
+    from app.models.ecole import Ecole
+    from app.models.user import User
+
+    creer_utilisateur("Dev", "dev@t.com", "developpeur")
+    _peupler(db, creer_utilisateur, creer_classe, creer_eleve)
+    archive = _sauvegarder(client)
+
+    def promouvoir(donnees):
+        for u in donnees["tables"]["users"]:
+            if u["email"] == "p@t.com":
+                u["role"] = "developpeur"
+
+    retouchee = _archive_modifiee(archive, promouvoir)
+    r = client.post("/plateforme/1/restaurer", data={"confirmation": "ET", "archive": (io.BytesIO(retouchee), "s.zip")},
+                    content_type="multipart/form-data", follow_redirects=True)
+    assert "signature" in r.get_data(as_text=True)
+
+    # Même en ignorant la signature, la restauration ne crée jamais d'administrateur de la plateforme.
+    r = client.post("/plateforme/1/restaurer", data={"confirmation": "ET", "ignorer_signature": "on",
+                                                     "archive": (io.BytesIO(retouchee), "s.zip")},
+                    content_type="multipart/form-data", follow_redirects=True)
+    assert "restauré" in r.get_data(as_text=True)
+    db.session.remove()
+    g.ecole_id = None
+    pirate = db.session.query(User).filter_by(email="p@t.com").execution_options(**TOUS).one()
+    assert pirate.role == "personnel" and pirate.statut == "verrouille"
+
+    db.session.add(Ecole(id=2, nom="Autre", sigle="AU", prefixe_matricule="AU26", actif=True))
+    db.session.commit()
+    r = client.post("/plateforme/2/restaurer", data={"confirmation": "AU", "archive": (io.BytesIO(archive), "s.zip")},
+                    content_type="multipart/form-data", follow_redirects=True)
+    assert "pas de « Autre »" in r.get_data(as_text=True)

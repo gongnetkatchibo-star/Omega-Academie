@@ -35,7 +35,7 @@ def test_permission_propre_a_une_ecole_ne_touche_pas_l_autre(client, db, deux_ec
     cases = {f"{r}__{m}": "on" for r in ROLES if r != "developpeur" for m, _ in MODULES if r in ROLES_PAR_DEFAUT.get(m, [])}
     cases["secretaire__finances"] = "on"
     client.post("/developpeur/permissions/enregistrer", data=cases)
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     from app.models.permission import Permission
     lignes = Permission.query.all()
@@ -43,7 +43,7 @@ def test_permission_propre_a_une_ecole_ne_touche_pas_l_autre(client, db, deux_ec
 
     connecter(client, "s1@t.td")
     assert client.get("/finances/").status_code == 200
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "s2@t.td")
     assert client.get("/finances/").status_code == 403
 
@@ -132,7 +132,9 @@ def test_le_secretariat_regle_les_roles_de_base_hors_finances(client, app, db, c
     creer_utilisateur("Prof", "p@t.td", "enseignant")
     connecter(client, "s@t.td")
     page = _texte(client.get("/developpeur/permissions"))
-    assert 'name="enseignant__alertes"' in page and 'name="eleve__bibliotheque"' in page
+    assert 'name="enseignant__alertes"' in page and 'name="eleve__classes"' in page
+    # Ce qu'elle n'a pas elle-même, ou la validation des comptes : jamais.
+    assert 'name="eleve__bibliotheque"' not in page and 'name="parent__secretariat"' not in page
     for absent in ("enseignant__finances", "enseignant__caisse", "enseignant__salaires", "enseignant__statistiques",
                    "enseignant__gestion_roles", "secretaire__", "comptable__", "fondateur__", "directeur_college__"):
         assert f'name="{absent}' not in page
@@ -148,7 +150,7 @@ def test_le_secretariat_regle_les_roles_de_base_hors_finances(client, app, db, c
     # « Revenir au réglage commun » n'efface que sa propre partie.
     client.post("/developpeur/permissions/reinitialiser")
     assert [(p.role, p.module) for p in Permission.query.all()] == [("comptable", "eleves")]
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
 
 # ------------------------------------------------------- double authentification
@@ -187,7 +189,7 @@ def test_la_direction_doit_saisir_le_code_recu_par_email(client, double_auth, cr
     assert client.get("/eleves/").status_code == 200
 
     # Appareil de confiance : plus de code à la prochaine connexion.
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     r = client.post("/auth/connexion", data={"email": "f@t.td", "mot_de_passe": "p12345678"})
     assert not r.headers["Location"].endswith("/auth/code-connexion")
 
@@ -207,7 +209,7 @@ def test_pas_de_code_pour_les_autres_roles_ni_sans_l_option(client, db, double_a
     creer_utilisateur("Prof", "p@t.td", "enseignant")
     r = client.post("/auth/connexion", data={"email": "p@t.td", "mot_de_passe": "p12345678"})
     assert r.headers["Location"].endswith("/")
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     double_auth.double_authentification = False
     db.session.commit()
     creer_utilisateur("Fondateur", "f@t.td", "fondateur")
@@ -267,12 +269,12 @@ def test_fiche_de_paie_detaillee_pour_la_compta_et_pour_l_interesse(client, db, 
     assert (salaire.salaire_base, salaire.montant) == (100000, 95000)
     r = client.get(f"/salaires/{salaire.id}/fiche")
     assert r.status_code == 200 and r.mimetype == "application/pdf"
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "p@t.td")
     assert "Octobre 2026" in _texte(client.get("/salaires/mes-fiches"))
     assert client.get(f"/salaires/{salaire.id}/fiche").mimetype == "application/pdf"
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "a@t.td")
     assert client.get(f"/salaires/{salaire.id}/fiche").status_code == 403
 

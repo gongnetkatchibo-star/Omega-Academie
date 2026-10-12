@@ -35,7 +35,7 @@ def test_bulletin_porte_un_code_verifiable_publiquement(client, db, creer_utilis
     assert len(_documents()) == 1
 
     # Vérification par quelqu'un qui n'a pas de compte.
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     page = client.get(f"/verifier/{document.code}")
     texte = page.get_data(as_text=True)
     assert page.status_code == 200

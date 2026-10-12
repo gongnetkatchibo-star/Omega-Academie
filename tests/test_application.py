@@ -68,7 +68,7 @@ def test_l_application_installee_porte_le_nom_et_le_logo_de_l_ecole(client, db, 
     connecter(client, "f@t.com")
     page = client.get("/").get_data(as_text=True)
     assert 'href="/e/ecole-test/manifest.webmanifest"' in page and "barre-devise-logo" in page
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     donnees = client.get("/e/ecole-test/manifest.webmanifest").get_json()  # lu sans cookie par le navigateur
     assert donnees["name"] == "École Test" and donnees["short_name"] == "ET"

@@ -250,7 +250,7 @@ def test_super_admin_cree_une_ecole_et_son_fondateur(client, db, creer_utilisate
     assert fondateur.ecole_id == ecole.id and fondateur.role == "fondateur"
 
     # Le nouveau fondateur se connecte et arrive dans SON école, vide.
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     db.session.remove()
     connecter(client, "g@t.com", "gamma12345")
     db.session.remove()

@@ -25,7 +25,7 @@ def tableau():
 
 @suivi_cours_bp.route("/classe/<int:classe_id>", methods=["GET", "POST"])
 @login_required
-@roles_required("enseignant", *ROLES_SUPERVISION)
+@roles_required("enseignant", *ROLES_SUPERVISION, module="suivi_cours")
 def classe(classe_id):
     classe_obj = db.get_or_404(Classe, classe_id)
     cycle = cycle_du_role(current_user.role)

@@ -106,7 +106,7 @@ def test_coefficients_modifiables_par_la_direction_seulement(client, db, creer_u
     cid = classe_notee["classe"]
     connecter(client, "s@t.com")
     assert client.get(f"/notes/classe/{cid}/coefficients").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     g.pop("_login_user", None)
     connecter(client, "d@t.com")
     page = client.get(f"/notes/classe/{cid}/coefficients").get_data(as_text=True)

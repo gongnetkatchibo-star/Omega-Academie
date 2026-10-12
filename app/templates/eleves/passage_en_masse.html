@@ -31,10 +31,25 @@
   {% elif not eleves %}
     {{ etat_vide("Tous les élèves de cette classe ont déjà été traités.") }}
   {% else %}
-    <p>
-      {{ _("Année d'arrivée :") }} <strong>{{ annee_cible }}</strong> {{ _("· Admis →") }} <strong>{{ superieure.nom if superieure else "aucune classe supérieure (fin de cycle)" }}</strong> {{ _("· Redoublants →") }} <strong>{{ meme_niveau.nom if meme_niveau else "classe absente de " ~ annee_cible }}</strong>
-    </p>
+    <form method="get" class="barre-recherche">
+      <input type="hidden" name="classe_id" value="{{ classe.id }}">
+      <input type="hidden" name="annee_cible" value="{{ annee_cible }}">
+      <span>{{ _("Année d'arrivée :") }} <strong>{{ annee_cible }}</strong></span>
+      <label>{{ _("Admis →") }}
+        {% if candidates_sup %}
+          <select name="dest_admis">{% for c in candidates_sup %}<option value="{{ c.id }}" {% if superieure and c.id == superieure.id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}</select>
+        {% else %}<strong>{{ _("aucune classe supérieure (fin de cycle)") }}</strong>{% endif %}
+      </label>
+      <label>{{ _("Redoublants →") }}
+        {% if candidates_meme %}
+          <select name="dest_redouble">{% for c in candidates_meme %}<option value="{{ c.id }}" {% if meme_niveau and c.id == meme_niveau.id %}selected{% endif %}>{{ c.nom }}</option>{% endfor %}</select>
+        {% else %}<strong>{{ _("classe absente de l'année d'arrivée") }}</strong>{% endif %}
+      </label>
+      {% if candidates_sup|length > 1 or candidates_meme|length > 1 %}<button type="submit">{{ _("Changer") }}</button>{% endif %}
+    </form>
     <form method="post">
+      {% if superieure %}<input type="hidden" name="dest_admis" value="{{ superieure.id }}">{% endif %}
+      {% if meme_niveau %}<input type="hidden" name="dest_redouble" value="{{ meme_niveau.id }}">{% endif %}
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="classe_id" value="{{ classe.id }}">
       <input type="hidden" name="annee_cible" value="{{ annee_cible }}">

@@ -5,7 +5,7 @@ from app.extensions import db
 from app.models.eleve import Eleve
 from app.models.paiement import Paiement, MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
 from app.finances import finances_bp
-from app.utils import roles_required
+from app.utils import roles_required, module_ouvert
 from app.services.paiements import enregistrer_paiement, resume_paiements, resumes_paiements, analyser_echeance
 from app.utils import montant_entier
 from app.services.journal import journaliser
@@ -54,6 +54,7 @@ def liste():
 @finances_bp.route("/<int:eleve_id>/remise", methods=["POST"])
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
+@module_ouvert("finances", ROLES_GESTION)
 def remise(eleve_id):
     """Remise sur la scolarité : réservée à la direction, comme la
     suppression d'un paiement."""
@@ -110,6 +111,7 @@ def frais_annexes():
 @finances_bp.route("/frais-annexes/<int:frais_id>/supprimer", methods=["POST"])
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
+@module_ouvert("finances", ROLES_GESTION)
 def supprimer_frais_annexe(frais_id):
     from app.models.frais_annexe import FraisAnnexe
 
@@ -261,6 +263,7 @@ def modifier_paiement(paiement_id):
 @finances_bp.route("/paiement/<int:paiement_id>/supprimer", methods=["POST"])
 @login_required
 @roles_required(*ROLES_SUPPRESSION)
+@module_ouvert("finances", ROLES_GESTION)
 def supprimer_paiement(paiement_id):
     paiement = db.get_or_404(Paiement, paiement_id)
     eleve_id = paiement.eleve_id

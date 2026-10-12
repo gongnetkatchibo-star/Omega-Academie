@@ -38,7 +38,7 @@ def test_la_direction_voit_l_argent_les_effectifs_et_les_absences(client, creer_
 
 def test_le_secretariat_ne_voit_pas_les_montants(client, creer_utilisateur, creer_classe, creer_eleve):
     _ecole_avec_un_paiement(client, creer_utilisateur, creer_classe, creer_eleve)
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     creer_utilisateur("Sec", "s@t.com", "secretaire")
     connecter(client, "s@t.com")
     page = _page(client)
@@ -56,7 +56,7 @@ def test_parent_et_enseignant_gardent_l_accueil_simple(client, creer_utilisateur
         page = _page(client)
         assert "accueil-carte-ecole" in page, role
         assert "Élèves inscrits" not in page, role
-        client.get("/auth/deconnexion")
+        client.post("/auth/deconnexion")
 
 
 def test_une_absence_du_jour_apparait_avec_sa_classe(client, db, creer_utilisateur, creer_classe, creer_eleve):

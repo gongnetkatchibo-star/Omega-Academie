@@ -38,7 +38,7 @@ def test_une_reussite_remet_le_compteur_a_zero(client, db, creer_utilisateur):
     for _ in range(3):
         _tenter(client, "faux")
     _tenter(client, "p12345678")
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     db.session.expire_all()
     assert User.query.filter_by(email="u@t.com").one().echecs_connexion == 0
 
@@ -60,7 +60,7 @@ def test_changer_son_mot_de_passe(client, db, creer_utilisateur):
     assert "différent" in changer("p12345678", "p12345678")
     assert "Mot de passe modifié" in changer("p12345678", "nouveau12345")
 
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     assert "incorrect" in _tenter(client, "p12345678")
     assert 'id="tableau-de-bord"' in _tenter(client, "nouveau12345")
 

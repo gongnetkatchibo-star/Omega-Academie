@@ -29,8 +29,49 @@ REFERENCES_SOUPLES = {
 TOUS = {"tous_etablissements": True}
 
 
+# Rôles qu'une restauration ne crée jamais : une archive retouchée ne
+# doit pas pouvoir fabriquer un administrateur de la plateforme.
+ROLES_INTERDITS = ("developpeur", "super_administrateur")
+# Taille maximale du fichier de données une fois décompressé.
+TAILLE_MAX_DONNEES = 2 * 1024 * 1024 * 1024
+# Réglages de l'école repris par la sauvegarde (en plus de ses tables).
+CHAMPS_ECOLE = (
+    "ville", "pays", "slogan", "nom_arabe", "ville_arabe", "couleur_theme", "couleur_accent",
+    "logo", "logo_mime", "filigrane", "filigrane_mime", "signature", "cachet",
+)
+
+
 class ErreurRestauration(Exception):
     pass
+
+
+def _empreinte(donnees):
+    """Signature de l'archive (HMAC avec la clé secrète du serveur)."""
+    import hashlib
+    import hmac
+    from flask import current_app
+
+    contenu = {k: v for k, v in donnees.items() if k != "signature"}
+    texte = json.dumps(contenu, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hmac.new(current_app.config["SECRET_KEY"].encode("utf-8"), texte, hashlib.sha256).hexdigest()
+
+
+def signature_valide(donnees):
+    """True : signée par ce serveur et intacte ; False : retouchée ou
+    signée ailleurs ; None : archive ancienne, sans signature."""
+    import hmac
+
+    if not donnees.get("signature"):
+        return None
+    return hmac.compare_digest(str(donnees["signature"]), _empreinte(donnees))
+
+
+def archive_de_cette_ecole(ecole, donnees):
+    identite = donnees.get("ecole") or {}
+    return bool(
+        (identite.get("prefixe_matricule") and identite.get("prefixe_matricule") == ecole.prefixe_matricule)
+        or (identite.get("sigle") and (identite.get("sigle") or "").lower() == (ecole.sigle or "").lower())
+    )
 
 
 def tables_de_l_ecole():
@@ -94,12 +135,21 @@ def exporter_ecole(ecole):
     ).mappings().all()
     tables[parents.name] = [dict(lien) for lien in liens]
 
-    return {
+    from app.models.permission import Permission
+    permissions = db.session.execute(
+        select(Permission.role, Permission.module, Permission.autorise).where(Permission.ecole_id == ecole.id)
+    ).all()
+
+    donnees = {
         "version": VERSION_FORMAT,
         "date": maintenant().isoformat(timespec="seconds"),
         "ecole": {"nom": ecole.nom, "sigle": ecole.sigle, "prefixe_matricule": ecole.prefixe_matricule},
+        "reglages_ecole": {champ: _vers_json(getattr(ecole, champ, None)) for champ in CHAMPS_ECOLE},
+        "permissions": [{"role": r, "module": m, "autorise": bool(a)} for r, m, a in permissions],
         "tables": tables,
     }
+    donnees["signature"] = _empreinte(donnees)
+    return donnees
 
 
 def lire_archive(archive):
@@ -108,6 +158,8 @@ def lire_archive(archive):
         raise ErreurRestauration(
             "Cette archive ne contient pas de fichier de restauration (sauvegarde d'une ancienne version)."
         )
+    if archive.getinfo(NOM_FICHIER_DONNEES).file_size > TAILLE_MAX_DONNEES:
+        raise ErreurRestauration("Le fichier de sauvegarde est anormalement volumineux : restauration refusée.")
     try:
         donnees = json.loads(archive.read(NOM_FICHIER_DONNEES).decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -161,6 +213,10 @@ def restaurer_ecole(ecole, donnees):
                     cible = _cible(colonne)
                     if colonne.name == "ecole_id":
                         valeur = ecole.id
+                    elif table.name == "users" and colonne.name == "role" and valeur in ROLES_INTERDITS:
+                        valeur = "personnel"
+                    elif table.name == "users" and colonne.name == "statut" and ligne.get("role") in ROLES_INTERDITS:
+                        valeur = "verrouille"
                     elif cible and valeur is not None:
                         valeur = correspondances.get(cible, {}).get(valeur)
                         if valeur is None and not colonne.nullable:
@@ -199,6 +255,20 @@ def restaurer_ecole(ecole, donnees):
                     ),
                     execution_options=TOUS,
                 )
+
+        # Réglages de l'école et permissions propres à l'école.
+        from app.models.ecole import Ecole
+        from app.models.permission import Permission, MODULES_CLES
+        from app.models.user import ROLES
+        reglages = donnees.get("reglages_ecole") or {}
+        for champ in CHAMPS_ECOLE:
+            if champ in reglages:
+                setattr(ecole, champ, _depuis_json(reglages[champ], Ecole.__table__.c[champ]))
+        if "permissions" in donnees:
+            Permission.query.filter_by(ecole_id=ecole.id).delete()
+            for p in donnees["permissions"]:
+                if p.get("role") in ROLES and p.get("role") not in ROLES_INTERDITS and p.get("module") in MODULES_CLES:
+                    db.session.add(Permission(ecole_id=ecole.id, role=p["role"], module=p["module"], autorise=bool(p.get("autorise"))))
 
         db.session.flush()
     except IntegrityError as erreur:

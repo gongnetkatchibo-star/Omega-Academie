@@ -75,7 +75,7 @@ def test_la_deconnexion_ramene_a_la_connexion_de_son_ecole(client, db, creer_uti
     db.session.commit()
     creer_utilisateur("Sec", "s@t.com", "secretaire")
     connecter(client, "s@t.com")
-    page = client.get("/auth/deconnexion", follow_redirects=True).get_data(as_text=True)
+    page = client.post("/auth/deconnexion", follow_redirects=True).get_data(as_text=True)
     assert '<p class="nom-plateforme">École Test</p>' in page
 
 

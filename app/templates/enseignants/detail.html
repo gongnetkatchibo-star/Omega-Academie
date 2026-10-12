@@ -22,6 +22,12 @@
             <a href="{{ url_for('emploi_du_temps.classe', classe_id=a.classe_id) }}">{{ _("Emploi du temps") }}</a>
             <a href="{{ url_for('suivi_cours.classe', classe_id=a.classe_id) }}">{{ _("Suivi") }}</a>
             <a href="{{ url_for('notes.saisie', classe_id=a.classe_id) }}">{{ _("Notes") }}</a>
+            {% if acces("directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique", module="enseignants") %}
+              <form method="post" action="{{ url_for('enseignants.retirer_affectation', affectation_id=a.id) }}" class="form-inline" onsubmit="return confirm({{ _('Retirer cette affectation ?')|tojson|forceescape }});">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="bouton-lien">{{ _("Retirer") }}</button>
+              </form>
+            {% endif %}
           </div>
         </li>
       {% endfor %}

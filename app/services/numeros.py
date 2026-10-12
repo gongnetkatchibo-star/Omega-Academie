@@ -107,3 +107,16 @@ def numero_lisible(numero):
         national = national[3:]
     groupes += [national[i:i + 2] for i in range(0, len(national), 2)]
     return f"+{code} " + " ".join(groupes)
+
+
+def normaliser_numero_ecole(saisie, longueur=30):
+    """Pour un champ facultatif : le numéro au format international s'il
+    est reconnu pour le pays de l'école, sinon la saisie telle quelle
+    (tronquée), plutôt que de refuser un numéro inhabituel."""
+    from app.services.tenant import ecole_courante
+
+    saisie = (saisie or "").strip()
+    if not saisie:
+        return ""
+    ecole = ecole_courante()
+    return (normaliser_numero(saisie, ecole.pays if ecole else None) or saisie)[:longueur]

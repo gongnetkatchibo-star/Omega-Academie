@@ -97,7 +97,7 @@ def test_cartes_reservees_au_secretariat_et_a_la_direction_de_son_cycle(client, 
     connecter(client, "p@t.td")
     assert client.get("/documents/cartes").status_code == 403
     assert client.get("/eleves/photos").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "d@t.td")
     assert client.get(f"/documents/cartes?eleve_id={eleve.id}").status_code == 404
     assert client.post("/documents/cartes", data={"classe_id": college.id}).status_code == 302
@@ -150,7 +150,7 @@ def test_signature_et_cachet_au_choix(client, app, db, creer_utilisateur, creer_
     assert 'name="signature_imprimee"' not in client.get(f"/documents/eleve/{eleve.id}/certificat").get_data(as_text=True)
     a_la_main = client.post(f"/documents/eleve/{eleve.id}/certificat", data={"signature_imprimee": "on"})
     assert client.get("/developpeur/parametres/signature").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "f@t.td")
     assert client.get("/developpeur/parametres/signature").status_code == 404
@@ -164,7 +164,7 @@ def test_signature_et_cachet_au_choix(client, app, db, creer_utilisateur, creer_
     assert max(p[3] for p in nettoyee.getdata()) == 255                   # l'encre est restée
     assert client.get("/developpeur/parametres/cachet").mimetype == "image/png"
     assert not ParametreEtablissement.get().signature_imprimee
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     # Réglage de l'école : à la main. Le choix est proposé document par document.
     connecter(client, "s@t.td")
@@ -182,7 +182,7 @@ def test_signature_et_cachet_au_choix(client, app, db, creer_utilisateur, creer_
     carte_signee = client.post("/documents/cartes", data={"eleve_id": eleve.id, "signature_imprimee": "on"})
     assert _images_pdf(carte_signee.data) == _images_pdf(carte_main.data) + 1
     assert "La Directrice" in _texte_pdf(carte_signee.data)[1] and "Mme Achta Brahim" in _texte_pdf(carte_signee.data)[1]
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     # Réglage de l'école : imprimés. Bulletins, reçus et fiches de paie suivent le réglage.
     from flask import g

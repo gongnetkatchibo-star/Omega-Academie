@@ -159,8 +159,14 @@ def test_eleve_cree_son_compte_et_se_connecte_par_matricule(client, db, eleve_in
     assert "Compte créé" in _texte(r)
     db.session.remove()
     eleve = db.session.get(Eleve, eleve_inscrit)
-    assert eleve.compte is not None and eleve.compte.statut == "actif"
+    # Le compte attend la validation du secrétariat (audit oct. 2026) :
+    # connaître le matricule et la date de naissance ne suffit plus.
+    assert eleve.compte is not None and eleve.compte.statut == "en_attente"
     assert eleve.compte.role == "eleve" and eleve.compte.nom_complet == "Moussa Élève"
+    r = client.post("/auth/connexion", data={"email": "ET26-CM1-001", "mot_de_passe": "eleve12345"}, follow_redirects=True)
+    assert "Mon bulletin" not in _texte(r)
+    eleve.compte.statut = "actif"
+    db.session.commit()
 
     r = client.post("/auth/connexion", data={"email": "ET26-CM1-001", "mot_de_passe": "eleve12345"}, follow_redirects=True)
     assert "Moussa Élève" in _texte(r) and "Mon bulletin" in _texte(r)
@@ -173,6 +179,8 @@ def test_contact_facultatif_enregistre(client, db, eleve_inscrit):
     db.session.remove()
     compte = db.session.get(Eleve, eleve_inscrit).compte
     assert compte.email == "moussa@mail.com" and compte.telephone == "+23599001122"
+    compte.statut = "actif"
+    db.session.commit()
     r = client.post("/auth/connexion", data={"email": "moussa@mail.com", "mot_de_passe": "eleve12345"}, follow_redirects=True)
     assert "Mon bulletin" in _texte(r)
 

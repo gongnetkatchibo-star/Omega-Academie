@@ -3760,3 +3760,20 @@ a.lien-ecole-copier {
 @media (max-width: 480px) {
   .grille-photos { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 }
+
+
+/* ========== Boutons dans les menus et les listes (oct. 2026) ========== */
+
+.form-deconnexion { margin: 0; }
+.sidebar-liens .form-deconnexion button {
+  display: block; width: 100%; background: none; border: 0; border-left: 3px solid transparent;
+  padding: 10px 18px; margin: 0; border-radius: 0; box-shadow: none;
+  color: rgba(255, 255, 255, 0.88); font-size: 14px; font-family: inherit; font-weight: normal;
+  text-align: start; cursor: pointer;
+}
+.sidebar-liens .form-deconnexion button:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.form-inline { display: inline; margin: 0; }
+.bouton-lien {
+  background: none; border: 0; padding: 0; margin: 0; color: var(--critique-vif, #a32d2d);
+  font: inherit; text-decoration: underline; cursor: pointer;
+}

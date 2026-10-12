@@ -34,6 +34,24 @@ def roles_required(*roles, module=None):
     return decorateur
 
 
+def module_ouvert(module, roles_par_defaut):
+    """À poser sous roles_required pour une action réservée à quelques
+    rôles (ex. la direction) : refuse aussi l'accès si le module a été
+    fermé à ce rôle dans la matrice des permissions."""
+
+    def decorateur(f):
+        @wraps(f)
+        def enveloppe(*args, **kwargs):
+            from app.services.permissions import role_a_acces
+            if not role_a_acces(current_user.role, module, roles_par_defaut):
+                abort(403)
+            return f(*args, **kwargs)
+
+        return enveloppe
+
+    return decorateur
+
+
 def logo_officiel_data_uri():
     """Logo de l'école courante en data-URI (xhtml2pdf gère mal les
     chemins de fichiers). None si l'école n'a pas de logo."""
@@ -303,6 +321,15 @@ def montant_entier(valeur):
         nombre = float(str(valeur).replace(" ", "").replace(",", "."))
     except (TypeError, ValueError):
         return None
-    if nombre <= 0 or nombre != int(nombre) or nombre > 1_000_000_000:
+    import math
+    if not math.isfinite(nombre) or nombre <= 0 or nombre != int(nombre) or nombre > 1_000_000_000:
         return None
     return int(nombre)
+
+
+def montant_positif_ou_nul(valeur):
+    """Comme montant_entier, mais 0 (ou un champ vide) est accepté et vaut 0."""
+    texte = str(valeur if valeur is not None else "").replace(" ", "").replace(",", ".")
+    if texte in ("", "0", "0.0", "0.00"):
+        return 0
+    return montant_entier(texte)

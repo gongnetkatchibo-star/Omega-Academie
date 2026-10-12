@@ -228,10 +228,13 @@ def changer_mot_de_passe():
         flash("Le nouveau mot de passe doit être différent de l'actuel.", "error")
     else:
         from app.services.journal import journaliser
+        from flask_login import login_user
         current_user.set_mot_de_passe(nouveau)
         journaliser("changement_mot_de_passe", cible_type="User", cible_id=current_user.id)
         db.session.commit()
-        flash("Mot de passe modifié.", "info")
+        # Les autres appareils sont déconnectés ; celui-ci reste connecté.
+        login_user(current_user._get_current_object())
+        flash("Mot de passe modifié. Tes autres appareils ont été déconnectés.", "info")
     return redirect(url_for("main.profil"))
 
 
@@ -396,9 +399,11 @@ def changer_langue(code):
         db.session.commit()
     retour = request.referrer or ""
     cible = urlparse(retour)
-    if not retour or (cible.netloc and cible.netloc != request.host):
+    chemin = cible.path or "/"
+    # « //autre-site » serait suivi comme une adresse externe.
+    if not retour or (cible.netloc and cible.netloc != request.host) or not chemin.startswith("/") or chemin.startswith("//"):
         return redirect(url_for("main.index"))
-    return redirect(cible.path + (f"?{cible.query}" if cible.query else ""))
+    return redirect(chemin + (f"?{cible.query}" if cible.query else ""))
 
 
 # --- Application installable (oct. 2026) --------------------------------------

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Déconnexion") }}{% endblock %}
+{% block content %}
+  <h1>{{ _("Déconnexion") }}</h1>
+  <form method="post" class="formulaire-etroit">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="bouton bouton-plein">{{ _("Me déconnecter") }}</button>
+  </form>
+{% endblock %}

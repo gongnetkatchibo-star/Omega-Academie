@@ -9,15 +9,19 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>{{ _("Type (appliqué à tous les fichiers)") }}
       <select name="type" required>
-        {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+        {% for t in types %}<option value="{{ t }}">{{ _(libelles_type[t]) }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ _("Matière") }}
       <input type="text" name="matiere" maxlength="80">
     </label>
     <label>{{ _("Fichiers (plusieurs à la fois)") }}
-      <input type="file" name="fichiers" multiple required>
+      <input type="file" name="fichiers" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.mov" multiple required>
     </label>
+    <label>{{ _("Visible par") }}
+      <select name="public">{% for cle, libelle in publics.items() %}<option value="{{ cle }}">{{ _(libelle) }}</option>{% endfor %}</select>
+    </label>
+    <p class="lien-secondaire">{{ _("« Personnel seulement » : invisible des parents et des élèves (corrigés, guides du maître…). Taille maximale par envoi : 20 Mo.") }}</p>
     <label><input type="checkbox" name="consultation_sur_place"> {{ _("Consultation sur place uniquement (non téléchargeable), pour tous les fichiers importés") }}</label>
     <button type="submit">{{ _("Importer") }}</button>
   </form>

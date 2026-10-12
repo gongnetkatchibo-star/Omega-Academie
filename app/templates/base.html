@@ -166,7 +166,10 @@
         {% endif %}
 
         <a href="{{ url_for('main.profil') }}">{{ icone("profil") }} {{ _("Mon profil") }}</a>
-        <a href="{{ url_for('auth.deconnexion') }}">{{ icone("deconnexion") }} {{ _("Déconnexion") }}</a>
+        <form method="post" action="{{ url_for('auth.deconnexion') }}" class="form-deconnexion">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit">{{ icone("deconnexion") }} {{ _("Déconnexion") }}</button>
+        </form>
       </nav>
       <button type="button" id="bouton-installer" class="bouton-installer" hidden>{{ icone("telecharger") }} {{ _("Installer l'application") }}</button>
       <div class="sidebar-pied">{{ _("Propulsé par") }} <strong>{{ nom_plateforme() }}</strong></div>

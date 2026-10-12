@@ -80,9 +80,23 @@ class User(AppartientEcole, UserMixin, db.Model):
     # Blocage temporaire après plusieurs mots de passe faux d'affilée.
     echecs_connexion = db.Column(db.Integer, default=0, nullable=False)
     bloque_jusqua = db.Column(db.DateTime)
+    # Codes faux saisis pour le code en cours (connexion ou vérification
+    # d'email) : gardé en base, pas dans le cookie du navigateur, qu'on
+    # pourrait rejouer pour essayer des codes sans limite.
+    essais_code = db.Column(db.Integer, default=0, nullable=False)
+    # Change à chaque nouveau mot de passe : les sessions ouvertes avant
+    # (un téléphone perdu, un cookie volé) ne sont plus reconnues.
+    version_session = db.Column(db.Integer, default=0, nullable=False)
+    # Dernière connexion réussie (console de la plateforme).
+    derniere_connexion = db.Column(db.DateTime)
 
     def set_mot_de_passe(self, mot_de_passe):
         self.mot_de_passe_hash = generate_password_hash(mot_de_passe)
+        self.version_session = (self.version_session or 0) + 1
+
+    def get_id(self):
+        version = self.version_session or 0
+        return f"{self.id}.{version}" if version else str(self.id)
 
     def verifier_mot_de_passe(self, mot_de_passe):
         return check_password_hash(self.mot_de_passe_hash, mot_de_passe)
@@ -91,7 +105,17 @@ class User(AppartientEcole, UserMixin, db.Model):
         import secrets  # tirage imprévisible, contrairement à random
         self.code_2fa = f"{secrets.randbelow(1_000_000):06d}"
         self.code_2fa_expiration = maintenant() + timedelta(minutes=10)
+        self.essais_code = 0
         return self.code_2fa
+
+    def noter_code_faux(self, maximum=5):
+        """Compte un code faux ; au-delà de `maximum`, le code est annulé.
+        Retourne True quand le code vient d'être annulé."""
+        self.essais_code = (self.essais_code or 0) + 1
+        if self.essais_code >= maximum:
+            self.invalider_code_2fa()
+            return True
+        return False
 
     def verifier_code_2fa(self, code):
         if not self.code_2fa or not self.code_2fa_expiration:

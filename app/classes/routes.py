@@ -10,16 +10,21 @@ from app.services.groupes_frais import appliquer_frais_au_groupe, groupe_du_nive
 
 ROLES_GESTION = ["secretaire", "directeur_primaire", "directeur_college", "fondateur", "administrateur_general"]
 ROLES_LECTURE = ROLES_GESTION + ["enseignant"]
-ROLES_FRAIS = ROLES_GESTION + ["comptable"]
+# Les montants de la scolarité relèvent de la comptabilité et de la
+# direction générale (le secrétariat et les directeurs de cycle ne voient
+# pas les montants, audit oct. 2026).
+ROLES_FRAIS = ["comptable", "fondateur", "administrateur_general"]
 
 
 def _montant_formulaire(nom_champ):
     """Lit un montant saisi via le champ liste déroulante + "Autre"
     (voir macro champ_montant) : priorité au menu, sinon la saisie libre."""
-    valeur = request.form.get(nom_champ, type=float)
-    if valeur is None:
-        valeur = request.form.get(f"{nom_champ}_autre", type=float)
-    return valeur
+    from app.utils import montant_positif_ou_nul
+    for champ in (nom_champ, f"{nom_champ}_autre"):
+        saisie = (request.form.get(champ) or "").strip()
+        if saisie:
+            return montant_positif_ou_nul(saisie)
+    return 0
 
 # Niveaux du Module 1 du cahier des charges, dans l'ordre. Le champ
 # Classe.niveau stocke la position dans cette liste (1 = CP1, etc.) —
@@ -42,8 +47,13 @@ def liste():
     # (document complémentaire, §5) — fondateur/administrateur général
     # voient tout.
     toutes = filtrer_par_cycle(toutes, cycle_du_role(current_user.role))
+    from sqlalchemy import func
+    effectifs = dict(
+        db.session.query(Eleve.classe_id, func.count(Eleve.id))
+        .filter(Eleve.actif.is_(True), Eleve.classe_id.in_([c.id for c in toutes])).group_by(Eleve.classe_id).all()
+    ) if toutes else {}
     return render_template(
-        "classes/liste.html", classes=toutes, annees_disponibles=annees_disponibles,
+        "classes/liste.html", classes=toutes, annees_disponibles=annees_disponibles, effectifs=effectifs,
         annee_selectionnee=annee_selectionnee, annee_courante=annee_courante,
     )
 
@@ -59,15 +69,18 @@ def nouvelle():
     cycle = cycle_du_role(current_user.role)
 
     if request.method == "POST":
-        nom = request.form.get("nom", "").strip()
+        nom = request.form.get("nom", "").strip()[:20]
         niveau = request.form.get("niveau", type=int)
         annee_scolaire = request.form.get("annee_scolaire", "").strip()
-        frais_inscription = _montant_formulaire("frais_inscription") or 0
-        frais_tranche1 = _montant_formulaire("frais_tranche1") or 0
-        frais_tranche2 = _montant_formulaire("frais_tranche2") or 0
+        frais_inscription = _montant_formulaire("frais_inscription")
+        frais_tranche1 = _montant_formulaire("frais_tranche1")
+        frais_tranche2 = _montant_formulaire("frais_tranche2")
 
-        if not nom or niveau not in niveaux_valables or not annee_scolaire:
-            flash("Merci de remplir tous les champs.", "error")
+        if None in (frais_inscription, frais_tranche1, frais_tranche2) or min(frais_inscription, frais_tranche1, frais_tranche2) < 0:
+            flash("Les frais doivent être des montants positifs.", "error")
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+        if not nom or niveau not in niveaux_valables or not annee_valide(annee_scolaire):
+            flash("Merci de remplir tous les champs (année scolaire au format 2027-2028).", "error")
             return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
         classe_candidate = Classe(niveau=niveau, nom=nom)
@@ -108,9 +121,66 @@ def nouvelle():
     return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
 
 
+@classes_bp.route("/<int:classe_id>/modifier", methods=["GET", "POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="classes")
+def modifier(classe_id):
+    """Corriger le nom, le niveau ou la série d'une classe."""
+    from app.services.niveaux import niveaux_disponibles, options_ecole, SERIES_PROPOSEES, est_lycee
+    from app.services.journal import journaliser
+
+    classe_obj = db.get_or_404(Classe, classe_id)
+    cycle = cycle_du_role(current_user.role)
+    if not classe_dans_le_cycle(classe_obj, cycle):
+        abort(403)
+    niveaux = niveaux_disponibles()
+    if request.method == "POST":
+        nom = request.form.get("nom", "").strip()[:20]
+        niveau = request.form.get("niveau", type=int)
+        if not nom or niveau not in {n for n, _ in niveaux}:
+            flash("Merci de remplir le nom et le niveau.", "error")
+        elif not classe_dans_le_cycle(Classe(niveau=niveau, nom=nom), cycle):
+            flash("Ce niveau ne fait pas partie de ton cycle de supervision.", "error")
+        elif Classe.query.filter(Classe.nom == nom, Classe.annee_scolaire == classe_obj.annee_scolaire, Classe.id != classe_obj.id).first():
+            flash(f"La classe {nom} existe déjà pour l'année {classe_obj.annee_scolaire}.", "error")
+        else:
+            ancien = f"{classe_obj.nom} (niveau {classe_obj.niveau})"
+            classe_obj.nom, classe_obj.niveau = nom, niveau
+            classe_obj.serie = (request.form.get("serie", "").strip().upper()[:10] or None) if est_lycee(niveau) else None
+            journaliser("modification_classe", details=f"{ancien} → {nom} (niveau {niveau})", cible_type="Classe", cible_id=classe_obj.id)
+            db.session.commit()
+            flash(f"Classe {nom} mise à jour. Les matricules déjà attribués ne changent pas.", "info")
+            return redirect(url_for("classes.liste", annee=classe_obj.annee_scolaire))
+    return render_template("classes/modifier.html", classe=classe_obj, niveaux=niveaux, lycee=options_ecole()[1], series=SERIES_PROPOSEES)
+
+
+@classes_bp.route("/<int:classe_id>/supprimer", methods=["POST"])
+@login_required
+@roles_required(*ROLES_GESTION, module="classes")
+def supprimer(classe_id):
+    """Seulement une classe vide, créée par erreur : dès qu'un élève, une
+    note ou un paiement s'y rattache, elle reste pour l'historique."""
+    from app.services.suppression import references_vers
+    from app.services.journal import journaliser
+
+    classe_obj = db.get_or_404(Classe, classe_id)
+    if not classe_dans_le_cycle(classe_obj, cycle_du_role(current_user.role)):
+        abort(403)
+    if references_vers("classes", classe_obj.id):
+        flash(f"La classe {classe_obj.nom} n'est pas vide (élèves, historique, notes, emploi du temps…) : elle ne peut pas être supprimée.", "error")
+    else:
+        journaliser("suppression_classe", details=f"{classe_obj.nom} {classe_obj.annee_scolaire}")
+        annee = classe_obj.annee_scolaire
+        db.session.delete(classe_obj)
+        db.session.commit()
+        flash("Classe supprimée.", "info")
+        return redirect(url_for("classes.liste", annee=annee))
+    return redirect(url_for("classes.liste", annee=classe_obj.annee_scolaire))
+
+
 @classes_bp.route("/<int:classe_id>/frais", methods=["POST"])
 @login_required
-@roles_required(*ROLES_FRAIS)
+@roles_required(*ROLES_FRAIS, module="finances")
 def modifier_frais(classe_id):
     classe_obj = db.get_or_404(Classe, classe_id)
     if not classe_dans_le_cycle(classe_obj, cycle_du_role(current_user.role)):
@@ -127,6 +197,13 @@ def modifier_frais(classe_id):
         flash(f"Échéancier mis à jour pour {noms} (total {classe_obj.frais_annuel:.0f}).", "info")
 
     return redirect(url_for("classes.liste"))
+
+
+def annee_valide(annee):
+    """« 2027-2028 » : deux années qui se suivent."""
+    import re
+    m = re.fullmatch(r"(\d{4})-(\d{4})", annee or "")
+    return bool(m) and int(m.group(2)) == int(m.group(1)) + 1 and 2000 <= int(m.group(1)) <= 2100
 
 
 @classes_bp.route("/demarrer-annee", methods=["GET", "POST"])
@@ -147,19 +224,28 @@ def demarrer_annee():
         annee = request.form.get("annee_scolaire", "").strip()
         annee_source = request.form.get("annee_source", "").strip()
 
-        if not annee:
-            flash("Merci d'indiquer l'année scolaire à créer (ex : 2027-2028).", "error")
+        if not annee_valide(annee):
+            flash("Merci d'indiquer l'année scolaire à créer au format 2027-2028.", "error")
             return render_template("classes/demarrer_annee.html", annees=annees_existantes, annee_suggeree=annee_suggeree)
 
         classes_source = {c.nom: c for c in Classe.query.filter_by(annee_scolaire=annee_source).all()} if annee_source else {}
 
         from app.services.niveaux import niveaux_disponibles
         a_creer = list(niveaux_disponibles())
-        # Les classes de lycée à série (« 1ère D »…) de l'année source sont
-        # reprises telles quelles, en plus des niveaux standard.
-        a_creer += [(c.niveau, c.nom) for c in classes_source.values() if c.serie]
+        # Toutes les classes de l'année source sont reprises telles quelles
+        # (« 6e A », « 6e B », « 1ère D »…), en plus des niveaux standard.
+        a_creer += [(c.niveau, c.nom) for c in classes_source.values()]
+        # Un directeur de cycle ne crée que les classes de son cycle.
+        from app.services.moyennes import NIVEAU_LIMITE_PRIMAIRE
+        cycle = cycle_du_role(current_user.role)
+        if cycle:
+            a_creer = [(n, nom) for n, nom in a_creer if (n <= NIVEAU_LIMITE_PRIMAIRE) == (cycle == "primaire")]
+        deja = set()
         creees = 0
         for position, nom in a_creer:
+            if nom in deja:
+                continue
+            deja.add(nom)
             if Classe.query.filter_by(nom=nom, annee_scolaire=annee).first():
                 continue
             reference = classes_source.get(nom)

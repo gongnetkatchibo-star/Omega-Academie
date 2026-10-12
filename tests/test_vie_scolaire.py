@@ -47,7 +47,7 @@ def test_enseignant_remplit_le_cahier_et_le_parent_voit_le_devoir(client, ecole)
         "devoir": "Exercices 3 et 4 page 12", "date_rendu": demain,
     }, follow_redirects=True)
     assert "Fractions : addition" in _texte(r)
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "parent@t.td")
     page = _texte(client.get(f"/cahier-de-textes/eleve/{ecole['awa'].id}"))
@@ -74,7 +74,7 @@ def test_direction_consulte_le_cahier_mais_parent_non(client, ecole, creer_utili
     creer_utilisateur("Directeur", "dir@t.td", "directeur_college")
     connecter(client, "dir@t.td")
     assert client.get(f"/cahier-de-textes/classe/{ecole['sixieme'].id}").status_code == 200
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
     connecter(client, "parent@t.td")
     assert client.get(f"/cahier-de-textes/classe/{ecole['sixieme'].id}").status_code == 403
     assert client.get("/cahier-de-textes/").status_code == 403
@@ -92,7 +92,7 @@ def test_retard_et_sanction_au_registre_et_sur_la_page_de_l_eleve(client, ecole,
     assert envois == ["Avertissement — Awa"]
     registre = _texte(client.get("/discipline/"))
     assert "Bavardages" in registre and "15 min" in registre
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "parent@t.td")
     page = _texte(client.get(f"/absences/eleve/{awa.id}"))
@@ -141,7 +141,7 @@ def test_calendrier_tenu_par_le_secretariat_et_visible_par_les_familles(client, 
     })
     page = _texte(client.get("/calendrier/"))
     assert "Vacances de Noël" in page and "Conseil de classe" in page and "Erreur" not in page
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "parent@t.td")
     page = _texte(client.get("/calendrier/"))
@@ -166,7 +166,7 @@ def test_emploi_du_temps_pour_le_parent_et_pas_d_autre_classe_pour_l_eleve(clien
     assert "08:00" in page and "Ajouter un créneau" not in page
     assert client.get(f"/emploi-du-temps/eleve/{ecole['awa'].id}/pdf").mimetype == "application/pdf"
     assert client.get(f"/emploi-du-temps/eleve/{ecole['ben'].id}").status_code == 403
-    client.get("/auth/deconnexion")
+    client.post("/auth/deconnexion")
 
     connecter(client, "awa@t.td")
     assert client.get(f"/emploi-du-temps/classe/{ecole['sixieme'].id}").status_code == 200

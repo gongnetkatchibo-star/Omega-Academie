@@ -8,8 +8,8 @@ sous lui et les colonnes (modules) qu'il a le droit de confier :
 - fondateur : tous les rôles de l'école sauf le sien, pour les modules
   auxquels il a lui-même accès — jamais les zones techniques ;
 - secrétaire : les rôles sans responsabilité de direction ni d'argent
-  (enseignant, élève, parent…), pour les modules qui ne touchent pas
-  aux finances.
+  (enseignant, élève, parent…), pour les modules qu'elle a elle-même,
+  hors finances et hors validation des comptes.
 
 Ce qui n'est pas dans la portée de quelqu'un n'est ni affiché, ni
 modifié, ni effacé par lui."""
@@ -46,6 +46,12 @@ def portee_matrice(role):
         ]
         return roles, modules
     if role == "secretaire":
-        modules = [m for m in MODULES_CLES if m not in MODULES_TECHNIQUES and m not in MODULES_FINANCIERS]
+        # Seulement ce qu'elle a elle-même, hors finances, et jamais la
+        # validation des comptes (qui ouvrirait l'école à n'importe qui).
+        modules = [
+            m for m in MODULES_CLES
+            if m not in MODULES_TECHNIQUES and m not in MODULES_FINANCIERS and m != "secretariat"
+            and role_a_acces("secretaire", m, ROLES_PAR_DEFAUT.get(m, []))
+        ]
         return list(ROLES_DU_SECRETARIAT), modules
     return [], []

@@ -37,7 +37,8 @@ def _serializer():
 def _empreinte(user):
     """Change dès que le mot de passe change : un lien déjà utilisé (ou
     émis avant un changement de mot de passe) ne fonctionne plus."""
-    return (user.mot_de_passe_hash or "")[-16:]
+    import hashlib
+    return hashlib.sha256((user.mot_de_passe_hash or "").encode("utf-8")).hexdigest()[:16]
 
 
 def generer_token_reset(user):
@@ -167,7 +168,9 @@ def _inscription_eleve():
     if telephone and _comptes().filter_by(telephone=telephone).first():
         return refuser("Un compte existe déjà avec ce numéro de téléphone.")
 
-    statut = "actif" if eleve.date_naissance else "en_attente"
+    # Toujours validé par le secrétariat : un camarade qui connaît le
+    # matricule et la date de naissance ne peut pas prendre le compte.
+    statut = "en_attente"
     compte = User(
         ecole_id=eleve.ecole_id, nom_complet=eleve.nom_complet, genre=eleve.sexe,
         email=email or f"{matricule.lower()}@eleves.local", telephone=telephone or None,
@@ -375,6 +378,8 @@ def appareil_de_confiance(user):
 
 def _ouvrir_session(user, destination=None, se_souvenir_appareil=False):
     login_user(user)
+    user.derniere_connexion = maintenant()
+    db.session.commit()
     session.permanent = True  # déconnexion automatique après inactivité
     flash(f"Bienvenue, {user.nom_complet}.", "info")
     reponse = redirect(destination or url_for("main.index"))
@@ -435,11 +440,9 @@ def code_connexion():
             db.session.commit()
             session.pop("double_auth", None)
             return _ouvrir_session(user, etat.get("next"), request.form.get("se_souvenir") == "on")
-        etat["essais"] = etat.get("essais", 0) + 1
-        session["double_auth"] = etat
-        if etat["essais"] >= ESSAIS_CODE_MAX:
-            user.invalider_code_2fa()
-            db.session.commit()
+        annule = user.noter_code_faux(ESSAIS_CODE_MAX)
+        db.session.commit()
+        if annule:
             session.pop("double_auth", None)
             flash("Trop de codes faux. Reconnecte-toi pour recevoir un nouveau code.", "error")
             return redirect(url_for("auth.connexion"))
@@ -476,7 +479,11 @@ def verification_email():
         code = request.form.get("code", "").strip()
 
         if not user.verifier_code_2fa(code):
-            flash("Code invalide ou expiré. Demande-en un nouveau si besoin.", "error")
+            if user.noter_code_faux(ESSAIS_CODE_MAX):
+                flash("Trop de codes faux : ce code est annulé. Demande un nouveau code.", "error")
+            else:
+                flash("Code invalide ou expiré. Demande-en un nouveau si besoin.", "error")
+            db.session.commit()
             return render_template("auth/verification_email.html", email=user.email)
 
         user.invalider_code_2fa()
@@ -510,10 +517,16 @@ def renvoyer_code_verification():
     return redirect(url_for("auth.verification_email"))
 
 
-@auth_bp.route("/deconnexion")
+@auth_bp.route("/deconnexion", methods=["GET", "POST"])
 @login_required
 def deconnexion():
+    """En POST seulement (formulaire du menu) : un lien posé sur un autre
+    site ne peut plus déconnecter quelqu'un à son insu. En GET, une page
+    demande de confirmer."""
     from app.services.liens_ecole import retenir_ecole_d_accueil
+
+    if request.method == "GET":
+        return render_template("auth/deconnexion.html")
 
     from app.models.ecole import Ecole
 

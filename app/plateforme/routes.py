@@ -172,7 +172,9 @@ def restaurer(ecole_id):
     """Remet en place une sauvegarde : les données actuelles de l'école
     sont remplacées. Le sigle doit être retapé pour confirmer."""
     import zipfile
-    from app.services.sauvegarde import lire_archive, restaurer_ecole, ErreurRestauration
+    from app.services.sauvegarde import (
+        lire_archive, restaurer_ecole, ErreurRestauration, signature_valide, archive_de_cette_ecole,
+    )
 
     ecole = db.session.get(Ecole, ecole_id) or abort(404)
     if request.method == "POST":
@@ -186,6 +188,16 @@ def restaurer(ecole_id):
             try:
                 with zipfile.ZipFile(fichier.stream) as archive:
                     donnees = lire_archive(archive)
+                if not archive_de_cette_ecole(ecole, donnees) and request.form.get("autre_ecole") != "on":
+                    raise ErreurRestauration(
+                        f"Cette sauvegarde est celle de « {(donnees.get('ecole') or {}).get('nom', '?')} », pas de « {ecole.nom} ». "
+                        "Coche « Restaurer quand même » si c'est voulu (migration vers une nouvelle école)."
+                    )
+                if signature_valide(donnees) is False and request.form.get("ignorer_signature") != "on":
+                    raise ErreurRestauration(
+                        "La signature de cette sauvegarde ne correspond pas : elle a été modifiée, ou produite par un autre serveur. "
+                        "Coche « Ignorer la signature » seulement si tu es sûr de sa provenance."
+                    )
                 bilan = restaurer_ecole(ecole, donnees)
             except zipfile.BadZipFile:
                 flash("Ce fichier n'est pas une archive .zip valide.", "error")
@@ -210,6 +222,10 @@ def restaurer(ecole_id):
 def entrer(ecole_id):
     ecole = db.session.get(Ecole, ecole_id) or abort(404)
     session["ecole_active"] = ecole.id
+    # Tracé dans le journal de l'école : sa direction voit quand
+    # l'administrateur de la plateforme est entré.
+    _journaliser(ecole.id, "entree_plateforme", f"{current_user.nom_complet} (administration de la plateforme) est entré dans l'école")
+    db.session.commit()
     flash(f"Tu travailles maintenant dans « {ecole.nom} ».", "info")
     return redirect(url_for("main.index"))
 
