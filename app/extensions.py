@@ -85,8 +85,13 @@ def envoyer_email(destinataires, sujet, corps, nom_expediteur=None):
             liste = ", ".join(destinataires)
             if len(liste) > 500:  # taille de la colonne
                 liste = f"{len(destinataires)} destinataires : {liste}"[:497] + "..."
-            db.session.add(JournalEmail(destinataires=liste, sujet=sujet[:200], reussi=reussi))
+            # Point de sauvegarde : si la ligne du journal échoue, seule elle
+            # est annulée, jamais le travail en cours de la page qui envoie
+            # l'email (décision d'un test de niveau, inscription…), audit oct. 2026.
+            with db.session.begin_nested():
+                db.session.add(JournalEmail(destinataires=liste, sujet=sujet[:200], reussi=reussi))
             db.session.commit()
         except Exception:
-            db.session.rollback()
+            if not db.session.is_active:  # l'écriture elle-même a échoué
+                db.session.rollback()
             current_app.logger.exception("Échec de la journalisation d'un email.")

@@ -51,6 +51,12 @@ def saisie(classe_id):
     if date_selectionnee > maintenant().date():
         flash("On ne fait pas l'appel d'un jour à venir : date ramenée à aujourd'hui.", "error")
         date_selectionnee = maintenant().date()
+    from datetime import date as _date
+    debut_annee = _date(int(Eleve.annee_scolaire_courante()[:4]), 9, 1)
+    if date_selectionnee < debut_annee:
+        # Les appels des années passées sont arrêtés, comme leurs notes.
+        flash("L'appel d'une année scolaire passée ne se modifie plus : date ramenée à aujourd'hui.", "error")
+        date_selectionnee = maintenant().date()
 
     absences_existantes = {
         a.eleve_id: a for a in Absence.query.filter_by(classe_id=classe_id, date=date_selectionnee).all()

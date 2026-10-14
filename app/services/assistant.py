@@ -52,9 +52,25 @@ MODULES_PAR_ROLE = {
 }
 
 
+# Module de la matrice des permissions qui couvre chaque question : un
+# module fermé à un rôle par l'école l'est aussi pour l'assistant (audit
+# oct. 2026).
+MODULE_DE_LA_MATRICE = {
+    "finances": "finances", "caisse": "caisse", "statistiques": "statistiques",
+    "effectifs": "eleves", "demandes": "secretariat",
+}
+
+
 def _a_le_module(role, module):
     modules = MODULES_PAR_ROLE.get(role, set())
-    return "*" in modules or module in modules
+    if "*" in modules:
+        return True
+    cle = MODULE_DE_LA_MATRICE.get(module)
+    if cle is None:
+        return module in modules
+    from app.services.permissions import role_a_acces
+    roles_par_defaut = [r for r, mods in MODULES_PAR_ROLE.items() if module in mods]
+    return role_a_acces(role, cle, roles_par_defaut)
 
 
 def _intent_effectif(user):

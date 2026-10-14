@@ -64,8 +64,11 @@ def notifier_annonce(annonce):
                         comptes.append(parent)
 
     if annonce.classe_id:
-        from app.communication.routes import classes_concernees
-        comptes = [u for u in comptes if annonce.classe_id in classes_concernees(u) or u.role not in ("parent", "eleve", "enseignant")]
+        # Mêmes personnes que celles qui peuvent la lire dans l'application :
+        # la classe visée, plus la direction et le secrétariat (un comptable
+        # parent d'un élève d'une autre classe ne la reçoit pas, audit oct. 2026).
+        from app.communication.routes import classes_concernees, ROLES_TOUT_VOIR
+        comptes = [u for u in comptes if annonce.classe_id in classes_concernees(u) or u.role in ROLES_TOUT_VOIR]
     destinataires = [u.email for u in comptes if u.email and not u.email.endswith(".local")]
     lien = url_for("communication.detail", annonce_id=annonce.id, _external=True)
     corps = (

@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.annonce import Annonce, DESTINATAIRES, DESTINATAIRES_ENSEIGNANT, LIBELLES_DESTINATAIRE
 from app.communication import communication_bp
-from app.utils import roles_required, EXTENSIONS_PIECE_JOINTE, extension_autorisee
+from app.utils import roles_required, EXTENSIONS_PIECE_JOINTE, extension_autorisee, type_mime_sur
 from app.services.temps import maintenant
 
 ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "secretaire", "enseignant"]
@@ -261,7 +261,7 @@ def telecharger(annonce_id):
     # fichier envoyé par un utilisateur ne s'exécute pas dans le site.
     return send_file(
         io.BytesIO(annonce.fichier), as_attachment=True, download_name=annonce.nom_fichier,
-        mimetype=annonce.fichier_mime or "application/octet-stream",
+        mimetype=type_mime_sur(annonce.nom_fichier),
     )
 
 

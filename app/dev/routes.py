@@ -10,6 +10,14 @@ from app.services.journal import journaliser
 from app.dev import dev_bp
 from app.utils import roles_required
 
+# Plus le nombre est petit, plus le rôle est élevé. Tous les autres
+# rôles de l'école sont au même rang, sous la direction générale.
+RANGS = {"developpeur": 0, "super_administrateur": 1, "fondateur": 1, "administrateur_general": 2}
+
+
+def rang_du_role(role):
+    return RANGS.get(role, 3)
+
 
 @dev_bp.route("/")
 @login_required
@@ -27,8 +35,12 @@ def utilisateurs():
         )
     from app.services.pagination import paginer
     page = paginer(requete.order_by(User.date_creation.desc()))
+    roles = ROLES if current_user.role == "developpeur" else [
+        r for r in ROLES if rang_du_role(r) > rang_du_role(current_user.role)
+    ]
     return render_template(
-        "dev/utilisateurs.html", utilisateurs=page, page=page, roles=ROLES, statuts=STATUTS, q=q
+        "dev/utilisateurs.html", utilisateurs=page, page=page, roles=roles, statuts=STATUTS, q=q,
+        rang_du_role=rang_du_role,
     )
 
 
@@ -46,8 +58,7 @@ def basculer_verrouillage_utilisateur(user_id):
         return redirect(url_for("dev.utilisateurs"))
     # On ne verrouille que quelqu'un placé sous soi : l'administrateur
     # général ne verrouille pas le fondateur.
-    rang = {"developpeur": 0, "fondateur": 1, "administrateur_general": 2}
-    if rang.get(utilisateur.role, 3) <= rang.get(current_user.role, 3):
+    if rang_du_role(utilisateur.role) <= rang_du_role(current_user.role):
         flash("Tu ne peux pas verrouiller ce compte : son rôle est égal ou supérieur au tien.", "error")
         return redirect(url_for("dev.utilisateurs"))
     if utilisateur.statut in ("en_attente", "refuse"):
@@ -94,6 +105,18 @@ def modifier_utilisateur(user_id):
     if utilisateur.id == current_user.id and nouveau_role != current_user.role:
         flash("Tu ne peux pas changer ton propre rôle depuis cet écran — demande à un autre développeur ou fondateur de le faire.", "error")
         return redirect(url_for("dev.utilisateurs"))
+
+    # Hors administrateur de la plateforme, on ne touche qu'aux comptes
+    # placés sous soi, et on ne donne qu'un rôle placé sous soi : un
+    # administrateur général ne rétrograde pas le fondateur, et personne
+    # ne se fabrique un second fondateur (audit oct. 2026).
+    if current_user.role != "developpeur":
+        if utilisateur.id == current_user.id or rang_du_role(utilisateur.role) <= rang_du_role(current_user.role):
+            flash("Tu ne peux pas modifier ce compte : son rôle est égal ou supérieur au tien.", "error")
+            return redirect(url_for("dev.utilisateurs"))
+        if rang_du_role(nouveau_role) <= rang_du_role(current_user.role):
+            flash("Tu ne peux attribuer qu'un rôle placé sous le tien.", "error")
+            return redirect(url_for("dev.utilisateurs"))
 
     ancien_role, ancien_statut = utilisateur.role, utilisateur.statut
     utilisateur.role = nouveau_role

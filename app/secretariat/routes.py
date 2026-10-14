@@ -27,6 +27,8 @@ def approuver(user_id):
         flash(f"Le compte de {user.nom_complet} n'est pas en attente de validation.", "error")
         return redirect(url_for("secretariat.demandes"))
     user.statut = "actif"
+    from app.services.journal import journaliser
+    journaliser("approbation_compte", details=f"{user.nom_complet} ({user.role})", cible_type="User", cible_id=user.id)
     db.session.commit()
     flash(f"Compte de {user.nom_complet} approuvé.", "info")
     return redirect(url_for("secretariat.demandes"))
@@ -41,6 +43,14 @@ def refuser(user_id):
         flash(f"Le compte de {user.nom_complet} n'est pas en attente de validation.", "error")
         return redirect(url_for("secretariat.demandes"))
     user.statut = "refuse"
+    if user.role == "eleve":
+        # Le dossier de l'élève est libéré : le vrai titulaire du matricule
+        # peut créer son compte (sinon un camarade qui a pris son matricule
+        # le bloquait pour de bon, audit oct. 2026).
+        from app.models.eleve import Eleve
+        Eleve.query.filter_by(user_id=user.id).update({"user_id": None})
+    from app.services.journal import journaliser
+    journaliser("refus_compte", details=f"{user.nom_complet} ({user.role})", cible_type="User", cible_id=user.id)
     db.session.commit()
     flash(f"Demande de {user.nom_complet} refusée.", "info")
     return redirect(url_for("secretariat.demandes"))

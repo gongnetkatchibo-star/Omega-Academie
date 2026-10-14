@@ -10,7 +10,7 @@ from app.models.mouvement_caisse import MouvementCaisse, TYPES_CAISSE
 from app.models.eleve import Eleve
 from app.models.paiement import MODES_PAIEMENT, ECHEANCES, LIBELLES_ECHEANCE
 from app.caisse import caisse_bp
-from app.utils import roles_required, html_vers_pdf
+from app.utils import roles_required, html_vers_pdf, piece_jointe
 from app.services.paiements import enregistrer_paiement
 from app.services.journal import journaliser
 
@@ -270,5 +270,5 @@ def recu_pdf(mouvement_id):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=recu_{m.reference or m.id}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"recu_{m.reference or m.id}.pdf")
     return reponse

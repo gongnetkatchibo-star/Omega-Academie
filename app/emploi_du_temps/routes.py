@@ -7,7 +7,7 @@ from app.models.classe import Classe
 from app.models.enseignant import Enseignant
 from app.models.emploi_du_temps import Creneau, JOURS
 from app.emploi_du_temps import emploi_du_temps_bp
-from app.utils import roles_required, html_vers_pdf
+from app.utils import roles_required, html_vers_pdf, piece_jointe
 from app.services.cycles import cycle_du_role, classe_dans_le_cycle
 
 ROLES_GESTION = ["directeur_primaire", "directeur_college", "fondateur", "administrateur_general", "responsable_pedagogique"]
@@ -209,7 +209,7 @@ def _pdf_de_la_classe(classe_obj):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=emploi_du_temps_{classe_obj.nom}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"emploi_du_temps_{classe_obj.nom}.pdf")
     return reponse
 
 
@@ -290,5 +290,5 @@ def moi_classe_pdf(classe_id):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=emploi_du_temps_{classe_obj.nom}_{profil.nom_complet}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"emploi_du_temps_{classe_obj.nom}_{profil.nom_complet}.pdf")
     return reponse

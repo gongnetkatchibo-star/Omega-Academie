@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from flask import abort
@@ -148,6 +149,21 @@ def html_vers_pdf(html):
     return tampon.read()
 
 
+def piece_jointe(nom_fichier):
+    """En-tête Content-Disposition d'un fichier à télécharger. Le nom peut
+    venir d'une saisie (classe « 6e A », référence, nom en arabe) : une
+    version ASCII sans espace pour les vieux navigateurs, et le nom exact
+    encodé (RFC 6266). Un caractère hors latin-1 dans l'en-tête faisait
+    échouer le téléchargement (erreur 500), audit oct. 2026."""
+    import unicodedata
+    from urllib.parse import quote
+
+    nom = str(nom_fichier).replace("\r", "").replace("\n", "")
+    simple = unicodedata.normalize("NFKD", nom).encode("ascii", "ignore").decode("ascii")
+    simple = re.sub(r"[^A-Za-z0-9._-]+", "_", simple).strip("_") or "document"
+    return f"attachment; filename=\"{simple}\"; filename*=UTF-8''{quote(nom, safe='')}"
+
+
 DEBUTS_FORMULE = ("=", "+", "-", "@", "\t", "\r")
 
 
@@ -174,7 +190,7 @@ def export_csv(entetes, lignes, nom_fichier):
     return Response(
         tampon.getvalue().encode("utf-8-sig"),  # BOM pour un bon affichage des accents dans Excel
         mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={nom_fichier}.csv"},
+        headers={"Content-Disposition": piece_jointe(f"{nom_fichier}.csv")},
     )
 
 
@@ -210,7 +226,7 @@ def export_xlsx(entetes, lignes, nom_fichier, titre_feuille="Export"):
     return Response(
         tampon.read(),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={nom_fichier}.xlsx"},
+        headers={"Content-Disposition": piece_jointe(f"{nom_fichier}.xlsx")},
     )
 
 
@@ -230,7 +246,7 @@ def export_pdf_liste(titre, sous_titre, entetes, lignes, nom_fichier):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"{nom_fichier}.pdf")
     return reponse
 
 

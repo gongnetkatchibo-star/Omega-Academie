@@ -26,10 +26,17 @@ def lire_image_televersee(fichier):
     return contenu, fichier.mimetype
 
 
+def type_image_sur(mime, defaut="image/png"):
+    """Type annoncé au navigateur pour une image enregistrée : seulement un
+    format d'image connu, jamais un type venu d'ailleurs (archive
+    restaurée, ancienne donnée) qui ferait exécuter le fichier comme une page."""
+    return mime if mime in FORMATS_IMAGE else defaut
+
+
 def data_uri(contenu, mime):
     if not contenu:
         return None
-    return f"data:{mime or 'image/png'};base64,{base64.b64encode(contenu).decode('ascii')}"
+    return f"data:{type_image_sur(mime)};base64,{base64.b64encode(contenu).decode('ascii')}"
 
 
 TAILLE_MAX_PHOTO = 8 * 1024 * 1024

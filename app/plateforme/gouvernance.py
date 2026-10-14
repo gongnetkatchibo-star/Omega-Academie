@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import select
 
 from app.extensions import db
+from app.utils import piece_jointe
 from app.models.ecole import Ecole
 from app.models.gouvernance import (
     AnnoncePlateforme, DemandeSupport, Facture, MODES_FACTURATION, PERIODICITES, MODES_REGLEMENT, STATUTS_DEMANDE,
@@ -147,7 +148,7 @@ def facture_pdf(facture_id):
     reponse = make_response(construire(facture, current_app.config.get("PLATEFORME_NOM", "Toumaï Edu School"),
                                        current_app.config.get("PLATEFORME_EMAIL_SUPPORT")))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=facture_{facture.numero}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"facture_{facture.numero}.pdf")
     return reponse
 
 

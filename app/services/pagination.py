@@ -58,7 +58,10 @@ def liens_pagination(page):
     def lien(numero, libelle, actif=True):
         if not actif:
             return f'<span class="pagination-inactif">{escape(libelle)}</span>'
-        arguments = {**request.view_args, **request.args.to_dict(), "page": numero}
+        # Les paramètres « _xxx » de l'adresse (_external, _scheme, _anchor)
+        # piloteraient url_for : jamais repris, audit oct. 2026.
+        filtres = {k: v for k, v in request.args.to_dict().items() if not k.startswith("_")}
+        arguments = {**request.view_args, **filtres, "page": numero}
         return f'<a href="{escape(url_for(request.endpoint, **arguments))}">{escape(libelle)}</a>'
 
     return Markup(

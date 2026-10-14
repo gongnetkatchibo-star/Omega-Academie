@@ -171,10 +171,19 @@ def _inscription_eleve():
     # Toujours validé par le secrétariat : un camarade qui connaît le
     # matricule et la date de naissance ne peut pas prendre le compte.
     statut = "en_attente"
+    if not email:
+        # Adresse technique libre (une demande refusée garde la sienne).
+        email, rang = f"{matricule.lower()}@eleves.local", 1
+        while _comptes().filter_by(email=email).first():
+            rang += 1
+            email = f"{matricule.lower()}.{rang}@eleves.local"
+        email_technique = True
+    else:
+        email_technique = False
     compte = User(
         ecole_id=eleve.ecole_id, nom_complet=eleve.nom_complet, genre=eleve.sexe,
-        email=email or f"{matricule.lower()}@eleves.local", telephone=telephone or None,
-        role="eleve", statut=statut, email_verifie=not email,
+        email=email, telephone=telephone or None,
+        role="eleve", statut=statut, email_verifie=email_technique,
     )
     compte.set_mot_de_passe(mot_de_passe)
     db.session.add(compte)

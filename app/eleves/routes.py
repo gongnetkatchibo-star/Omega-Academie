@@ -195,7 +195,8 @@ def photo(eleve_id):
     eleve = db.get_or_404(Eleve, eleve_id)
     if not _peut_voir(eleve) or not eleve.photo:
         abort(404)
-    reponse = Response(eleve.photo, mimetype=eleve.photo_mime or "image/jpeg")
+    from app.services.images_ecole import type_image_sur
+    reponse = Response(eleve.photo, mimetype=type_image_sur(eleve.photo_mime, "image/jpeg"))
     reponse.headers["Cache-Control"] = "private, max-age=300"
     return reponse
 

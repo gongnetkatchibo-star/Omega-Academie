@@ -267,4 +267,5 @@ def image(ecole_id, image):
     contenu = getattr(ecole, image)
     if not contenu:
         abort(404)
-    return Response(contenu, mimetype=getattr(ecole, f"{image}_mime") or "image/png")
+    from app.services.images_ecole import type_image_sur
+    return Response(contenu, mimetype=type_image_sur(getattr(ecole, f"{image}_mime")))

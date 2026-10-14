@@ -261,9 +261,19 @@ def restaurer_ecole(ecole, donnees):
         from app.models.permission import Permission, MODULES_CLES
         from app.models.user import ROLES
         reglages = donnees.get("reglages_ecole") or {}
+        from app.services.images_ecole import FORMATS_IMAGE
+        from app.services.theme import FORMAT as FORMAT_COULEUR
         for champ in CHAMPS_ECOLE:
             if champ in reglages:
-                setattr(ecole, champ, _depuis_json(reglages[champ], Ecole.__table__.c[champ]))
+                valeur = _depuis_json(reglages[champ], Ecole.__table__.c[champ])
+                # Une archive retouchée ne fait rien entrer d'actif dans les
+                # pages (couleur glissée dans la feuille de style, faux type
+                # d'image) : valeur invalide = réglage retiré.
+                if champ.startswith("couleur_") and valeur and not FORMAT_COULEUR.match(str(valeur)):
+                    valeur = None
+                if champ.endswith("_mime") and valeur not in FORMATS_IMAGE:
+                    valeur = None
+                setattr(ecole, champ, valeur)
         if "permissions" in donnees:
             Permission.query.filter_by(ecole_id=ecole.id).delete()
             for p in donnees["permissions"]:

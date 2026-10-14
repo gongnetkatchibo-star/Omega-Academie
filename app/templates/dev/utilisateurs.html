@@ -47,9 +47,11 @@
     </thead>
     <tbody>
       {% for u in utilisateurs %}
+        {% set modifiable = current_user.role == "developpeur" or (u.id != current_user.id and rang_du_role(u.role) > rang_du_role(current_user.role)) %}
         <tr>
           <td>{{ u.nom_complet }}</td>
           <td>{{ u.email }}</td>
+          {% if modifiable %}
           <td>
             <select name="genre" form="form-{{ u.id }}">
               <option value="">—</option>
@@ -71,8 +73,14 @@
               {% endfor %}
             </select>
           </td>
+          {% else %}
+          <td>{{ u.genre or "—" }}</td>
+          <td>{{ _(u.role|role_libelle) }}</td>
+          <td>{{ u.statut }}</td>
+          {% endif %}
           <td>{{ u.date_creation.strftime("%d/%m/%Y") if u.date_creation else "" }}</td>
           <td>
+            {% if modifiable %}
             <div class="actions-tableau">
               <form id="form-{{ u.id }}" method="post" action="{{ url_for('dev.modifier_utilisateur', user_id=u.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -91,6 +99,7 @@
                 </form>
               {% endif %}
             </div>
+            {% endif %}
           </td>
         </tr>
       {% endfor %}

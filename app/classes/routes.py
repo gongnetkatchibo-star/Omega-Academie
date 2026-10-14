@@ -16,6 +16,11 @@ ROLES_LECTURE = ROLES_GESTION + ["enseignant"]
 ROLES_FRAIS = ["comptable", "fondateur", "administrateur_general"]
 
 
+def _gere_les_frais():
+    from app.services.permissions import role_a_acces
+    return role_a_acces(current_user.role, "finances", ROLES_FRAIS)
+
+
 def _montant_formulaire(nom_champ):
     """Lit un montant saisi via le champ liste déroulante + "Autre"
     (voir macro champ_montant) : priorité au menu, sinon la saisie libre."""
@@ -72,25 +77,33 @@ def nouvelle():
         nom = request.form.get("nom", "").strip()[:20]
         niveau = request.form.get("niveau", type=int)
         annee_scolaire = request.form.get("annee_scolaire", "").strip()
-        frais_inscription = _montant_formulaire("frais_inscription")
-        frais_tranche1 = _montant_formulaire("frais_tranche1")
-        frais_tranche2 = _montant_formulaire("frais_tranche2")
+        # Les montants ne sont lus que pour ceux qui gèrent les frais : sinon
+        # la classe reprend l'échéancier de son groupe, sans le changer
+        # (créer une classe ne doit pas servir à modifier les frais des
+        # autres, audit oct. 2026).
+        gere_les_frais = _gere_les_frais()
+        if gere_les_frais:
+            frais_inscription = _montant_formulaire("frais_inscription")
+            frais_tranche1 = _montant_formulaire("frais_tranche1")
+            frais_tranche2 = _montant_formulaire("frais_tranche2")
+        else:
+            frais_inscription = frais_tranche1 = frais_tranche2 = 0
 
         if None in (frais_inscription, frais_tranche1, frais_tranche2) or min(frais_inscription, frais_tranche1, frais_tranche2) < 0:
             flash("Les frais doivent être des montants positifs.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES, gere_les_frais=_gere_les_frais())
         if not nom or niveau not in niveaux_valables or not annee_valide(annee_scolaire):
             flash("Merci de remplir tous les champs (année scolaire au format 2027-2028).", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES, gere_les_frais=_gere_les_frais())
 
         classe_candidate = Classe(niveau=niveau, nom=nom)
         if not classe_dans_le_cycle(classe_candidate, cycle):
             flash("Ce niveau ne fait pas partie de ton cycle de supervision.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES, gere_les_frais=_gere_les_frais())
 
         if Classe.query.filter_by(nom=nom, annee_scolaire=annee_scolaire).first():
             flash(f"La classe {nom} existe déjà pour l'année {annee_scolaire}.", "error")
-            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+            return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES, gere_les_frais=_gere_les_frais())
 
         # Si d'autres classes du même groupe (même échéancier, même année)
         # existent déjà et qu'aucun montant n'a été saisi ici, on hérite
@@ -114,11 +127,12 @@ def nouvelle():
         db.session.commit()
         # Propage au reste du groupe (utile si des montants ont été saisis
         # ici alors que les classes sœurs existaient déjà sans échéancier).
-        appliquer_frais_au_groupe(nouvelle_classe, frais_inscription, frais_tranche1, frais_tranche2)
+        if gere_les_frais:
+            appliquer_frais_au_groupe(nouvelle_classe, frais_inscription, frais_tranche1, frais_tranche2)
         flash(f"Classe {nom} créée.", "info")
         return redirect(url_for("classes.liste"))
 
-    return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES)
+    return render_template("classes/nouvelle.html", niveaux=niveaux_numerotes, lycee=lycee_propose, series=SERIES_PROPOSEES, gere_les_frais=_gere_les_frais())
 
 
 @classes_bp.route("/<int:classe_id>/modifier", methods=["GET", "POST"])

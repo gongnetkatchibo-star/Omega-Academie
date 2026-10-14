@@ -355,7 +355,8 @@ def logo_ecole_public(identifiant):
     etab = _ecole_du_lien(identifiant)
     if not etab.logo:
         abort(404)
-    reponse = Response(etab.logo, mimetype=etab.logo_mime or "image/png")
+    from app.services.images_ecole import type_image_sur
+    reponse = Response(etab.logo, mimetype=type_image_sur(etab.logo_mime))
     reponse.headers["Cache-Control"] = "public, max-age=3600"
     return reponse
 
@@ -379,7 +380,8 @@ def image_ecole(image):
     contenu = getattr(ecole, image, None) if ecole else None
     if not contenu:
         abort(404)
-    reponse = Response(contenu, mimetype=getattr(ecole, f"{image}_mime") or "image/png")
+    from app.services.images_ecole import type_image_sur
+    reponse = Response(contenu, mimetype=type_image_sur(getattr(ecole, f"{image}_mime")))
     reponse.headers["Cache-Control"] = "private, max-age=3600"
     return reponse
 

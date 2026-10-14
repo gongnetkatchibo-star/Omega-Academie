@@ -123,7 +123,9 @@
             <td>{{ p.reference or "—" }}</td>
             {% if acces("comptable", "fondateur", "administrateur_general") %}
               <td>
+                {% if acces("fondateur", "administrateur_general") or (p.date_paiement and p.date_paiement.date().isoformat() == aujourdhui_iso()) %}
                 <a href="{{ url_for('finances.modifier_paiement', paiement_id=p.id) }}">{{ _("Corriger") }}</a>
+                {% endif %}
                 {% if acces("fondateur", "administrateur_general") %}
                   · <form method="post" action="{{ url_for('finances.supprimer_paiement', paiement_id=p.id) }}" class="form-inline" onsubmit="return confirm({{ _("Annuler ce paiement ? La caisse gardera une trace de l'annulation.")|tojson|forceescape }});">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

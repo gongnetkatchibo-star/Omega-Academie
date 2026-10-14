@@ -1568,3 +1568,21 @@ for _cle, _valeur in {
     "Tous les types": "كل الأنواع",
 }.items():
     INTERFACE.setdefault(_cle, _valeur)
+
+# Audit complet (oct. 2026) : nouveaux messages.
+for _cle, _valeur in {
+    "Les frais de la classe reprennent ceux des classes du même groupe ; la comptabilité les ajuste si besoin.":
+        "تأخذ رسوم القسم رسوم أقسام المجموعة نفسها، وتعدّلها المحاسبة عند الحاجة.",
+    "Tu ne peux pas modifier ce compte : son rôle est égal ou supérieur au tien.":
+        "لا يمكنك تعديل هذا الحساب: دوره مساوٍ لدورك أو أعلى منه.",
+    "Tu ne peux attribuer qu'un rôle placé sous le tien.": "لا يمكنك منح إلا دور أدنى من دورك.",
+    "Ton propre salaire est enregistré par la direction, pas par toi-même.": "تسجّل الإدارة راتبك، لا أنت.",
+    "Ton propre salaire est marqué payé par la direction, pas par toi-même.": "تؤشّر الإدارة على دفع راتبك، لا أنت.",
+    "Ce paiement date d'un jour précédent : seule la direction peut le corriger ou l'annuler.":
+        "هذا الدفع من يوم سابق: الإدارة وحدها يمكنها تصحيحه أو إلغاؤه.",
+    "Des notes de cette année sont déjà clôturées : les coefficients ne peuvent plus changer. Rouvre d'abord la période (direction).":
+        "بعض نقاط هذه السنة مغلقة: لا يمكن تغيير المعاملات. أعد فتح الفترة أولاً (الإدارة).",
+    "L'appel d'une année scolaire passée ne se modifie plus : date ramenée à aujourd'hui.":
+        "لا يُعدَّل غياب سنة دراسية سابقة: أُعيد التاريخ إلى اليوم.",
+}.items():
+    INTERFACE.setdefault(_cle, _valeur)

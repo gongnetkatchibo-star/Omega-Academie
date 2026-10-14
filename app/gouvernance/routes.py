@@ -9,7 +9,7 @@ from app.gouvernance import gouvernance_bp
 from app.models.gouvernance import DemandeSupport, Facture, CATEGORIES_DEMANDE, STATUTS_DEMANDE
 from app.services.journal import journaliser
 from app.services.tenant import ecole_courante, ecole_courante_id
-from app.utils import roles_required
+from app.utils import roles_required, piece_jointe
 
 ROLES_DIRECTION = ("fondateur", "administrateur_general")
 
@@ -39,7 +39,7 @@ def facture_pdf(facture_id):
     reponse = make_response(construire(facture, current_app.config.get("PLATEFORME_NOM", "Toumaï Edu School"),
                                        current_app.config.get("PLATEFORME_EMAIL_SUPPORT")))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=facture_{facture.numero}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"facture_{facture.numero}.pdf")
     return reponse
 
 

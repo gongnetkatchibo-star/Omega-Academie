@@ -4,7 +4,7 @@ from flask_login import login_required
 from app.models.eleve import Eleve
 from app.models.parametre import ParametreEtablissement
 from app.documents_officiels import documents_officiels_bp
-from app.utils import roles_required, html_vers_pdf
+from app.utils import roles_required, html_vers_pdf, piece_jointe
 from app.services.documents_officiels import (
     numero_reference, contexte_entete_officiel, signature_du_document,
 )
@@ -80,7 +80,7 @@ def _generer(eleve_id, type_doc):
     html = render_template(modele, eleve=eleve, numero=numero, **contexte)
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename={prefixe_fichier}_{eleve.matricule}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"{prefixe_fichier}_{eleve.matricule}.pdf")
     return reponse
 
 
@@ -192,8 +192,7 @@ def cartes():
         )
         reponse = make_response(pdf)
         reponse.headers["Content-Type"] = "application/pdf"
-        nom_sur = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in nom_fichier)
-        reponse.headers["Content-Disposition"] = f"attachment; filename={nom_sur}.pdf"
+        reponse.headers["Content-Disposition"] = piece_jointe(f"{nom_fichier}.pdf")
         return reponse
 
     effectifs = dict(

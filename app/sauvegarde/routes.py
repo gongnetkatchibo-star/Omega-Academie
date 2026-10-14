@@ -73,6 +73,7 @@ def construire_archive():
             archive.writestr(NOM_FICHIER_DONNEES, json.dumps(exporter_ecole(ecole), ensure_ascii=False))
 
     tampon.seek(0)
-    sigle = (ecole.sigle if ecole and ecole.sigle else "ecole").lower()
+    from app.utils import nom_fichier_sur
+    sigle = nom_fichier_sur((ecole.sigle if ecole and ecole.sigle else "ecole").lower())
     nom_fichier = f"sauvegarde_{sigle}_{maintenant().strftime('%Y%m%d_%H%M')}.zip"
     return tampon, nom_fichier

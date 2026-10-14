@@ -231,6 +231,15 @@ def modifier_paiement(paiement_id):
     paiement = db.get_or_404(Paiement, paiement_id)
     eleve = paiement.eleve
 
+    from app.services.temps import aujourd_hui
+    if (current_user.role not in ROLES_SUPPRESSION + ["developpeur"]
+            and paiement.date_paiement and paiement.date_paiement.date() != aujourd_hui()):
+        # Le jour même, le comptable corrige une faute de frappe ; ensuite,
+        # le reçu est entre les mains de la famille : seule la direction
+        # le corrige (ou l'annule), audit oct. 2026.
+        flash("Ce paiement date d'un jour précédent : seule la direction peut le corriger ou l'annuler.", "error")
+        return redirect(url_for("finances.detail", eleve_id=eleve.id))
+
     if request.method == "POST":
         montant = montant_entier(request.form.get("montant"))
         mode = request.form.get("mode")

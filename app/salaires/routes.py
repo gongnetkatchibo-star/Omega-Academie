@@ -9,7 +9,7 @@ from app.models.user import User
 from app.models.salaire import Salaire, STATUTS_SALAIRE, LIBELLES_STATUT_SALAIRE, MOIS_LIBELLES
 from app.models.mouvement_caisse import MouvementCaisse, TYPE_SALAIRE_AUTO
 from app.salaires import salaires_bp
-from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste
+from app.utils import roles_required, export_csv, export_xlsx, export_pdf_liste, piece_jointe
 from app.services.journal import journaliser
 from app.services.temps import maintenant
 
@@ -130,6 +130,9 @@ def nouveau():
             erreur = "L'année du salaire doit être l'année en cours, la précédente ou la suivante."
         elif montant <= 0:
             erreur = "Les retenues dépassent le salaire : le net à payer doit rester positif."
+        elif employe.id == current_user.id and current_user.role not in ("fondateur", "developpeur"):
+            # Séparation des tâches : personne n'enregistre son propre salaire.
+            erreur = "Ton propre salaire est enregistré par la direction, pas par toi-même."
         elif Salaire.query.filter_by(personnel_id=personnel_id, mois=mois, annee=annee).first():
             erreur = f"Un salaire existe déjà pour {employe.nom_complet} sur cette période."
 
@@ -168,6 +171,9 @@ def marquer_paye(salaire_id):
     salaire = db.session.execute(
         db.select(Salaire).where(Salaire.id == salaire_id).with_for_update()
     ).scalar_one_or_none() or abort(404)
+    if salaire.personnel_id == current_user.id and current_user.role not in ("fondateur", "developpeur"):
+        flash("Ton propre salaire est marqué payé par la direction, pas par toi-même.", "error")
+        return redirect(url_for("salaires.liste"))
     deja = MouvementCaisse.query.filter_by(origine_module="salaires", origine_id=salaire.id).first()
     if salaire.statut == "paye" or deja:
         flash("Ce salaire est déjà marqué comme payé.", "error")
@@ -263,7 +269,7 @@ def _fiche_pdf(salaire):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename=fiche_paie_{reference}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"fiche_paie_{reference}.pdf")
     return reponse
 
 

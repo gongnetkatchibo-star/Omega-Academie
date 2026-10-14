@@ -6,7 +6,7 @@ from app.models.classe import Classe
 from app.models.eleve import Eleve
 from app.models.note import Note
 from app.notes import notes_bp
-from app.utils import roles_required
+from app.utils import roles_required, piece_jointe
 from app.services.moyennes import bareme_pour_classe
 from app.models.bulletin import AppreciationBulletin, CoefficientMatiere, PeriodeCloturee
 from app.models.evaluation import Evaluation, TYPES_EVALUATION, LIBELLES_TYPE
@@ -316,7 +316,7 @@ def _pdf_bulletins(classe, periode, eleves, nom_fichier):
     )
     reponse = make_response(html_vers_pdf(html))
     reponse.headers["Content-Type"] = "application/pdf"
-    reponse.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}.pdf"
+    reponse.headers["Content-Disposition"] = piece_jointe(f"{nom_fichier}.pdf")
     return reponse
 
 
@@ -354,6 +354,11 @@ def appreciation(eleve_id):
         abort(403)
     periode = _periode_demandee()
     annee = eleve.classe.annee_scolaire
+    fermee = periode_fermee(annee, periode)
+    if fermee:
+        # Bulletin arrêté : l'appréciation déjà imprimée ne change plus.
+        flash(fermee, "error")
+        return redirect(url_for("notes.bulletin", eleve_id=eleve.id, trimestre=periode))
     texte = request.form.get("appreciation", "").strip()[:400]
     existante = AppreciationBulletin.query.filter_by(eleve_id=eleve.id, periode=periode, annee_scolaire=annee).first()
     if not texte:
@@ -376,6 +381,13 @@ def coefficients(classe_id):
     actuels = {c.matiere: c for c in CoefficientMatiere.query.filter_by(classe_id=classe.id).all()}
 
     if request.method == "POST":
+        # Un coefficient change toutes les moyennes de l'année : plus
+        # possible dès qu'une période est clôturée, ni pour une année passée.
+        if classe.annee_scolaire != Eleve.annee_scolaire_courante() or PeriodeCloturee.query.filter_by(
+                annee_scolaire=classe.annee_scolaire).first():
+            flash("Des notes de cette année sont déjà clôturées : les coefficients ne peuvent plus changer. "
+                  "Rouvre d'abord la période (direction).", "error")
+            return redirect(url_for("notes.coefficients", classe_id=classe.id))
         for position, matiere in enumerate(matieres):
             valeur = request.form.get(f"coefficient_{position}", type=float)
             if valeur is None or not 0 < valeur <= 20:

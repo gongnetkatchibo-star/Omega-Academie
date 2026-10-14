@@ -36,6 +36,7 @@
     <label>{{ _("Année scolaire") }}
       <input type="text" name="annee_scolaire" maxlength="9" required>
     </label>
+    {% if gere_les_frais %}
     <label>{{ _("Frais d'inscription") }}
       {{ champ_montant("frais_inscription", 0, 30000) }}
     </label>
@@ -45,6 +46,9 @@
     <label>{{ _("Frais tranche 2 (février)") }}
       {{ champ_montant("frais_tranche2") }}
     </label>
+    {% else %}
+    <p class="lien-secondaire">{{ _("Les frais de la classe reprennent ceux des classes du même groupe ; la comptabilité les ajuste si besoin.") }}</p>
+    {% endif %}
     <button type="submit">{{ _("Créer la classe") }}</button>
   </form>
 {% endblock %}
